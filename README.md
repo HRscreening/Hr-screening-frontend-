@@ -1,73 +1,80 @@
-# React + TypeScript + Vite
+# HR Screening Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern web application for HR screening and job management, built with React, TypeScript, and Vite.
 
-Currently, two official plugins are available:
+## Overview
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+This is a frontend application designed to streamline the HR recruitment process. It provides an interface for managing job postings, conducting candidate screenings, and organizing recruitment workflows.
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Framework**: React 19 with TypeScript
+- **Build Tool**: Vite
+- **Routing**: React Router DOM
+- **UI Components**: Radix UI primitives
+- **Styling**: Tailwind CSS with animations
+- **State Management**: Zustand
+- **Form Handling**: React Hook Form with Zod validation
+- **HTTP Client**: Axios
+- **Icons**: Lucide React & React Icons
 
-## Expanding the ESLint configuration
+## Project Structure
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+The `src` folder contains the following main directories:
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- **assets** - Static assets like images and media files
+- **components** - Reusable UI components and building blocks
+- **guards** - Route protection and authentication guards
+- **hooks** - Custom React hooks for shared logic
+- **lib** - Utility libraries and configurations
+- **pages** - Application pages and views
+- **store** - Global state management stores
+- **types** - TypeScript type definitions and interfaces
+- **utils** - Helper functions and utilities
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Getting Started
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Prerequisites
+
+- Node.js (v18 or higher recommended)
+- npm or yarn package manager
+
+### Installation
+
+1. Clone the repository
+```bash
+git clone <repository-url>
+cd Hr-screening-frontend-
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+2. Install dependencies
+```bash
+npm install
 ```
+
+3. Start the development server
+```bash
+npm run dev
+```
+
+The application will be available at `http://localhost:5173`
+
+## Available Scripts
+
+- `npm run dev` - Start the development server with hot reload
+- `npm run build` - Build the application for production
+- `npm run lint` - Run ESLint to check code quality
+- `npm run preview` - Preview the production build locally
+
+## Features
+
+- User authentication and authorization
+- Job posting management
+- Dashboard with recruitment analytics
+- Settings and configuration management
+- Role-based access control
+- Responsive design for all devices
+
+## License
+
+This project is private and proprietary.
