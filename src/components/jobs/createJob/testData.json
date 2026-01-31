@@ -1,0 +1,189 @@
+{
+    "job_data": {
+        "title": "Software Engineer Intern (Real-Time AI Voice Systems)",
+        "description": "Develop and maintain backend systems for real-time voice AI. Build scalable, high-concurrency pipelines, integrate speech and language model services, and contribute to telephony and media routing infrastructure.",
+        "location": "Remote / Hybrid",
+        "salary": null,
+        "target_headcount": 1,
+        "metadata": {
+            "employment_type": "Internship",
+            "duration": "1 - 3 Months",
+            "pre_placement_opportunity": true,
+            "department": "Platform Engineering"
+        }
+    },
+    "threshold_score": 95,
+    "criteria": {
+        "mandatory_criteria": {
+            "programming_languages": {
+                "weight": 20,
+                "value": null,
+                "sub_criteria": {
+                    "golang": {
+                        "weight": 80,
+                        "value": null
+                    },
+                    "python": {
+                        "weight": 20,
+                        "value": null
+                    }
+                }
+            },
+            "concurrency_fundamentals": {
+                "weight": 25,
+                "value": null,
+                "sub_criteria": null
+            },
+            "backend_fundamentals": {
+                "weight": 25,
+                "value": null,
+                "sub_criteria": {
+                    "rest_apis": {
+                        "weight": 30,
+                        "value": null
+                        
+                    },
+                    "websockets": {
+                        "weight": 10,
+                        "value": null
+                        
+                    },
+                    "networking": {
+                        "weight": 60,
+                        "value": null
+                        
+                    }
+                }
+            },
+            "databases": {
+                "weight": 10,
+                "value": null,
+                "sub_criteria": null
+            },
+            "development_tools_and_os": {
+                "weight": 5,
+                "value": null,
+                "sub_criteria": {
+                    "linux": {
+                        "weight": 25,
+                        "value": null
+                        
+                    },
+                    "docker": {
+                        "weight": 25,
+                        "value": null
+                       
+                    },
+                    "git": {
+                        "weight": 25,
+                        "value": null
+                       
+                    },
+                    "cli_workflows": {
+                        "weight": 25,
+                        "value": null
+                        
+                    }
+                }
+            },
+            "problem_solving": {
+                "weight": 10,
+                "value": null,
+                "sub_criteria": null
+            },
+            "eagerness_to_learn": {
+                "weight": 5,
+                "value": null,
+                "sub_criteria": null
+            }
+        },
+        "screening_criteria": {
+            "real_time_communication_systems": {
+                "weight": 10,
+                "value": null,
+                "sub_criteria": {
+                    "sip": {
+                        "weight": 50,
+                        "value": null
+                    },
+                    "webrtc": {
+                        "weight": 50,
+                        "value": null
+                    }
+                }
+            },
+            "container_orchestration_cloud_deployment": {
+                "weight": 10,
+                "value": null,
+                "sub_criteria": {
+                    "kubernetes": {
+                        "weight": 50,
+                        "value": null
+                    },
+                    "aws": {
+                        "weight": 25,
+                        "value": null
+                    },
+                    "gcp": {
+                        "weight": 20,
+                        "value": null
+                    },
+                    "azure": {
+                        "weight": 5,
+                        "value": null
+                    }
+                }
+            },
+            "ai_ml_voice_pipelines": {
+                "weight": 10,
+                "value": null,
+                "sub_criteria": {
+                    "llms_slms": {
+                        "weight": 50,
+                        "value": null
+                    },
+                    "embeddings": {
+                        "weight": 30,
+                        "value": null
+                    },
+                    "voice_ai_pipelines": {
+                        "weight": 20,
+                        "value": null
+                    }
+                }
+            },
+            "message_queues_async_job_systems": {
+                "weight": 30,
+                "value": null,
+                "sub_criteria": {
+                    "redis_queue": {
+                        "weight": 30,
+                        "value": null
+                    },
+                    "bullmq": {
+                        "weight": 20,
+                        "value": null
+                    },
+                    "kafka": {
+                        "weight": 30,
+                        "value": null
+                    },
+                    "rabbitmq": {
+                        "weight": 20,
+                        "value": null
+                    }
+                }
+            },
+            "model_fine_tuning_workflows": {
+                "weight": 10,
+                "value": null,
+                "sub_criteria": null
+            },
+            "real_time_streaming_ai": {
+                "weight": 30,
+                "value": null,
+                "sub_criteria": null
+            }
+        }
+    }
+}
