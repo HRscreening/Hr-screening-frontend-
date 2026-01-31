@@ -43,7 +43,7 @@ The `src` folder contains the following main directories:
 
 1. Clone the repository
 ```bash
-git clone <repository-url>
+git clone https://github.com/HRscreening/Hr-screening-frontend-.git
 cd Hr-screening-frontend-
 ```
 
