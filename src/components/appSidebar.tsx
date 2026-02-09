@@ -110,7 +110,7 @@ export function AppSidebar({ setPageTitle }: { setPageTitle: (title: string) => 
                 <div className="flex items-center gap-2">
                     <LogoIcon />
                     <div className="flex flex-col group-data-[collapsible=icon]:hidden">
-                        <span className="text-[18px] font-bold italic">TalentForge</span>
+                        <span className="text-[18px] font-bold italic">DeskZero</span>
                     </div>
                 </div>
             </SidebarHeader>

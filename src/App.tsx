@@ -15,6 +15,7 @@ import RequireAuth from "@/guards/RequireAuth";
 import RequireOrgContext from "@/guards/RequireOrgContext";
 import RequireOrgRole from "@/guards/RequireOrgRole";
 
+
 function App() {
   return (
     <BrowserRouter>
@@ -30,6 +31,7 @@ function App() {
             <Route path="jobs" element={<Jobs />} />
             <Route path="settings" element={<Settings />} />
             <Route path="create-job" element={<CreateJob />} />
+          <Route path="jobs/:jobId" element={<JobPage />} />
 
             {/* Org-only */}
             <Route element={<RequireOrgContext />}>
@@ -43,7 +45,6 @@ function App() {
 
           </Route>
 
-          <Route path="jobs/:jobId" element={<JobPage />} />
         </Route>
 
         {/* 404 */}
@@ -54,6 +55,7 @@ function App() {
     </BrowserRouter>
   );
 }
+
 
 
 export default App;
