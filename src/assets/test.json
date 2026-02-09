@@ -1,0 +1,986 @@
+{
+    "applications": [
+        {
+            "id": "d86a519f-b09c-4047-a002-38e541221311",
+            "current_round": 0,
+            "is_starred": false,
+            "denormalized_rank": null,
+            "is_flagged": false,
+            "offer_letter_url": null,
+            "flag_reason": null,
+            "tags": null,
+            "last_activity_at": null,
+            "deleted_at": null,
+            "status": "applied",
+            "created_at": "2026-02-06T17:32:27.112410+00:00",
+            "updated_at": "2026-02-06T16:55:40.388610+00:00",
+            "ai_analysis": {
+                "bad_points": [
+                    "Limited explicit experience with modern backend technologies like message queues or container orchestration.",
+                    "No direct mention of cloud platforms or real-time media communication.",
+                    "While Python is listed, extensive backend experience with it is not detailed."
+                ],
+                "good_points": [
+                    "Strong academic background with high achievements in national and international olympiads.",
+                    "Demonstrates proficiency in various programming languages and data structures.",
+                    "Experience with database implementation and machine learning APIs.",
+                    "Developed complex projects involving compilers, pipelines, and data structures."
+                ]
+            },
+            "candidate": {
+                "id": "386a305f-f167-4a65-a1a2-66f95ab24d57",
+                "full_name": "RISHIT SINGLA",
+                "email": null,
+                "phone": null
+            },
+            "resume": {
+                "id": "a075327b-11b0-44df-8bf6-66ce75dc6004",
+                "raw_file_url": "https://akzgqvcsmazwckhprzvm.supabase.co/storage/v1/object/public/resumes/6b36fedd-3459-4656-be64-b8944a4f2898/Nirvana.pdf",
+                "status": "parsed",
+                "page_count": 2,
+                "uploaded_at": "2026-02-06T16:55:20.920335+00:00"
+            },
+            "scores": [
+                {
+                    "is_active": true,
+                    "overall_score": 90.0,
+                    "ai_confidence": 0.9,
+                    "created_at": "2026-02-06T16:55:28.829694+00:00",
+                    "grounding_data": {
+                        "databases": [
+                            "Implemented SQL database with dynamic table creation",
+                            "Libraries: Flask, MySQLdb"
+                        ],
+                        "model_fine_tuning": [],
+                        "llms_slms_voice_ai": [
+                            "Integrated the Microsoft Machine Learning API to enable seamless translation of post content"
+                        ],
+                        "backend_fundamentals": [
+                            "Developed advanced personalized feed feature",
+                            "Implemented a compiler in Standard ML that efficiently translates Markdown syntax"
+                        ],
+                        "linux_docker_git_cli": [
+                            "Tools/Utilitites: Git, LaTeX, SQL, Markdown, Excel, ML-Lex, ML-Yacc, Swagger, Vim, Make",
+                            "Languages: C++, C, Python, Standard ML, Prolog, JavaScript, Bash, HTML, CSS, Verilog HDL"
+                        ],
+                        "problem_solving_skills": [
+                            "Developed expertise in a wide range of advanced data structures, such as Heap, Binary Search Trees",
+                            "Implemented a high-performance matrix multiplier using a finite state machine architecture"
+                        ],
+                        "concurrency_fundamentals": [
+                            "Designed and implemented a two-level cache model with a 5-stage MIPS pipeline",
+                            "Implemented a compiler in Standard ML that efficiently translates Markdown syntax"
+                        ],
+                        "message_queues_async_jobs": [],
+                        "container_orchestration_cloud": [],
+                        "real_time_media_communication": [],
+                        "prior_experience_golang_python": [
+                            "Languages: C++, C, Python, Standard ML, Prolog, JavaScript, Bash, HTML, CSS, Verilog HDL",
+                            "Libraries: Jquery, Flask, MySQLdb"
+                        ]
+                    },
+                    "is_overridden": false,
+                    "version": 1,
+                    "is_latest": true
+                }
+            ]
+        },
+        {
+            "id": "66e6aadf-a2b6-421b-aab8-736c3298f89d",
+            "current_round": 0,
+            "is_starred": false,
+            "denormalized_rank": null,
+            "is_flagged": false,
+            "offer_letter_url": null,
+            "flag_reason": null,
+            "tags": null,
+            "last_activity_at": null,
+            "deleted_at": null,
+            "status": "applied",
+            "created_at": "2026-02-06T17:32:27.112410+00:00",
+            "updated_at": "2026-02-06T16:55:43.416691+00:00",
+            "ai_analysis": {
+                "bad_points": [
+                    "Limited explicit experience with message queues or asynchronous job processing systems.",
+                    "No direct mention of real-time media communication technologies.",
+                    "While Docker is mentioned, explicit experience with container orchestration platforms is not detailed.",
+                    "Experience with Go is not explicitly stated, though Python experience is strong."
+                ],
+                "good_points": [
+                    "Strong academic background with high scores in intermediate and matriculation exams.",
+                    "Demonstrates significant experience with AI and ML technologies, including LLMs, chatbots, and generative models.",
+                    "Proficient in multiple programming languages and backend technologies like Python, JavaScript, Node.js, and Django.",
+                    "Experience with containerization using Docker and cloud-related technologies.",
+                    "Actively involved in competitive programming and problem-solving, evidenced by a high Codeforces rating.",
+                    "Possesses leadership experience as a Web Coordinator and mentorship experience.",
+                    "Developed several impactful projects showcasing practical application of learned skills."
+                ]
+            },
+            "candidate": {
+                "id": "b713da00-e45a-431c-a52e-f4404d7c6683",
+                "full_name": "Mohit",
+                "email": "22b0442@iitb.ac.in",
+                "phone": null
+            },
+            "resume": {
+                "id": "759f8a3f-c465-47a7-b2ca-d57411f0e8bf",
+                "raw_file_url": "https://akzgqvcsmazwckhprzvm.supabase.co/storage/v1/object/public/resumes/6b36fedd-3459-4656-be64-b8944a4f2898/resume.pdf",
+                "status": "parsed",
+                "page_count": 2,
+                "uploaded_at": "2026-02-06T16:55:23.407556+00:00"
+            },
+            "scores": [
+                {
+                    "is_active": true,
+                    "overall_score": 78.0,
+                    "ai_confidence": 0.95,
+                    "created_at": "2026-02-06T16:55:28.829694+00:00",
+                    "grounding_data": {
+                        "mandatory_criteria": {
+                            "databases": [
+                                "Built REST APIswithNode.js&MongoDB",
+                                "Django Rest APIs with MySQL"
+                            ],
+                            "backend_fundamentals": [
+                                "Implemented Authenticationusing GoogleOAuth for secure Login and Signup using Supabase and Next.js",
+                                "Built REST APIs with Node.js & MongoDB"
+                            ],
+                            "linux_docker_git_cli": [
+                                "ContainerizedusingDocker",
+                                "Github"
+                            ],
+                            "problem_solving_skills": [
+                                "Solved 400+ problems of DP, graphs, hashing, STL, Trees, Heap",
+                                "ImplementedadvancealgorithmslikeKnapsack,Dijkstra’s,Prim’s,Kruskal’s,KMPalgorithm,BFS,DFS"
+                            ],
+                            "concurrency_fundamentals": [
+                                "Usedmulti-threadingtofetchfiles,boostingefficiencyby80%",
+                                "Implementeda threaded messaging feature facilitating 3k+ alumni-student engagement"
+                            ],
+                            "prior_experience_golang_python": [
+                                "Python,Javascript,TypeScript",
+                                "Finetuned Tiny-Llama-1.1B model to enhance its conversation summarization ability"
+                            ]
+                        },
+                        "screening_criteria": {
+                            "model_fine_tuning": [
+                                "Finetuned Tiny-Llama-1.1B model to enhance its conversation summarization ability",
+                                "Working on preprocess NIFTY50 stock data, training and fine-tuning RL models"
+                            ],
+                            "llms_slms_voice_ai": [
+                                "Developed an AI chatbot integratable with various LLMs, including GPT, Azure, Ollama, and Mistral",
+                                "LeveragedLangChain&GPTtogenerateresumeembeddings&insights"
+                            ],
+                            "message_queues_async_jobs": [
+                                "Createdacron schedulerforautomation."
+                            ],
+                            "container_orchestration_cloud": [
+                                "ContainerizedusingDocker",
+                                "ReactJS, NodeJS, Django, ExpressJS,GetX, Bootstrap, Docker, Postman, Github"
+                            ],
+                            "real_time_media_communication": [
+                                "Developed an AI chatbot integratable with various LLMs"
+                            ]
+                        }
+                    },
+                    "is_overridden": false,
+                    "version": 1,
+                    "is_latest": true
+                }
+            ]
+        },
+        {
+            "id": "62357520-0e4c-449a-a2f7-9a53ef1ad61e",
+            "current_round": 0,
+            "is_starred": false,
+            "denormalized_rank": null,
+            "is_flagged": false,
+            "offer_letter_url": null,
+            "flag_reason": null,
+            "tags": null,
+            "last_activity_at": null,
+            "deleted_at": null,
+            "status": "applied",
+            "created_at": "2026-02-06T17:32:27.112410+00:00",
+            "updated_at": "2026-02-06T16:55:46.094562+00:00",
+            "ai_analysis": {
+                "bad_points": [
+                    "Lacks explicit experience in specialized areas such as LLMs, container orchestration, and real-time communication.",
+                    "While Python is listed, there is no specific project or experience detail showcasing its application in a backend context.",
+                    "No mention of databases or backend specific frameworks that are typically associated with backend development roles."
+                ],
+                "good_points": [
+                    "Demonstrates strong academic background with high rankings and achievements in competitive exams.",
+                    "Possesses a diverse technical skill set including multiple programming languages and software tools.",
+                    "Showcases project experience in algorithm optimization, data structures, and game development.",
+                    "Highlights leadership and organizational skills through various positions of responsibility.",
+                    "Exhibits a proactive approach with participation in extracurricular activities and competitions."
+                ]
+            },
+            "candidate": {
+                "id": "4bd24ab0-b610-465b-91d1-23a5e9b50f84",
+                "full_name": "SANCHIT",
+                "email": null,
+                "phone": null
+            },
+            "resume": {
+                "id": "2d8d3bce-2b58-4627-b000-6df50e9b3912",
+                "raw_file_url": "https://akzgqvcsmazwckhprzvm.supabase.co/storage/v1/object/public/resumes/6b36fedd-3459-4656-be64-b8944a4f2898/Sanchit_it.pdf",
+                "status": "parsed",
+                "page_count": 2,
+                "uploaded_at": "2026-02-06T16:55:25.856432+00:00"
+            },
+            "scores": [
+                {
+                    "is_active": true,
+                    "overall_score": 65.0,
+                    "ai_confidence": 0.9,
+                    "created_at": "2026-02-06T16:55:28.829694+00:00",
+                    "grounding_data": {
+                        "mandatory_criteria": {
+                            "databases": [
+                                "Programming and Scripting Languages : C, C++, Java, Python, SQL, HTML, CSS, JavaScript, R, MATLAB"
+                            ],
+                            "backend_fundamentals": [
+                                "Implemented O(1) time complexity methods for efficient insertion, deletion, updating, and retrieval of key-value pairs"
+                            ],
+                            "linux_docker_git_cli": [
+                                "Software and Tools : NumPy, Pandas, Git, Vim, Autodesk Inventor, Solidworks, ANSYS, LaTeX, Figma, Adobe CC, MS Office"
+                            ],
+                            "problem_solving_skills": [
+                                "Developed a high-performing Othello winner prediction algorithm utilising Minimax Algorithm and k-step lookahead technique"
+                            ],
+                            "concurrency_fundamentals": [
+                                "Designed a snakes and ladders game using Breath-First Search traversal algorithm and Queue data Structure in Java"
+                            ],
+                            "prior_experience_golang_python": [
+                                "Programming and Scripting Languages : C, C++, Java, Python, SQL, HTML, CSS, JavaScript, R, MATLAB"
+                            ]
+                        },
+                        "screening_criteria": {
+                            "model_fine_tuning": [],
+                            "llms_slms_voice_ai": [],
+                            "message_queues_async_jobs": [],
+                            "container_orchestration_cloud": [],
+                            "real_time_media_communication": []
+                        }
+                    },
+                    "is_overridden": false,
+                    "version": 1,
+                    "is_latest": true
+                }
+            ]
+        },
+        {
+            "id": "478630ab-78c9-4b4e-9aad-3adf2ba23fe1",
+            "current_round": 0,
+            "is_starred": false,
+            "denormalized_rank": null,
+            "is_flagged": false,
+            "offer_letter_url": null,
+            "flag_reason": null,
+            "tags": null,
+            "last_activity_at": null,
+            "deleted_at": null,
+            "status": "applied",
+            "created_at": "2026-02-06T17:32:27.112410+00:00",
+            "updated_at": "2026-02-06T16:55:33.694660+00:00",
+            "ai_analysis": {
+                "bad_points": [
+                    "Limited explicit experience in Go programming.",
+                    "No direct mention of concurrency primitives or advanced concurrency patterns.",
+                    "No experience or mention of model fine-tuning.",
+                    "No experience or mention of real-time media communication technologies."
+                ],
+                "good_points": [
+                    "Demonstrates experience with backend development, including RESTful APIs and database integration.",
+                    "Proficient in containerization technologies like Docker and orchestration with Docker Compose and NGINX.",
+                    "Experience with cloud deployment on AWS EC2 and CI/CD automation using GitHub Actions.",
+                    "Familiarity with Python for image processing and AI-related projects.",
+                    "Experience with LLM frameworks like LangGraph for building conversational bots.",
+                    "Skilled in various programming languages and development frameworks."
+                ]
+            },
+            "candidate": {
+                "id": "4a501a17-2afe-4c53-a62b-d22130456bbc",
+                "full_name": "KESHAV RAJ",
+                "email": null,
+                "phone": null
+            },
+            "resume": {
+                "id": "2eddfadb-a52b-4628-8250-05547b8b34da",
+                "raw_file_url": "https://akzgqvcsmazwckhprzvm.supabase.co/storage/v1/object/public/resumes/6b36fedd-3459-4656-be64-b8944a4f2898/CV_IT (1).pdf",
+                "status": "parsed",
+                "page_count": 2,
+                "uploaded_at": "2026-02-06T16:55:15.504304+00:00"
+            },
+            "scores": [
+                {
+                    "is_active": true,
+                    "overall_score": 75.0,
+                    "ai_confidence": 0.95,
+                    "created_at": "2026-02-06T16:55:28.829694+00:00",
+                    "grounding_data": {
+                        "mandatory_criteria": {
+                            "databases": [
+                                "Prisma with PostgreSQL",
+                                "PostgreSQL to store user preferences and history"
+                            ],
+                            "backend_fundamentals": [
+                                "Developed RESTful APIs with Node.js and Express",
+                                "Enhanced responsiveness by optimizing API handling and server-side rendering in Next.js"
+                            ],
+                            "linux_docker_git_cli": [
+                                "Containerized and deployed a 3-tier web application",
+                                "Configured Docker Compose and NGINX",
+                                "Integrated GitHub Actions to automate CI/CD pipeline"
+                            ],
+                            "problem_solving_skills": [
+                                "Developed a Python program using OpenCV to accurately detect, locate, and classify red or blue balls",
+                                "Built a multi-state 2D snake game in C++ using SFML with OOP design"
+                            ],
+                            "concurrency_fundamentals": [
+                                "Integrated movie APIs (TMDb, OMDb) using async calls to efficiently fetch and filter real-time metadata"
+                            ],
+                            "prior_experience_golang_python": [
+                                "Developed a Python program using OpenCV",
+                                "Languages & Programming : C, C++, Python, JavaScript, TypeScript"
+                            ]
+                        },
+                        "screening_criteria": {
+                            "model_fine_tuning": [],
+                            "llms_slms_voice_ai": [
+                                "Built a Telegram conversational bot UI using LangGraph for movie recommendations"
+                            ],
+                            "message_queues_async_jobs": [
+                                "Integrated movie APIs (TMDb, OMDb) using async calls to efficiently fetch and filter real-time metadata"
+                            ],
+                            "container_orchestration_cloud": [
+                                "Containerized and deployed a 3-tier web application (React, Node.js, PostgreSQL) on an AWS EC2 instance",
+                                "Configured Docker Compose and NGINX for production-ready container orchestration"
+                            ],
+                            "real_time_media_communication": []
+                        }
+                    },
+                    "is_overridden": false,
+                    "version": 1,
+                    "is_latest": true
+                }
+            ]
+        },
+        {
+            "id": "aa474089-5aa5-4a86-96b5-b2f4bdec12b1",
+            "current_round": 0,
+            "is_starred": false,
+            "denormalized_rank": null,
+            "is_flagged": false,
+            "offer_letter_url": null,
+            "flag_reason": null,
+            "tags": null,
+            "last_activity_at": null,
+            "deleted_at": null,
+            "status": "applied",
+            "created_at": "2026-02-06T17:32:27.112410+00:00",
+            "updated_at": "2026-02-06T16:55:36.758720+00:00",
+            "ai_analysis": {
+                "bad_points": [
+                    "Lacks explicit mention of experience with modern cloud platforms, container orchestration, or message queues.",
+                    "No direct experience indicated with LLMs, SLMs, voice AI, or real-time media communication technologies.",
+                    "Concurrency fundamentals are only implicitly suggested through network simulations, not explicitly detailed."
+                ],
+                "good_points": [
+                    "Demonstrates strong academic background with achievements in national-level competitions.",
+                    "Possesses internship experience in software development, including database optimization and data migration.",
+                    "Showcases project experience in diverse areas like programming environments, data mining, and open-source contributions.",
+                    "Proficient in multiple programming languages and familiar with various technical tools and frameworks.",
+                    "Held significant leadership roles in academic clubs and event coordination."
+                ]
+            },
+            "candidate": {
+                "id": "5f102adc-58e1-40db-ab25-c0134fcad087",
+                "full_name": "MIHIR OKTE",
+                "email": null,
+                "phone": null
+            },
+            "resume": {
+                "id": "9d4e594a-448f-4dc8-843e-581d62b3e1ae",
+                "raw_file_url": "https://akzgqvcsmazwckhprzvm.supabase.co/storage/v1/object/public/resumes/6b36fedd-3459-4656-be64-b8944a4f2898/2019MT10703_it.pdf",
+                "status": "parsed",
+                "page_count": 2,
+                "uploaded_at": "2026-02-06T16:55:18.557288+00:00"
+            },
+            "scores": [
+                {
+                    "is_active": true,
+                    "overall_score": 75.0,
+                    "ai_confidence": 0.9,
+                    "created_at": "2026-02-06T16:55:28.829694+00:00",
+                    "grounding_data": {
+                        "mandatory_criteria": {
+                            "databases": [
+                                {
+                                    "evidence": "DataBases: SSMS, MySQL, FireStore",
+                                    "criterion": "databases"
+                                },
+                                {
+                                    "evidence": "corresponding SQL queries, LINQ & C# DAL methods",
+                                    "criterion": "databases"
+                                }
+                            ],
+                            "backend_fundamentals": [
+                                {
+                                    "evidence": "Developed multiple ASP.NET Pages, corresponding SQL queries, LINQ & C# DAL methods",
+                                    "criterion": "backend_fundamentals"
+                                },
+                                {
+                                    "evidence": "Implemented the user onboarding flow and optimised the feed reloading algorithms",
+                                    "criterion": "backend_fundamentals"
+                                }
+                            ],
+                            "linux_docker_git_cli": [
+                                {
+                                    "evidence": "WSL, GDB",
+                                    "criterion": "linux_docker_git_cli"
+                                },
+                                {
+                                    "evidence": "Version Control: TFS, Git",
+                                    "criterion": "linux_docker_git_cli"
+                                }
+                            ],
+                            "problem_solving_skills": [
+                                {
+                                    "evidence": "Optimized stored procedures across the solution to reduce query execution time by 30%",
+                                    "criterion": "problem_solving_skills"
+                                },
+                                {
+                                    "evidence": "Devised novel data migration process from multiple source databases",
+                                    "criterion": "problem_solving_skills"
+                                }
+                            ],
+                            "concurrency_fundamentals": [
+                                {
+                                    "evidence": "Simulated slotted & unslotted Aloha to analyse the packet throughput & arrival rate",
+                                    "criterion": "concurrency_fundamentals"
+                                }
+                            ],
+                            "prior_experience_golang_python": [
+                                {
+                                    "evidence": "Completed certification in Python and Statistics for Financial Analysis [2020]",
+                                    "criterion": "prior_experience_golang_python"
+                                },
+                                {
+                                    "evidence": "Languages: C/C++, JAVA, C#, Python, Javascript, SQL, MATLAB",
+                                    "criterion": "prior_experience_golang_python"
+                                }
+                            ]
+                        },
+                        "screening_criteria": {
+                            "model_fine_tuning": [],
+                            "llms_slms_voice_ai": [],
+                            "message_queues_async_jobs": [],
+                            "container_orchestration_cloud": [],
+                            "real_time_media_communication": []
+                        }
+                    },
+                    "is_overridden": false,
+                    "version": 1,
+                    "is_latest": true
+                }
+            ]
+        },
+        {
+            "id": "d86a519f-b09c-4047-a002-38e541221311",
+            "current_round": 0,
+            "is_starred": false,
+            "denormalized_rank": null,
+            "is_flagged": false,
+            "offer_letter_url": null,
+            "flag_reason": null,
+            "tags": null,
+            "last_activity_at": null,
+            "deleted_at": null,
+            "status": "applied",
+            "created_at": "2026-02-06T17:32:27.112410+00:00",
+            "updated_at": "2026-02-06T16:55:40.388610+00:00",
+            "ai_analysis": {
+                "bad_points": [
+                    "Limited explicit experience with modern backend technologies like message queues or container orchestration.",
+                    "No direct mention of cloud platforms or real-time media communication.",
+                    "While Python is listed, extensive backend experience with it is not detailed."
+                ],
+                "good_points": [
+                    "Strong academic background with high achievements in national and international olympiads.",
+                    "Demonstrates proficiency in various programming languages and data structures.",
+                    "Experience with database implementation and machine learning APIs.",
+                    "Developed complex projects involving compilers, pipelines, and data structures."
+                ]
+            },
+            "candidate": {
+                "id": "386a305f-f167-4a65-a1a2-66f95ab24d57",
+                "full_name": "RISHIT SINGLA",
+                "email": null,
+                "phone": null
+            },
+            "resume": {
+                "id": "a075327b-11b0-44df-8bf6-66ce75dc6004",
+                "raw_file_url": "https://akzgqvcsmazwckhprzvm.supabase.co/storage/v1/object/public/resumes/6b36fedd-3459-4656-be64-b8944a4f2898/Nirvana.pdf",
+                "status": "parsed",
+                "page_count": 2,
+                "uploaded_at": "2026-02-06T16:55:20.920335+00:00"
+            },
+            "scores": [
+                {
+                    "is_active": true,
+                    "overall_score": 90.0,
+                    "ai_confidence": 0.9,
+                    "created_at": "2026-02-06T16:55:28.829694+00:00",
+                    "grounding_data": {
+                        "databases": [
+                            "Implemented SQL database with dynamic table creation",
+                            "Libraries: Flask, MySQLdb"
+                        ],
+                        "model_fine_tuning": [],
+                        "llms_slms_voice_ai": [
+                            "Integrated the Microsoft Machine Learning API to enable seamless translation of post content"
+                        ],
+                        "backend_fundamentals": [
+                            "Developed advanced personalized feed feature",
+                            "Implemented a compiler in Standard ML that efficiently translates Markdown syntax"
+                        ],
+                        "linux_docker_git_cli": [
+                            "Tools/Utilitites: Git, LaTeX, SQL, Markdown, Excel, ML-Lex, ML-Yacc, Swagger, Vim, Make",
+                            "Languages: C++, C, Python, Standard ML, Prolog, JavaScript, Bash, HTML, CSS, Verilog HDL"
+                        ],
+                        "problem_solving_skills": [
+                            "Developed expertise in a wide range of advanced data structures, such as Heap, Binary Search Trees",
+                            "Implemented a high-performance matrix multiplier using a finite state machine architecture"
+                        ],
+                        "concurrency_fundamentals": [
+                            "Designed and implemented a two-level cache model with a 5-stage MIPS pipeline",
+                            "Implemented a compiler in Standard ML that efficiently translates Markdown syntax"
+                        ],
+                        "message_queues_async_jobs": [],
+                        "container_orchestration_cloud": [],
+                        "real_time_media_communication": [],
+                        "prior_experience_golang_python": [
+                            "Languages: C++, C, Python, Standard ML, Prolog, JavaScript, Bash, HTML, CSS, Verilog HDL",
+                            "Libraries: Jquery, Flask, MySQLdb"
+                        ]
+                    },
+                    "is_overridden": false,
+                    "version": 1,
+                    "is_latest": true
+                }
+            ]
+        },
+        {
+            "id": "66e6aadf-a2b6-421b-aab8-736c3298f89d",
+            "current_round": 0,
+            "is_starred": false,
+            "denormalized_rank": null,
+            "is_flagged": false,
+            "offer_letter_url": null,
+            "flag_reason": null,
+            "tags": null,
+            "last_activity_at": null,
+            "deleted_at": null,
+            "status": "applied",
+            "created_at": "2026-02-06T17:32:27.112410+00:00",
+            "updated_at": "2026-02-06T16:55:43.416691+00:00",
+            "ai_analysis": {
+                "bad_points": [
+                    "Limited explicit experience with message queues or asynchronous job processing systems.",
+                    "No direct mention of real-time media communication technologies.",
+                    "While Docker is mentioned, explicit experience with container orchestration platforms is not detailed.",
+                    "Experience with Go is not explicitly stated, though Python experience is strong."
+                ],
+                "good_points": [
+                    "Strong academic background with high scores in intermediate and matriculation exams.",
+                    "Demonstrates significant experience with AI and ML technologies, including LLMs, chatbots, and generative models.",
+                    "Proficient in multiple programming languages and backend technologies like Python, JavaScript, Node.js, and Django.",
+                    "Experience with containerization using Docker and cloud-related technologies.",
+                    "Actively involved in competitive programming and problem-solving, evidenced by a high Codeforces rating.",
+                    "Possesses leadership experience as a Web Coordinator and mentorship experience.",
+                    "Developed several impactful projects showcasing practical application of learned skills."
+                ]
+            },
+            "candidate": {
+                "id": "b713da00-e45a-431c-a52e-f4404d7c6683",
+                "full_name": "Mohit",
+                "email": "22b0442@iitb.ac.in",
+                "phone": null
+            },
+            "resume": {
+                "id": "759f8a3f-c465-47a7-b2ca-d57411f0e8bf",
+                "raw_file_url": "https://akzgqvcsmazwckhprzvm.supabase.co/storage/v1/object/public/resumes/6b36fedd-3459-4656-be64-b8944a4f2898/resume.pdf",
+                "status": "parsed",
+                "page_count": 2,
+                "uploaded_at": "2026-02-06T16:55:23.407556+00:00"
+            },
+            "scores": [
+                {
+                    "is_active": true,
+                    "overall_score": 78.0,
+                    "ai_confidence": 0.95,
+                    "created_at": "2026-02-06T16:55:28.829694+00:00",
+                    "grounding_data": {
+                        "mandatory_criteria": {
+                            "databases": [
+                                "Built REST APIswithNode.js&MongoDB",
+                                "Django Rest APIs with MySQL"
+                            ],
+                            "backend_fundamentals": [
+                                "ImplementedAuthenticationusingGoogleOAuthforsecureLoginandSignupusingSupabaseandNext.js",
+                                "Built REST APIswithNode.js&MongoDB"
+                            ],
+                            "linux_docker_git_cli": [
+                                "ContainerizedusingDocker",
+                                "Github"
+                            ],
+                            "problem_solving_skills": [
+                                "Solved 400+ problems of DP, graphs, hashing, STL, Trees, Heap",
+                                "ImplementedadvancealgorithmslikeKnapsack,Dijkstra’s,Prim’s,Kruskal’s,KMPalgorithm,BFS,DFS"
+                            ],
+                            "concurrency_fundamentals": [
+                                "Usedmulti-threadingtofetchfiles,boostingefficiencyby80%",
+                                "Implementeda threaded messaging feature facilitating 3k+ alumni-student engagement"
+                            ],
+                            "prior_experience_golang_python": [
+                                "Python,Javascript,TypeScript",
+                                "Finetuned Tiny-Llama-1.1B model to enhance its conversation summarization ability"
+                            ]
+                        },
+                        "screening_criteria": {
+                            "model_fine_tuning": [
+                                "Finetuned Tiny-Llama-1.1B model to enhance its conversation summarization ability",
+                                "Working on preprocess NIFTY50 stock data, training and fine-tuning RL models"
+                            ],
+                            "llms_slms_voice_ai": [
+                                "Developed an AI chatbot integratable with various LLMs, including GPT, Azure, Ollama, and Mistral",
+                                "LeveragedLangChain&GPTtogenerateresumeembeddings&insights"
+                            ],
+                            "message_queues_async_jobs": [
+                                "Createdacron schedulerforautomation."
+                            ],
+                            "container_orchestration_cloud": [
+                                "ContainerizedusingDocker",
+                                "ReactJS, NodeJS, Django, ExpressJS,GetX, Bootstrap, Docker, Postman, Github"
+                            ],
+                            "real_time_media_communication": [
+                                "Developed an AI chatbot integratable with various LLMs"
+                            ]
+                        }
+                    },
+                    "is_overridden": false,
+                    "version": 1,
+                    "is_latest": true
+                }
+            ]
+        },
+        {
+            "id": "62357520-0e4c-449a-a2f7-9a53ef1ad61e",
+            "current_round": 0,
+            "is_starred": false,
+            "denormalized_rank": null,
+            "is_flagged": false,
+            "offer_letter_url": null,
+            "flag_reason": null,
+            "tags": null,
+            "last_activity_at": null,
+            "deleted_at": null,
+            "status": "applied",
+            "created_at": "2026-02-06T17:32:27.112410+00:00",
+            "updated_at": "2026-02-06T16:55:46.094562+00:00",
+            "ai_analysis": {
+                "bad_points": [
+                    "Lacks explicit experience in specialized areas such as LLMs, container orchestration, and real-time communication.",
+                    "While Python is listed, there is no specific project or experience detail showcasing its application in a backend context.",
+                    "No mention of databases or backend specific frameworks that are typically associated with backend development roles."
+                ],
+                "good_points": [
+                    "Demonstrates strong academic background with high rankings and achievements in competitive exams.",
+                    "Possesses a diverse technical skill set including multiple programming languages and software tools.",
+                    "Showcases project experience in algorithm optimization, data structures, and game development.",
+                    "Highlights leadership and organizational skills through various positions of responsibility.",
+                    "Exhibits a proactive approach with participation in extracurricular activities and competitions."
+                ]
+            },
+            "candidate": {
+                "id": "4bd24ab0-b610-465b-91d1-23a5e9b50f84",
+                "full_name": "SANCHIT",
+                "email": null,
+                "phone": null
+            },
+            "resume": {
+                "id": "2d8d3bce-2b58-4627-b000-6df50e9b3912",
+                "raw_file_url": "https://akzgqvcsmazwckhprzvm.supabase.co/storage/v1/object/public/resumes/6b36fedd-3459-4656-be64-b8944a4f2898/Sanchit_it.pdf",
+                "status": "parsed",
+                "page_count": 2,
+                "uploaded_at": "2026-02-06T16:55:25.856432+00:00"
+            },
+            "scores": [
+                {
+                    "is_active": true,
+                    "overall_score": 65.0,
+                    "ai_confidence": 0.9,
+                    "created_at": "2026-02-06T16:55:28.829694+00:00",
+                    "grounding_data": {
+                        "mandatory_criteria": {
+                            "databases": [
+                                "Programming and Scripting Languages : C, C++, Java, Python, SQL, HTML, CSS, JavaScript, R, MATLAB"
+                            ],
+                            "backend_fundamentals": [
+                                "Implemented O(1) time complexity methods for efficient insertion, deletion, updating, and retrieval of key-value pairs"
+                            ],
+                            "linux_docker_git_cli": [
+                                "Software and Tools : NumPy, Pandas, Git, Vim, Autodesk Inventor, Solidworks, ANSYS, LaTeX, Figma, Adobe CC, MS Office"
+                            ],
+                            "problem_solving_skills": [
+                                "Developed a high-performing Othello winner prediction algorithm utilising Minimax Algorithm and k-step lookahead technique"
+                            ],
+                            "concurrency_fundamentals": [
+                                "Designed a snakes and ladders game using Breath-First Search traversal algorithm and Queue data Structure in Java"
+                            ],
+                            "prior_experience_golang_python": [
+                                "Programming and Scripting Languages : C, C++, Java, Python, SQL, HTML, CSS, JavaScript, R, MATLAB"
+                            ]
+                        },
+                        "screening_criteria": {
+                            "model_fine_tuning": [],
+                            "llms_slms_voice_ai": [],
+                            "message_queues_async_jobs": [],
+                            "container_orchestration_cloud": [],
+                            "real_time_media_communication": []
+                        }
+                    },
+                    "is_overridden": false,
+                    "version": 1,
+                    "is_latest": true
+                }
+            ]
+        },
+        {
+            "id": "478630ab-78c9-4b4e-9aad-3adf2ba23fe1",
+            "current_round": 0,
+            "is_starred": false,
+            "denormalized_rank": null,
+            "is_flagged": false,
+            "offer_letter_url": null,
+            "flag_reason": null,
+            "tags": null,
+            "last_activity_at": null,
+            "deleted_at": null,
+            "status": "applied",
+            "created_at": "2026-02-06T17:32:27.112410+00:00",
+            "updated_at": "2026-02-06T16:55:33.694660+00:00",
+            "ai_analysis": {
+                "bad_points": [
+                    "Limited explicit experience in Go programming.",
+                    "No direct mention of concurrency primitives or advanced concurrency patterns.",
+                    "No experience or mention of model fine-tuning.",
+                    "No experience or mention of real-time media communication technologies."
+                ],
+                "good_points": [
+                    "Demonstrates experience with backend development, including RESTful APIs and database integration.",
+                    "Proficient in containerization technologies like Docker and orchestration with Docker Compose and NGINX.",
+                    "Experience with cloud deployment on AWS EC2 and CI/CD automation using GitHub Actions.",
+                    "Familiarity with Python for image processing and AI-related projects.",
+                    "Experience with LLM frameworks like LangGraph for building conversational bots.",
+                    "Skilled in various programming languages and development frameworks."
+                ]
+            },
+            "candidate": {
+                "id": "4a501a17-2afe-4c53-a62b-d22130456bbc",
+                "full_name": "KESHAV RAJ",
+                "email": null,
+                "phone": null
+            },
+            "resume": {
+                "id": "2eddfadb-a52b-4628-8250-05547b8b34da",
+                "raw_file_url": "https://akzgqvcsmazwckhprzvm.supabase.co/storage/v1/object/public/resumes/6b36fedd-3459-4656-be64-b8944a4f2898/CV_IT (1).pdf",
+                "status": "parsed",
+                "page_count": 2,
+                "uploaded_at": "2026-02-06T16:55:15.504304+00:00"
+            },
+            "scores": [
+                {
+                    "is_active": true,
+                    "overall_score": 75.0,
+                    "ai_confidence": 0.95,
+                    "created_at": "2026-02-06T16:55:28.829694+00:00",
+                    "grounding_data": {
+                        "mandatory_criteria": {
+                            "databases": [
+                                "Prisma with PostgreSQL",
+                                "PostgreSQL to store user preferences and history"
+                            ],
+                            "backend_fundamentals": [
+                                "Developed RESTful APIs with Node.js and Express",
+                                "Enhanced responsiveness by optimizing API handling and server-side rendering in Next.js"
+                            ],
+                            "linux_docker_git_cli": [
+                                "Containerized and deployed a 3-tier web application",
+                                "Configured Docker Compose and NGINX",
+                                "Integrated GitHub Actions to automate CI/CD pipeline"
+                            ],
+                            "problem_solving_skills": [
+                                "Developed a Python program using OpenCV to accurately detect, locate, and classify red or blue balls",
+                                "Built a multi-state 2D snake game in C++ using SFML with OOP design"
+                            ],
+                            "concurrency_fundamentals": [
+                                "Integrated movie APIs (TMDb, OMDb) using async calls to efficiently fetch and filter real-time metadata"
+                            ],
+                            "prior_experience_golang_python": [
+                                "Developed a Python program using OpenCV",
+                                "Languages & Programming : C, C++, Python, JavaScript, TypeScript"
+                            ]
+                        },
+                        "screening_criteria": {
+                            "model_fine_tuning": [],
+                            "llms_slms_voice_ai": [
+                                "Built a Telegram conversational bot UI using LangGraph for movie recommendations"
+                            ],
+                            "message_queues_async_jobs": [
+                                "Integrated movie APIs (TMDb, OMDb) using async calls to efficiently fetch and filter real-time metadata"
+                            ],
+                            "container_orchestration_cloud": [
+                                "Containerized and deployed a 3-tier web application (React, Node.js, PostgreSQL) on an AWS EC2 instance",
+                                "Configured Docker Compose and NGINX for production-ready container orchestration"
+                            ],
+                            "real_time_media_communication": []
+                        }
+                    },
+                    "is_overridden": false,
+                    "version": 1,
+                    "is_latest": true
+                }
+            ]
+        },
+        {
+            "id": "aa474089-5aa5-4a86-96b5-b2f4bdec12b1",
+            "current_round": 0,
+            "is_starred": false,
+            "denormalized_rank": null,
+            "is_flagged": false,
+            "offer_letter_url": null,
+            "flag_reason": null,
+            "tags": null,
+            "last_activity_at": null,
+            "deleted_at": null,
+            "status": "applied",
+            "created_at": "2026-02-06T17:32:27.112410+00:00",
+            "updated_at": "2026-02-06T16:55:36.758720+00:00",
+            "ai_analysis": {
+                "bad_points": [
+                    "Lacks explicit mention of experience with modern cloud platforms, container orchestration, or message queues.",
+                    "No direct experience indicated with LLMs, SLMs, voice AI, or real-time media communication technologies.",
+                    "Concurrency fundamentals are only implicitly suggested through network simulations, not explicitly detailed."
+                ],
+                "good_points": [
+                    "Demonstrates strong academic background with achievements in national-level competitions.",
+                    "Possesses internship experience in software development, including database optimization and data migration.",
+                    "Showcases project experience in diverse areas like programming environments, data mining, and open-source contributions.",
+                    "Proficient in multiple programming languages and familiar with various technical tools and frameworks.",
+                    "Held significant leadership roles in academic clubs and event coordination."
+                ]
+            },
+            "candidate": {
+                "id": "5f102adc-58e1-40db-ab25-c0134fcad087",
+                "full_name": "MIHIR OKTE",
+                "email": null,
+                "phone": null
+            },
+            "resume": {
+                "id": "9d4e594a-448f-4dc8-843e-581d62b3e1ae",
+                "raw_file_url": "https://akzgqvcsmazwckhprzvm.supabase.co/storage/v1/object/public/resumes/6b36fedd-3459-4656-be64-b8944a4f2898/2019MT10703_it.pdf",
+                "status": "parsed",
+                "page_count": 2,
+                "uploaded_at": "2026-02-06T16:55:18.557288+00:00"
+            },
+            "scores": [
+                {
+                    "is_active": true,
+                    "overall_score": 75.0,
+                    "ai_confidence": 0.9,
+                    "created_at": "2026-02-06T16:55:28.829694+00:00",
+                    "grounding_data": {
+                        "mandatory_criteria": {
+                            "databases": [
+                                {
+                                    "evidence": "DataBases: SSMS, MySQL, FireStore",
+                                    "criterion": "databases"
+                                },
+                                {
+                                    "evidence": "corresponding SQL queries, LINQ & C# DAL methods",
+                                    "criterion": "databases"
+                                }
+                            ],
+                            "backend_fundamentals": [
+                                {
+                                    "evidence": "Developed multiple ASP.NET Pages, corresponding SQL queries, LINQ & C# DAL methods",
+                                    "criterion": "backend_fundamentals"
+                                },
+                                {
+                                    "evidence": "Implemented the user onboarding flow and optimised the feed reloading algorithms",
+                                    "criterion": "backend_fundamentals"
+                                }
+                            ],
+                            "linux_docker_git_cli": [
+                                {
+                                    "evidence": "WSL, GDB",
+                                    "criterion": "linux_docker_git_cli"
+                                },
+                                {
+                                    "evidence": "Version Control: TFS, Git",
+                                    "criterion": "linux_docker_git_cli"
+                                }
+                            ],
+                            "problem_solving_skills": [
+                                {
+                                    "evidence": "Optimized stored procedures across the solution to reduce query execution time by 30%",
+                                    "criterion": "problem_solving_skills"
+                                },
+                                {
+                                    "evidence": "Devised novel data migration process from multiple source databases",
+                                    "criterion": "problem_solving_skills"
+                                }
+                            ],
+                            "concurrency_fundamentals": [
+                                {
+                                    "evidence": "Simulated slotted & unslotted Aloha to analyse the packet throughput & arrival rate",
+                                    "criterion": "concurrency_fundamentals"
+                                }
+                            ],
+                            "prior_experience_golang_python": [
+                                {
+                                    "evidence": "Completed certification in Python and Statistics for Financial Analysis [2020]",
+                                    "criterion": "prior_experience_golang_python"
+                                },
+                                {
+                                    "evidence": "Languages: C/C++, JAVA, C#, Python, Javascript, SQL, MATLAB",
+                                    "criterion": "prior_experience_golang_python"
+                                }
+                            ]
+                        },
+                        "screening_criteria": {
+                            "model_fine_tuning": [],
+                            "llms_slms_voice_ai": [],
+                            "message_queues_async_jobs": [],
+                            "container_orchestration_cloud": [],
+                            "real_time_media_communication": []
+                        }
+                    },
+                    "is_overridden": false,
+                    "version": 1,
+                    "is_latest": true
+                }
+            ]
+        }
+    ],
+    "pagination": {
+        "page": 1,
+        "page_size": 20,
+        "total": 10,
+        "total_pages": 1
+    }
+}
