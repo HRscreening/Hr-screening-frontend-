@@ -25,13 +25,13 @@ const jobFormSchema = z.object({
   description: z.string().min(10, 'Description must be at least 10 characters'),
   location: z.string().optional(),
   salary: z.string().optional(),
-  target_headcount: z.coerce
+  target_headcount: z
     .number()
     .min(1, 'Must hire at least 1 person')
     .max(1000, 'Target headcount seems too high'),
-  voice_ai_enabled: z.boolean().default(false),
-  is_confidential: z.boolean().default(false),
-  manual_rounds_count: z.coerce.number().min(0).max(10).optional(),
+  voice_ai_enabled: z.boolean(),
+  is_confidential: z.boolean(),
+  manual_rounds_count: z.number().min(0).max(10).optional(),
 });
 
 type JobFormValues = z.infer<typeof jobFormSchema>;
@@ -75,6 +75,7 @@ const JobForm = forwardRef(function JobForm(
   };
 
   useImperativeHandle(ref, () => ({
+          
     submit: form.handleSubmit(onSubmit),
   }));
 

@@ -1,8 +1,6 @@
 import React from 'react';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Application } from '@/types/applicationTypes';
 import ViewAnalysis from "./viewAnalysisSheet"

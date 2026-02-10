@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Upload, FileText, Sparkles } from 'lucide-react';
+import React from 'react';
+import { ChevronLeft, ChevronRight, } from 'lucide-react';
 import { Separator } from "@/components/ui/separator";
 
 interface StepIndicatorProps {
@@ -18,7 +18,7 @@ interface StepIndicatorProps {
 
 
 
-const StepIndicator = ({ steps, currentStep, handleNext, handlePrevious, handleStepClick }: StepIndicatorProps) => {
+const StepIndicator = ({ steps, currentStep, handleNext, handlePrevious }: StepIndicatorProps) => {
 
 
 

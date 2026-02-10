@@ -69,10 +69,10 @@ const CriterionItem: React.FC<CriterionItemProps> = ({
   const hasValue = criterion.value !== undefined && criterion.value !== null;
 
   const totalWeight = hasSubCriteria
-    ? Object.values(criterion.sub_criteria).reduce((sum, sub) => sum + sub.weight, 0)
+    ? criterion?.sub_criteria && Object.values(criterion?.sub_criteria).reduce((sum, sub) => sum + sub.weight, 0)
     : 0;
 
-  const isWeightValid = !hasSubCriteria || Math.abs(totalWeight - 100) < 0.01;
+  const isWeightValid = !hasSubCriteria || totalWeight && Math.abs(totalWeight - 100) < 0.01;
 
   const handleWeightChange = (newWeight: number[]) => {
     onUpdate({ ...criterion, weight: newWeight[0] });
@@ -149,7 +149,7 @@ const CriterionItem: React.FC<CriterionItemProps> = ({
               </h4>
               {!isWeightValid && hasSubCriteria && (
                 <p className="text-xs text-destructive mt-1">
-                  Sub-criteria weights must sum to 100% (currently: {totalWeight.toFixed(1)}%)
+                  Sub-criteria weights must sum to 100% (currently: {totalWeight?.toFixed(1)}%)
                 </p>
               )}
             </div>
@@ -601,7 +601,7 @@ const CriteriaManager = forwardRef(function CriteriaManager(
       <Form {...form} >
         <form className="space-y-6">
           {/* Threshold Score Card */}
-          <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+          <Card className="border-2 border-primary/20 bg-linear-to-br from-primary/5 to-transparent">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Target className="w-5 h-5" />

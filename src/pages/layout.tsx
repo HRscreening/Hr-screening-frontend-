@@ -1,19 +1,17 @@
 import { Outlet } from "react-router-dom";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
+import { SidebarProvider } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/appSidebar"
-import { Separator } from "@/components/ui/separator"
 // import NotificationBell from "@/components/notification";
 // import CreateJobButton from "@/components/jobs/createJobButton";
 import { useState } from "react"
-import { useLocation } from "react-router-dom"
 
 
 export default function Layout() {
-  const location = useLocation();
-  const showCreateJobButton = location.pathname.endsWith("/jobs");
 
 
   const [pageTitle, setPageTitle] = useState("Dashboard");
+
+   console.log("Current Page:", pageTitle);
 
 
   return (

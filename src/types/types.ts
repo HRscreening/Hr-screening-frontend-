@@ -60,3 +60,33 @@ export type ExtractedJD = {
     screening_criteria: Record<string, Criterion>;
   };
 }
+
+
+// Updated types to match backend structure exactly
+
+export interface AIAnalysis {
+  [key: string]: string[]; // Matches Optional[Dict[str, List[str]]]
+}
+
+export interface GroundingData {
+  [key: string]: any; // Matches Dict[str, Any] - completely flexible
+}
+
+export interface Score {
+  is_active: boolean;
+  overall_score: number;
+  ai_confidence: number;
+  created_at: string;
+  grounding_data: GroundingData;
+  is_overridden: boolean;
+  version: number;
+  is_latest: boolean;
+}
+
+export interface Resume {
+  id: string;
+  raw_file_url: string;
+  status: 'parsed' | 'pending' | 'failed';
+  page_count: number;
+  uploaded_at: string;
+}
