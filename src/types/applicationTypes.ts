@@ -5,13 +5,13 @@ export interface Candidate {
   phone: string | null;
 }
 
-export interface Resume {
-  id: string;
-  raw_file_url: string;
-  status: 'parsed' | 'pending' | 'failed';
-  page_count: number;
-  uploaded_at: string;
-}
+// export interface Resume {
+//   id: string;
+//   raw_file_url: string;
+//   status: 'parsed' | 'pending' | 'failed';
+//   page_count: number;
+//   uploaded_at: string;
+// }
 
 export type ApplicationStatus = 
   | 'applied' 
@@ -21,14 +21,14 @@ export type ApplicationStatus =
   | 'rejected' 
   | 'hired';
 
-export interface AIAnalysis {
-  good_points: string[];
-  bad_points: string[];
-}
+// export interface AIAnalysis {
+//   good_points: string[];
+//   bad_points: string[];
+// }
 
-export interface GroundingData {
-  [key: string]: string[] | Record<string, string[]>;
-}
+// export interface GroundingData {
+//   [key: string]: string[] | Record<string, string[]>;
+// }
 
 export interface Score {
   is_active: boolean;
@@ -73,3 +73,32 @@ export interface ApplicationsResponse {
   pagination: Pagination;
 }
 
+
+// Updated types to match backend structure exactly
+
+export interface Score {
+  is_active: boolean;
+  overall_score: number;
+  ai_confidence: number;
+  created_at: string;
+  grounding_data: GroundingData;
+  is_overridden: boolean;
+  version: number;
+  is_latest: boolean;
+}
+
+
+export interface AIAnalysis {
+  [key: string]: string[]; // Matches Optional[Dict[str, List[str]]]
+}
+
+export interface GroundingData {
+  [key: string]: any; // Matches Dict[str, Any] - completely flexible
+}
+export interface Resume {
+  id: string;
+  raw_file_url: string;
+  status: 'parsed' | 'pending' | 'failed' | 'scored'; // Added 'scored' status
+  page_count: number;
+  uploaded_at: string;
+}

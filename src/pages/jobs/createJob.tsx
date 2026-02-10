@@ -8,7 +8,7 @@ import JobForm from '@/components/jobs/createJob/jobForm';
 import ManageCriterias from '@/components/jobs/createJob/manageCriterias';
 import Loader from '@/components/loader';
 import axios from "@/axiosConfig"
-import { data, replace, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 
 const steps = [

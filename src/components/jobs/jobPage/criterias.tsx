@@ -1,4 +1,4 @@
-import React, { useState, forwardRef, useImperativeHandle } from "react";
+import React, { useState } from "react";
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -31,7 +31,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { snakeCaseToTitle, titleToSnakeCase } from '@/utils/snakeCaseToTitle';
-import type { criterias, Criterion } from "@/types/types";
+import type { Criterion } from "@/types/types";
 import type { Criteria } from "@/types/jobTypes";
 
 
@@ -42,7 +42,7 @@ const thresholdSchema = z.object({
 
 interface CriteriaManagerProps {
   criterias: Criteria;
-  onUpdate: (updatedJD: criterias) => void;
+  onUpdate: (updatedJD : any) => void;
   onNext?: () => void;
 }
 
@@ -70,10 +70,10 @@ const CriterionItem: React.FC<CriterionItemProps> = ({
   const hasValue = criterion.value !== undefined && criterion.value !== null;
 
   const totalWeight = hasSubCriteria
-    ? Object.values(criterion.sub_criteria).reduce((sum, sub) => sum + sub.weight, 0)
+    ? criterion.sub_criteria && Object.values(criterion.sub_criteria).reduce((sum, sub) => sum + sub.weight, 0)
     : 0;
 
-  const isWeightValid = !hasSubCriteria || Math.abs(totalWeight - 100) < 0.01;
+  const isWeightValid = !hasSubCriteria || totalWeight && Math.abs(totalWeight - 100) < 0.01;
 
   const handleWeightChange = (newWeight: number[]) => {
     onUpdate({ ...criterion, weight: newWeight[0] });
@@ -150,7 +150,7 @@ const CriterionItem: React.FC<CriterionItemProps> = ({
               </h4>
               {!isWeightValid && hasSubCriteria && (
                 <p className="text-xs text-destructive mt-1">
-                  Sub-criteria weights must sum to 100% (currently: {totalWeight.toFixed(1)}%)
+                  Sub-criteria weights must sum to 100% (currently: {totalWeight?.toFixed(1)}%)
                 </p>
               )}
             </div>
@@ -467,7 +467,7 @@ const SubCriterionItem: React.FC<SubCriterionItemProps> = ({
 
 // Main Criteria Manager Component
 function CriteriaManager (
-  { criterias, onUpdate, onNext }: CriteriaManagerProps,
+  { criterias, onUpdate }: CriteriaManagerProps,
 ) {
   const [newMandatoryName, setNewMandatoryName] = useState('');
   const [newScreeningName, setNewScreeningName] = useState('');
@@ -575,9 +575,9 @@ function CriteriaManager (
     });
   };
 
-  const handleSubmit = () => {
+  // const handleSubmit = () => {
     
-  };
+  // };
 
 
   return (
@@ -585,7 +585,7 @@ function CriteriaManager (
       <Form {...form} >
         <form className="space-y-6">
           {/* Threshold Score Card */}
-          <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+          <Card className="border-2 border-primary/20 bg-linear-to-br from-primary/5 to-transparent">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Target className="w-5 h-5" />

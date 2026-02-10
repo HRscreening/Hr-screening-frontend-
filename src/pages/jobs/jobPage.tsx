@@ -17,21 +17,16 @@ import {
   Archive,
   XCircle,
   TrendingUp,
-  UserCheck,
-  UserX,
-  UserMinus,
-  Clock,
-  CheckCircle2,
   Lock,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import axios from "@/axiosConfig"
 
-import DashboardSection from '@/components/jobs/jobPage/dahsboard';
+// import DashboardSection from '@/components/jobs/jobPage/dahsboard';
 import Applications from '@/components/jobs/jobPage/application';
 import Criterias from '@/components/jobs/jobPage/criterias';
-import AddCandidate from '@/components/jobs/jobPage/addCandidatePopUp';
+// import AddCandidate from '@/components/jobs/jobPage/addCandidatePopUp';
 // Types
 import type { JobStatus, JobOverviewResponse, } from '@/types/jobTypes';
 
@@ -198,7 +193,7 @@ const JobOverview: React.FC = () => {
             </div>
 
             {/* Compact Badges */}
-            <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="flex items-center gap-2 shrink-0">
               <Badge 
                 variant="outline" 
                 className={`gap-1.5 px-2.5 py-0.5 text-xs ${statusConfig.color}`}

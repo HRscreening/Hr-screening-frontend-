@@ -1,9 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Upload, FileText, X, CheckCircle2, AlertCircle } from 'lucide-react';
 import axios from '@/axiosConfig';
-import test_data from './testData.json';
 import Loader from '@/components/loader';
-import { set } from 'date-fns';
 
 interface UploadJdProps {
   setCurrentStep: (step: number) => void;

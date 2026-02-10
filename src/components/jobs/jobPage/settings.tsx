@@ -1,30 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import {
-  LayoutDashboard,
   Users,
-  Target,
-  Settings,
-  Briefcase,
-  ChevronLeft,
-  Play,
-  Pause,
-  Archive,
-  XCircle,
   TrendingUp,
-  UserCheck,
-  UserX,
-  UserMinus,
-  Clock,
-  CheckCircle2,
   Lock,
 } from 'lucide-react';
-import { toast } from 'sonner';
 import type { SettingsTypes,Job } from '@/types/jobTypes';
 
 type SettingsPlaceholderProps = {

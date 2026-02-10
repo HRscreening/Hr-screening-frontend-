@@ -80,7 +80,7 @@ export default function HomePage() {
                 <Sparkles className="w-6 h-6 text-primary-foreground" />
               </div>
               <span className="text-2xl font-bold text-primary">
-                RecruitAI
+                DeskZero
               </span>
             </div>
 
@@ -336,7 +336,7 @@ export default function HomePage() {
                 <div className="bg-primary p-2 rounded-lg">
                   <Sparkles className="w-5 h-5 text-primary-foreground" />
                 </div>
-                <span className="text-xl font-bold text-foreground">RecruitAI</span>
+                <span className="text-xl font-bold text-foreground">DeskZero</span>
               </div>
               <p className="text-sm">
                 AI-powered recruitment platform helping companies hire better, faster.
@@ -375,7 +375,7 @@ export default function HomePage() {
           </div>
 
           <div className="border-t border-border mt-12 pt-8 text-center text-sm">
-            <p>&copy; 2025 RecruitAI. All rights reserved.</p>
+            <p>&copy; 2025 DeskZero. All rights reserved.</p>
           </div>
         </div>
       </footer>

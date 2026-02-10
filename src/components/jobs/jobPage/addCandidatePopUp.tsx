@@ -133,7 +133,7 @@ export default function AddCandidatesDialog({job_id}: {job_id: string}) {
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-[550px]" onCloseAutoFocus={handleClose}>
+      <DialogContent className="sm:max-w-137.5" onCloseAutoFocus={handleClose}>
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold">
             {batchStarted ? 'Processing Started!' : 'Add Candidates'}
@@ -225,7 +225,7 @@ export default function AddCandidatesDialog({job_id}: {job_id: string}) {
                   <div className="border rounded-lg p-4 bg-muted/50">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
+                        <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
                           <FileArchive className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -236,7 +236,7 @@ export default function AddCandidatesDialog({job_id}: {job_id: string}) {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 flex-shrink-0"
+                        className="h-8 w-8 shrink-0"
                         onClick={removeFile}
                       >
                         <X className="h-4 w-4" />
