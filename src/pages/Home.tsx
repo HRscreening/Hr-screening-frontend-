@@ -80,7 +80,7 @@ export default function HomePage() {
                 <Sparkles className="w-6 h-6 text-primary-foreground" />
               </div>
               <span className="text-2xl font-bold text-primary">
-                DeskZero
+                deskzero
               </span>
             </div>
 
