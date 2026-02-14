@@ -17,7 +17,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import ApplicationRow from "@/components/jobs/jobPage/applicantRow";
+import ApplicationRow from "@/components/jobs/jobPage/application/applicantRow";
 import type { Application, ApplicationsResponse } from '@/types/applicationTypes';
 
 interface ApplicationsTableProps {
@@ -88,12 +88,13 @@ const ApplicationsTable: React.FC<ApplicationsTableProps> = ({
 
   return (
     <div className="w-full space-y-4">
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
+      <div className="rounded-md border bg-card px-5">
+        <Table >
+          <TableHeader >
             <TableRow>
               <TableHead>Candidate</TableHead>
-              <TableHead>Match Score</TableHead>
+              <TableHead>Progress</TableHead>
+              <TableHead>Match</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>

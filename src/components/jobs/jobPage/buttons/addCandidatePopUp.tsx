@@ -14,7 +14,12 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Plus, Upload, Cloud, FileArchive, X, Play, CheckCircle2, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import axios from "axios";
+import axios from "@/axiosConfig";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 interface ProcessingResponse {
   batch_id: string;
@@ -127,10 +132,21 @@ export default function AddCandidatesDialog({job_id}: {job_id: string}) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-primary cursor-pointer text-primary-foreground px-4 py-2 rounded-lg hover:bg-hover-primary transition">
+        {/* <Button className="bg-primary cursor-pointer text-primary-foreground px-4 py-2 rounded-lg hover:bg-hover-primary transition">
           <Plus className="w-4 h-4 mr-2 inline" />
           Add Candidates
-        </Button>
+        </Button> */}
+        <Tooltip >
+            <TooltipTrigger>
+
+              <Button className="bg-primary cursor-pointer text-primary-foreground px-3 py-2 rounded-lg hover:bg-hover-primary transition">
+                <Plus className="w-4 h-4 inline" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Add Candidates</p>
+            </TooltipContent>
+          </Tooltip>
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-137.5" onCloseAutoFocus={handleClose}>

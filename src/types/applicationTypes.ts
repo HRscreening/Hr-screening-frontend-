@@ -41,6 +41,8 @@ export interface Score {
   is_latest: boolean;
 }
 
+export type statusType = 'applied' | 'in_review' | 'shortlisted' | 'rejected' | 'offered';
+
 export interface Application {
   id: string;
   current_round: number;
@@ -52,7 +54,7 @@ export interface Application {
   tags: string[] | null;
   last_activity_at: string | null;
   deleted_at: string | null;
-  status: 'applied' | 'in_review' | 'shortlisted' | 'rejected' | 'offered';
+  status: statusType;
   created_at: string;
   updated_at: string;
   ai_analysis: AIAnalysis;

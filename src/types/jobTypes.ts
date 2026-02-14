@@ -51,3 +51,14 @@ export type JobOverviewResponse = {
   criteria: Criteria;
   settings: SettingsTypes;
 };
+
+
+export interface RubricVersionData{
+  current_active_version: string;
+  active_rubric_id: string;
+  versions: {
+    rubric_id: string;
+    rubric_version: string;
+    created_at: string;
+  }[]
+}

@@ -1025,7 +1025,7 @@ export default function ViewAnalysisSheet({
             <SheetTrigger asChild>
                 <Button variant="ghost" size="sm" className="h-8 gap-2">
                     <Eye className="h-4 w-4" />
-                    View
+                    {/* View */}
                 </Button>
             </SheetTrigger>
             <SheetContent className="w-full sm:max-w-xl lg:max-w-2xl">
