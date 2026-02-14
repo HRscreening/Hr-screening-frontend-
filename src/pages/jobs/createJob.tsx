@@ -46,6 +46,12 @@ const CreateJob = () => {
 
 
   const handleNext = () => {
+
+  if (currentStep === 1 && !extractedJData) {
+    toast.error('Please upload a job description to proceed.');
+    return;
+  }
+  
   if (currentStep === 2) {
     jobFormRef.current?.submit();
     return;

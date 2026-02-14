@@ -1,43 +1,67 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect} from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import {
-  LayoutDashboard,
-  Users,
-  Target,
-  Settings,
-  Briefcase,
   ChevronLeft,
-  Play,
-  Pause,
-  Archive,
+  Briefcase,
   XCircle,
-  TrendingUp,
-  Lock,
+  Share2,
+  RefreshCcw,
+  ListCheck,
+  TargetIcon,
 } from 'lucide-react';
 import { toast } from 'sonner';
-
+import AddCandidatePopup from "@/components/jobs/jobPage/buttons/addCandidatePopUp";
+import TrackCandidateDialog from "@/components/jobs/jobPage/buttons/resumeProcessingTracker";
 import axios from "@/axiosConfig"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import RubricVersionSwitcher from "@/components/jobs/jobPage/buttons/rubricVersionButton"
+import TotalApplicationCard from '@/components/jobs/cards/totalApplicationCard';
+import AnalyticsCard from '@/components/jobs/cards/analyticsCard';
+import Applications from '@/components/jobs/jobPage/application/application';
+import Loader from '@/components/loader';
+import type { JobOverviewResponse, RubricVersionData } from '@/types/jobTypes';
 
-// import DashboardSection from '@/components/jobs/jobPage/dahsboard';
-import Applications from '@/components/jobs/jobPage/application';
-import Criterias from '@/components/jobs/jobPage/criterias';
-// import AddCandidate from '@/components/jobs/jobPage/addCandidatePopUp';
-// Types
-import type { JobStatus, JobOverviewResponse, } from '@/types/jobTypes';
 
+const application_stats = {
+  totalApplications: 100,
+  applied: 60,
+  shortlisted: 15,
+  rejected: 10,
+  interviewed: 10,
+  hired: 5,
+}
+
+const version_data: RubricVersionData = {
+  current_active_version: "v1",
+  active_rubric_id: "5488",
+  versions: [
+    { rubric_version: "v1", created_at: "2024-08-01", rubric_id: "5488" },
+    { rubric_version: "v2", created_at: "2024-08-01", rubric_id: "5487" },
+    { rubric_version: "v2", created_at: "2024-08-01", rubric_id: "5486" },
+    { rubric_version: "v2", created_at: "2024-08-01", rubric_id: "5485" },
+    { rubric_version: "v2", created_at: "2024-08-01", rubric_id: "5484" },
+    { rubric_version: "v2", created_at: "2024-08-01", rubric_id: "5483" },
+  ]
+}
 
 
 const JobOverview: React.FC = () => {
   const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('dashboard');
   const [jobData, setJobData] = useState<JobOverviewResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+
+  // TODO:Pass this version to applications and criterias component to fetch data based on version
+  const [activeVersion, setActiveVersion] = useState(version_data.current_active_version);
+
+
 
   // Fetch job data
   useEffect(() => {
@@ -92,7 +116,7 @@ const JobOverview: React.FC = () => {
 
         const res = await axios.get(`/jobs/get-job/${jobId}`);
 
-        if(res.status === 200){
+        if (res.status === 200) {
           setJobData(res.data);
           return;
         }
@@ -113,41 +137,10 @@ const JobOverview: React.FC = () => {
     }
   }, [jobId]);
 
-  const getStatusConfig = (status: JobStatus) => {
-    const configs = {
-      open: {
-        color: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-400 dark:border-emerald-900',
-        icon: <Play className="w-3 h-3" />,
-        label: 'OPEN',
-      },
-      paused: {
-        color: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-400 dark:border-amber-900',
-        icon: <Pause className="w-3 h-3" />,
-        label: 'PAUSED',
-      },
-      closed: {
-        color: 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-950/50 dark:text-slate-400 dark:border-slate-900',
-        icon: <XCircle className="w-3 h-3" />,
-        label: 'CLOSED',
-      },
-      archived: {
-        color: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/50 dark:text-rose-400 dark:border-rose-900',
-        icon: <Archive className="w-3 h-3" />,
-        label: 'ARCHIVED',
-      },
-    };
-    return configs[status];
-  };
+
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary/20 border-t-primary mx-auto mb-4"></div>
-          <p className="text-sm text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
+    return <Loader />
   }
 
   if (!jobData) {
@@ -172,161 +165,86 @@ const JobOverview: React.FC = () => {
     );
   }
 
-  const statusConfig = getStatusConfig(jobData.job.status);
+
+  const handleVersionChange = (version: string) => {
+    setActiveVersion(version);
+  };
+
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Minimal Compact Header */}
-      <div className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container mx-auto px-6 py-3">
-          <div className="flex items-center justify-between gap-4">
-            {/* Compact Job Title */}
-            <div className="flex items-center gap-3 min-w-0 flex-1">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <Briefcase className="w-4 h-4 text-primary" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <h1 className="text-lg font-semibold text-foreground truncate">
-                  {jobData.job.title}
-                </h1>
-              </div>
-            </div>
 
-            {/* Compact Badges */}
-            <div className="flex items-center gap-2 shrink-0">
-              <Badge 
-                variant="outline" 
-                className={`gap-1.5 px-2.5 py-0.5 text-xs ${statusConfig.color}`}
-              >
-                {statusConfig.icon}
-                {statusConfig.label}
-              </Badge>
-              
-              {jobData.settings.is_confidential && (
-                <Badge variant="secondary" className="gap-1.5 px-2.5 py-0.5 text-xs">
-                  <Lock className="w-3 h-3" />
-                  Confidential
-                </Badge>
-              )}
-            </div>
-          </div>
+      {/* Header */}
+      <div className="flex items-center gap-3 min-w-0 flex-1">
+        <div className="p-2 rounded-lg bg-primary/10">
+          <Briefcase className="w-4 h-4 text-primary" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <h1 className="text-3xl font-bold text-foreground truncate">
+            {jobData?.job.title || "Job Title"}
+          </h1>
+        </div>
+
+        <div id='button group' className='flex flex-row gap-4'>
+          {/* <Button className="bg-gray-300/50 cursor-pointer text-black px-4 py-2 rounded-lg hover:bg-hover-primary transition">
+            <Share className="w-5 h-5 inline" />
+            Share
+          </Button> */}
+          <Tooltip >
+            <TooltipTrigger>
+
+              <Button className="bg-primary cursor-pointer text-primary-foreground px-3 py-2 rounded-lg hover:bg-hover-primary transition">
+                <Share2 className="w-4 h-4 inline" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Share</p>
+            </TooltipContent>
+          </Tooltip>
+          <TrackCandidateDialog batch_id={jobId as string} />  {/* TODO: pass Batch_id instead of job_id*/}
+          <AddCandidatePopup job_id={jobId as string} />
+
+          {/* <Button className="bg-green-600 cursor-pointer text-primary-foreground px-4 py-2 rounded-lg hover:bg-hover-primary transition">
+            <Sparkle className="w-5 h-5 inline" />
+            Rerank AI
+          </Button> */}
+          <Tooltip >
+            <TooltipTrigger>
+              <Button className="bg-primary cursor-pointer text-primary-foreground px-3 py-2 rounded-lg hover:bg-hover-primary transition">
+                <ListCheck className="w-4 h-4 inline" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Manage Criterias</p>
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip >
+            <TooltipTrigger>
+              <Button className="bg-primary cursor-pointer text-primary-foreground px-3 py-2 rounded-lg hover:bg-hover-primary transition">
+                <RefreshCcw className="w-4 h-4 inline" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Rerank Applications</p>
+            </TooltipContent>
+          </Tooltip>
+          <RubricVersionSwitcher activeVersion={activeVersion} handleVersionChange={handleVersionChange} versionData={version_data} />
         </div>
       </div>
 
-      {/* Main Content Area - Maximum Space */}
-      <div className="container mx-auto px-6 py-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          {/* Clean Minimal Tabs */}
-          <TabsList className="bg-muted/50 p-1">
-            <TabsTrigger value="dashboard" className="gap-2 text-sm">
-              <LayoutDashboard className="w-4 h-4" />
-              Dashboard
-            </TabsTrigger>
-            <TabsTrigger value="applications" className="gap-2 text-sm">
-              <Users className="w-4 h-4" />
-              Applications
-              {/* {jobData.dashboard.total_applications > 0 && (
-                <Badge variant="secondary" className="ml-1 h-4 px-1.5 text-xs">
-                  {jobData.dashboard.total_applications}
-                </Badge>
-              )} */}
-            </TabsTrigger>
-            <TabsTrigger value="criteria" className="gap-2 text-sm">
-              <Target className="w-4 h-4" />
-              Criteria
-            </TabsTrigger>
-            <TabsTrigger value="settings" className="gap-2 text-sm">
-              <Settings className="w-4 h-4" />
-              Settings
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Content Sections - Full Space Available */}
-          <TabsContent value="dashboard" className="mt-0">
-            {/* <DashboardSection data={jobData} /> */}
-            <div className="text-center py-20">
-              Dashboard content coming soon! 🚀
-              </div>
-          </TabsContent>
-
-          <TabsContent value="applications" className="mt-0">
-            
-            <Applications job_id={jobId as string}/>
-          </TabsContent>
-
-          <TabsContent value="criteria" className="mt-0">
-            <Criterias criterias={jobData.criteria} onUpdate={()=>{}} />
-          </TabsContent>
-
-          <TabsContent value="settings" className="mt-0">
-            <SettingsPlaceholder data={jobData} />
-          </TabsContent>
-        </Tabs>
+      {/* Analytics */}
+      <div className='flex flex-wrap gap-4'>
+        <TotalApplicationCard data={application_stats} />
+        <AnalyticsCard title='Avg. Match Score' value={"76%"} desc='based on skills & exp.' icon={<TargetIcon className='h-5 w-5' />} />
       </div>
+
+
+      <Applications job_id={jobId as string} rubric_version='5488' />
+
+
     </div>
   );
 };
 
-
-const SettingsPlaceholder: React.FC<{ data: JobOverviewResponse }> = ({ data }) => {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Job Settings</CardTitle>
-        <CardDescription>Configure job preferences and features</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="flex justify-between items-center py-3">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-muted">
-                <TrendingUp className="w-4 h-4 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm font-medium">Voice AI Screening</p>
-                <p className="text-xs text-muted-foreground">Automated interviews</p>
-              </div>
-            </div>
-            <Badge variant={data.settings.voice_ai_enabled ? 'default' : 'secondary'}>
-              {data.settings.voice_ai_enabled ? 'Enabled' : 'Disabled'}
-            </Badge>
-          </div>
-          
-          <Separator />
-          
-          <div className="flex justify-between items-center py-3">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-muted">
-                <Users className="w-4 h-4 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm font-medium">Manual Rounds</p>
-                <p className="text-xs text-muted-foreground">Interview rounds</p>
-              </div>
-            </div>
-            <span className="text-lg font-semibold">{data.settings.manual_rounds_count}</span>
-          </div>
-          
-          <Separator />
-          
-          <div className="flex justify-between items-center py-3">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-muted">
-                <Lock className="w-4 h-4 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm font-medium">Confidential Job</p>
-                <p className="text-xs text-muted-foreground">Hidden from public</p>
-              </div>
-            </div>
-            <Badge variant={data.settings.is_confidential ? 'default' : 'secondary'}>
-              {data.settings.is_confidential ? 'Yes' : 'No'}
-            </Badge>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
 
 export default JobOverview;

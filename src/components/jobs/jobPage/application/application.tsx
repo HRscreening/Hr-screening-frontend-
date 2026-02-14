@@ -1,17 +1,19 @@
 import { useState, useEffect } from 'react';
-import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import ApplicationsTable from "@/components/jobs/jobPage/applicationTable";
+import ApplicationsTable from "@/components/jobs/jobPage/application/applicationTable";
 import type { ApplicationsResponse, Application } from '@/types/applicationTypes';
 // import applicationData from '@/assets/test.json';
 import axios from "@/axiosConfig"
-import AddCandidatePopup from "@/components/jobs/jobPage/addCandidatePopUp";
+import { Separator } from "@/components/ui/separator";
+import { Input } from '@/components/ui/input';
+import { Search } from 'lucide-react';
 
 
 
-function Applications({ job_id }: { job_id: string }) {
+function Applications({ job_id,rubric_version }: { job_id: string, rubric_version: string }) {
   const [isLoading, setIsLoading] = useState(false);
   const [currentData, setCurrentData] = useState<ApplicationsResponse | undefined>(undefined);
   const [page, setPage] = useState(1);
+  const [activeTab, setActiveTab] = useState<'all_candidates' | 'shortlisted' | 'rejected'>('all_candidates');
   const [pageSize, setPageSize] = useState(20);
 
 
@@ -31,7 +33,9 @@ function Applications({ job_id }: { job_id: string }) {
   //   }
   // }
 
-
+  // TODOO: add rubric version as query param once backend supports fetching applications based on rubric version. This will be used to show different applications based on the rubric version selected in the dashboard.
+  
+  
   async function getApplicationData(
     jobId: string,
     page: number,
@@ -40,6 +44,7 @@ function Applications({ job_id }: { job_id: string }) {
     try {
       setIsLoading(true);
 
+      //TODO: fliter query param to be added once backend supports filtering applications based on status and other params.
       const response = await axios.get(
         `jobs/get-applications/${jobId}`,
         {
@@ -68,7 +73,7 @@ function Applications({ job_id }: { job_id: string }) {
   }, [job_id, page, pageSize]);
 
 
-   const handlePageChange = (newPage: number) => {
+  const handlePageChange = (newPage: number) => {
     setPage(newPage);
   };
 
@@ -83,19 +88,42 @@ function Applications({ job_id }: { job_id: string }) {
     console.log('View details for:', application);
   };
 
+  const tabs: {
+    label: string;
+    value: 'all_candidates' | 'shortlisted' | 'rejected';
+  }[] = [
+      { label: 'All Candidates', value: 'all_candidates' },
+      { label: 'Shortlisted', value: 'shortlisted' },
+      { label: 'Rejected', value: 'rejected' },
+    ]
+
   return (
-    <div className="space-y-4 ">
-      <Card className="border-0 shadow-none flex flex-row justify-between items-center">
-        <CardHeader className="px-0 pt-0">
-          <CardTitle>Applications</CardTitle>
-          <CardDescription>
-            Manage and review candidate applications
-          </CardDescription>
-        </CardHeader>
+    <div className="space-y-4 my-2 flex flex-col">
 
-        <AddCandidatePopup job_id={job_id} />
-      </Card>
+      <div className='flex flex-row items-center justify-between'>
+        <div className='flex flex-row gap-5 items-center justify-items-start'>
+          {
+            tabs.map((tab) => (
+              <span
+                className={`${activeTab === tab.value ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} cursor-pointer inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
+                onClick={() => setActiveTab(tab.value)}
+              >{tab.label}</span>
+            ))
+          }
+        </div>
+        <div className="relative w-65 max-w-sm">
+          <Search
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            size={18}
+          />
+          <Input
+            placeholder="Search..."
+            className="pl-9 bg-primary/10 border-none rounded-lg shadow-accent focus-visible:ring-1"
+          />
+        </div>
+      </div>
 
+      <Separator />
       <ApplicationsTable
         data={currentData}
         isLoading={isLoading}

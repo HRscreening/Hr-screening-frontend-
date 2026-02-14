@@ -1,9 +1,12 @@
 import { Outlet } from "react-router-dom";
-import { SidebarProvider } from "@/components/ui/sidebar"
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/appSidebar"
+// import { Separator } from "@/components/ui/separator";
 // import NotificationBell from "@/components/notification";
 // import CreateJobButton from "@/components/jobs/createJobButton";
 import { useState } from "react"
+import Navigator from "@/components/navigator.tsx";
+import ProfileButton from "@/components/profileButton.tsx";
 
 
 export default function Layout() {
@@ -11,8 +14,9 @@ export default function Layout() {
 
   const [pageTitle, setPageTitle] = useState("Dashboard");
 
-   console.log("Current Page:", pageTitle);
+  console.log("Current Page:", pageTitle);
 
+  
 
   return (
     <SidebarProvider>
@@ -23,16 +27,14 @@ export default function Layout() {
       <main className="flex min-h-screen flex-1 flex-col">
 
         {/* Header */}
-        {/* <div className="w-full flex flex-row justify-between border-b bg-white p-4">
-          <div className="flex items-center gap-2">
-            <SidebarTrigger />
-            <Separator orientation="vertical" className="h-5" />
-            <h1 className="text-xl font-bold">{pageTitle}</h1>
-          </div>
+        <div className="sticky top-0 z-20 w-full h-15 flex flex-row justify-between border-b bg-background p-4">
 
-            {showCreateJobButton && <CreateJobButton />}
+          {/* <h1 className="text-xl font-bold">{pageTitle}</h1> */}
+          <Navigator />
 
-        </div> */}
+          <ProfileButton />
+
+        </div>
 
         {/* Page body */}
         <div className="flex-1 overflow-auto p-4">

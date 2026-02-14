@@ -57,6 +57,12 @@
   --warning: oklch(0.75 0.15 85);
   --destructive: oklch(0.62 0.22 27);
 
+  --color-applied: #3B82F6;      /* Blue */
+  --color-shortlisted: #F59E0B;  /* Amber */
+  --color-interviewed: #8B5CF6;  /* Violet */
+  --color-hired: #10B981;        /* Emerald */
+  --color-rejected: #EF4444;     /* Red */
+
   /* === Borders / Inputs === */
   --border: oklch(0.92 0 0);
   --input: oklch(0.92 0 0);
