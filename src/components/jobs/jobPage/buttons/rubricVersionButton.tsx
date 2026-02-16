@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+// import React, { useState } from 'react';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -9,11 +9,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ChevronDown, Check, History } from 'lucide-react';
 
-import type { JobOverviewResponse, RubricVersionData } from '@/types/jobTypes';
+import type { CriteriaOverview} from '@/types/newJobType';
 
 interface RubricVersionSwitcherProps {
-    versionData: RubricVersionData;
-    activeVersion: string;
+    versionData: CriteriaOverview;
+    activeVersion: string | undefined;
     handleVersionChange: (version: string) => void;
 }
 
@@ -58,15 +58,15 @@ const RubricVersionSwitcher = ({ versionData, activeVersion,handleVersionChange 
 
                     <div className="max-h-64 overflow-y-auto">
                         {versionData.versions
-                            .sort((a, b) => b.rubric_version.localeCompare(a.rubric_version))
+                            .sort((a, b) => b.version.localeCompare(a.version))
                             .map((version, index) => (
                                 <DropdownMenuItem
-                                    key={`${version.rubric_version}-${index}`}
-                                    onClick={() => handleVersionChange(version.rubric_version)}
+                                    key={`${version.version}-${index}`}
+                                    onClick={() => handleVersionChange(version.version)}
                                     className={`
                     flex items-center justify-between px-3 py-2.5 rounded-md cursor-pointer
                     transition-colors
-                    ${activeVersion === version.rubric_version
+                    ${activeVersion === version.version
                                             ? 'bg-blue-50 text-blue-700'
                                             : 'text-gray-700 hover:bg-gray-100'
                                         }
@@ -74,8 +74,8 @@ const RubricVersionSwitcher = ({ versionData, activeVersion,handleVersionChange 
                                 >
                                     <div className="flex flex-col gap-0.5">
                                         <span className="font-semibold text-sm">
-                                            {version.rubric_version}
-                                            {activeVersion === version.rubric_version && (
+                                            {version.version}
+                                            {activeVersion === version.version && (
                                                 <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
                                                     Current
                                                 </span>
@@ -86,7 +86,7 @@ const RubricVersionSwitcher = ({ versionData, activeVersion,handleVersionChange 
                                         </span>
                                     </div>
 
-                                    {activeVersion === version.rubric_version && (
+                                    {activeVersion === version.version && (
                                         <Check className="w-4 h-4 text-blue-600" />
                                     )}
                                 </DropdownMenuItem>

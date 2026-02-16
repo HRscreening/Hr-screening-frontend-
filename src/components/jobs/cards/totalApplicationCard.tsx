@@ -1,4 +1,4 @@
-import { Card,CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Users,
 } from 'lucide-react';
@@ -7,30 +7,25 @@ import {
     TooltipContent,
     TooltipTrigger,
 } from "@/components/ui/tooltip"
-
-
-type TotalApplicationdataType = {
-    totalApplications: number;
-    applied: number;
-    shortlisted: number;
-    interviewed: number;
-    hired: number;
-    rejected: number;
-}
-
+import type { Dashboard} from '@/types/jobTypes';
 
 type TotalApplicationCardProp = {
-    data: TotalApplicationdataType;
+    data: Dashboard;
 }
 
-const TotalApplicationCard = ({data}: TotalApplicationCardProp) => {
+const TotalApplicationCard = ({ data }: TotalApplicationCardProp) => {
 
+    const appliedPercent = (data.by_status.applied || 0 / data.total_applications) * 100;
+    const shortlistedPercent = (data.by_status.shortlisted || 0 / data.total_applications) * 100;
+    const interviewedPercent = (data.by_status.in_review || 0 / data.total_applications) * 100;
+    const hiredPercent = (data.by_status.hired || 0 / data.total_applications) * 100;
+    const rejectedPercent = (data.by_status.rejected || 0 / data.total_applications) * 100;
 
-    const appliedPercent = (data.applied / data.totalApplications) * 100;
-    const shortlistedPercent = (data.shortlisted / data.totalApplications) * 100;
-    const interviewedPercent = (data.interviewed / data.totalApplications) * 100;
-    const hiredPercent = (data.hired / data.totalApplications) * 100;
-    const rejectedPercent = (data.rejected / data.totalApplications) * 100;
+    // const appliedPercent = (data.applied / data.totalApplications) * 100;
+    // const shortlistedPercent = (data.shortlisted / data.totalApplications) * 100;
+    // const interviewedPercent = (data.interviewed / data.totalApplications) * 100;
+    // const hiredPercent = (data.hired / data.totalApplications) * 100;
+    // const rejectedPercent = (data.rejected / data.totalApplications) * 100;
 
     return (
         <Card className='my-4 min-w-80 w-fit p-5 bg-card border shadow-sm'>
@@ -42,13 +37,27 @@ const TotalApplicationCard = ({data}: TotalApplicationCardProp) => {
 
                 <div className='flex flex-row items-center gap-4'>
                     <div className='text-3xl font-bold text-foreground-900'>
-                        {data.totalApplications}
+                        {data.total_applications}
                     </div>
 
-                    <div className="relative h-3 bg-muted rounded-full overflow-hidden">
-                        <div className="relative h-3 bg-muted rounded-full overflow-hidden w-48">
+                    <div className="relative h-2 bg-muted rounded-full overflow-hidden">
+                        <div className="relative h-2 bg-muted rounded-full overflow-hidden w-48">
                             <div className="absolute inset-0 flex">
 
+
+                                {/* Rejected */}
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <div
+                                            className="transition-all duration-500 cursor-pointer"
+                                            style={{
+                                                width: `${rejectedPercent}%`,
+                                                backgroundColor: "var(--color-rejected)"
+                                            }}
+                                        />
+                                    </TooltipTrigger>
+                                    <TooltipContent>Rejected: {data.by_status.rejected}</TooltipContent>
+                                </Tooltip>
                                 {/* Applied */}
                                 <Tooltip>
                                     <TooltipTrigger asChild>
@@ -60,7 +69,7 @@ const TotalApplicationCard = ({data}: TotalApplicationCardProp) => {
                                             }}
                                         />
                                     </TooltipTrigger>
-                                    <TooltipContent>Applied: {data.applied}</TooltipContent>
+                                    <TooltipContent>Applied: {data.by_status.applied}</TooltipContent>
                                 </Tooltip>
 
                                 {/* Shortlisted */}
@@ -74,7 +83,7 @@ const TotalApplicationCard = ({data}: TotalApplicationCardProp) => {
                                             }}
                                         />
                                     </TooltipTrigger>
-                                    <TooltipContent >Shortlisted: {data.shortlisted}</TooltipContent>
+                                    <TooltipContent >Shortlisted: {data.by_status.shortlisted}</TooltipContent>
                                 </Tooltip>
 
                                 {/* Interviewed */}
@@ -88,7 +97,7 @@ const TotalApplicationCard = ({data}: TotalApplicationCardProp) => {
                                             }}
                                         />
                                     </TooltipTrigger>
-                                    <TooltipContent >Interviewed: {data.interviewed}</TooltipContent>
+                                    <TooltipContent >In Review: {data.by_status.in_review}</TooltipContent>
                                 </Tooltip>
 
                                 {/* Hired */}
@@ -104,22 +113,9 @@ const TotalApplicationCard = ({data}: TotalApplicationCardProp) => {
 
                                         </div>
                                     </TooltipTrigger>
-                                    <TooltipContent>Hired: {data.hired}</TooltipContent>
+                                    <TooltipContent>Hired: {data.by_status.hired}</TooltipContent>
                                 </Tooltip>
 
-                                {/* Rejected */}
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <div
-                                            className="transition-all duration-500 cursor-pointer"
-                                            style={{
-                                                width: `${rejectedPercent}%`,
-                                                backgroundColor: "var(--color-rejected)"
-                                            }}
-                                        />
-                                    </TooltipTrigger>
-                                    <TooltipContent>Rejected: {data.rejected}</TooltipContent>
-                                </Tooltip>
 
                             </div>
 

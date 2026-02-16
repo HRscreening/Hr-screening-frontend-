@@ -55,7 +55,7 @@ function Applications({ job_id,rubric_version }: { job_id: string, rubric_versio
           withCredentials: true,
         }
       );
-
+      console.log(rubric_version)
       setCurrentData(response.data as ApplicationsResponse);
     } catch (error) {
       console.error("Error loading application data:", error);
@@ -136,3 +136,42 @@ function Applications({ job_id,rubric_version }: { job_id: string, rubric_versio
 };
 
 export default Applications;
+
+
+
+//  failed_files_names: [
+//       {
+//         name: "resume1.pdf",
+//         reason: "File format not supported",
+//       },
+//       {
+//         name: "resume2.pdf",
+//         reason: "File size exceeds limit",
+//       },
+//       {
+//         name: "resume3.pdf",
+//         reason: "Corrupted file",
+//       },
+//       {
+//         name: "resume4.pdf",
+//       },
+//       {
+//         name: "resume5.pdf",
+//         reason: "Invalid content",
+//       },
+//       {
+//         name: "resume2.pdf",
+//         reason: "File size exceeds limit",
+//       },
+//       {
+//         name: "resume3.pdf",
+//         reason: "Corrupted file",
+//       },
+//       {
+//         name: "resume4.pdf",
+//       },
+//       {
+//         name: "resume5.pdf",
+//         reason: "Invalid content",
+//       },
+//     ],
