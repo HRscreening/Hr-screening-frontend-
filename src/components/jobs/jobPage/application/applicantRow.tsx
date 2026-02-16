@@ -18,16 +18,20 @@ import {
   Info,
   Mic,
   Trash,
+  Star,
   FlagTriangleRight
 
 } from "lucide-react"
 import { Button } from '@/components/ui/button';
-
+import axios from '@/axiosConfig';
+import { toast } from 'sonner';
 
 type MenuItemsProps = {
   applicationId: string;
   name: string | null;
   email: string | null;
+  is_starred: boolean;
+  is_flagged: boolean;
   candidate_id: string | null;
   phone: string | null;
 }
@@ -35,10 +39,6 @@ export function MenuItems({ ...data }: MenuItemsProps) {
 
   const [editOpen, setEditOpen] = useState(false);
 
-  async function handleEdit() {
-    // Implement edit functionality
-    console.log("Edit action triggered");
-  }
 
   async function handleShare() {
     // Implement share functionality
@@ -46,8 +46,29 @@ export function MenuItems({ ...data }: MenuItemsProps) {
   }
 
   async function handleFlag() {
-    // Implement flag functionality
-    console.log("Flag action triggered");
+    try {
+      if (data.is_flagged) {
+        await axios.patch(`/application/unflag/${data.applicationId}`);
+      } else {
+        await axios.patch(`/application/flag/${data.applicationId}`);
+      }
+    } catch (err) {
+      console.log(err);
+      toast.error("An error occurred while updating the flag status.");
+    }
+  }
+
+  async function handleStar() {
+    try {
+      if (data.is_starred) {
+        await axios.patch(`/application/unstar/${data.applicationId}`);
+      } else {
+        await axios.patch(`/application/star/${data.applicationId}`);
+      }
+    } catch (err) {
+      console.log(err);
+      toast.error("An error occurred while updating the star status.");
+    }
   }
 
   async function handleDelete() {
@@ -66,7 +87,7 @@ export function MenuItems({ ...data }: MenuItemsProps) {
         <DropdownMenuContent >
           <DropdownMenuItem
             onSelect={(e) => {
-              e.preventDefault();   // 🔥 important
+              e.preventDefault();   
               setEditOpen(true);
             }}
           >
@@ -77,10 +98,34 @@ export function MenuItems({ ...data }: MenuItemsProps) {
             <Share />
             Share
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={handleFlag}>
-            <FlagTriangleRight />
-            Flag
-          </DropdownMenuItem>
+          {
+            data.is_starred ? (
+              <DropdownMenuItem onClick={handleStar}>
+                <Star color='yellow' fill='yellow' />
+                Unstar
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem onClick={handleStar}>
+                <Star />
+                Star
+              </DropdownMenuItem>
+            )
+          }
+          {
+            data.is_flagged ? (
+              <DropdownMenuItem onClick={handleFlag}>
+                <FlagTriangleRight color='orange' fill='orange' />
+                Unflag
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem onClick={handleFlag}>
+                <FlagTriangleRight />
+                Flag
+              </DropdownMenuItem>
+            )
+            
+
+          }
           <DropdownMenuItem >
             <Info />
             Info
@@ -108,10 +153,11 @@ export function MenuItems({ ...data }: MenuItemsProps) {
 
 interface StatusProps {
   status: statusType;
+  application_id: string;
   setCurrentStatus: React.Dispatch<React.SetStateAction<statusType>>;
 }
 
-export function Status({ status, setCurrentStatus }: StatusProps) {
+export function Status({ status, setCurrentStatus,application_id }: StatusProps) {
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
@@ -150,9 +196,23 @@ export function Status({ status, setCurrentStatus }: StatusProps) {
   };
 
   async function handleStatusChange(newStatus: statusType) {
-    // Implement status change functionality
-    setCurrentStatus(newStatus);
-    console.log("Status changed to:", newStatus);
+    try {
+
+      const res = await axios.patch(`/application/change-status/${application_id}`,{
+        "new_status": newStatus,
+      });
+
+      if (res.status === 200) {
+        setCurrentStatus(newStatus);
+        toast.success("Status updated successfully");
+        return;
+      }
+      
+    } catch (error) {
+      console.error("Error updating status:", error);
+      toast.error("Failed to update status. Please try again.");
+      
+    }
   }
 
   const statusValues = [
@@ -346,12 +406,12 @@ const ApplicationRow: React.FC<ApplicationRowProps> = ({ application, onViewDeta
       </TableCell>
 
       <TableCell>
-        <Status status={currentStatus} setCurrentStatus={setCurrentStatus} />
+        <Status status={currentStatus} application_id={application.id} setCurrentStatus={setCurrentStatus} />
       </TableCell>
 
       <TableCell className="text-right ">
         <ViewAnalysis groundingData={latestScore?.grounding_data} aiAnalysis={application.ai_analysis} resume={application.resume} />
-        <MenuItems applicationId={id} name={candidate?.full_name} email={candidate?.email} phone={candidate?.phone} candidate_id={candidate?.id} />
+        <MenuItems applicationId={id} name={candidate?.full_name} email={candidate?.email} phone={candidate?.phone} candidate_id={candidate?.id} is_flagged={application.is_flagged} is_starred={application.is_starred} />
       </TableCell>
 
     </TableRow>

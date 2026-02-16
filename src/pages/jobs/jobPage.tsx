@@ -25,30 +25,8 @@ import TotalApplicationCard from '@/components/jobs/cards/totalApplicationCard';
 import AnalyticsCard from '@/components/jobs/cards/analyticsCard';
 import Applications from '@/components/jobs/jobPage/application/application';
 import Loader from '@/components/loader';
-import type { JobOverviewResponse, RubricVersionData } from '@/types/jobTypes';
-
-
-const application_stats = {
-  totalApplications: 100,
-  applied: 60,
-  shortlisted: 15,
-  rejected: 10,
-  interviewed: 10,
-  hired: 5,
-}
-
-const version_data: RubricVersionData = {
-  current_active_version: "v1",
-  active_rubric_id: "5488",
-  versions: [
-    { rubric_version: "v1", created_at: "2024-08-01", rubric_id: "5488" },
-    { rubric_version: "v2", created_at: "2024-08-01", rubric_id: "5487" },
-    { rubric_version: "v2", created_at: "2024-08-01", rubric_id: "5486" },
-    { rubric_version: "v2", created_at: "2024-08-01", rubric_id: "5485" },
-    { rubric_version: "v2", created_at: "2024-08-01", rubric_id: "5484" },
-    { rubric_version: "v2", created_at: "2024-08-01", rubric_id: "5483" },
-  ]
-}
+// import type { JobOverviewResponse, RubricVersionData } from '@/types/jobTypes';
+import type { JobOverviewResponse} from '@/types/newJobType';
 
 
 const JobOverview: React.FC = () => {
@@ -59,7 +37,7 @@ const JobOverview: React.FC = () => {
 
 
   // TODO:Pass this version to applications and criterias component to fetch data based on version
-  const [activeVersion, setActiveVersion] = useState(version_data.current_active_version);
+  const [activeVersion, setActiveVersion] = useState<string | undefined>(undefined);
 
 
 
@@ -118,6 +96,7 @@ const JobOverview: React.FC = () => {
 
         if (res.status === 200) {
           setJobData(res.data);
+          setActiveVersion(res.data.criteria.current_active_version); // Set active version from fetched data
           return;
         }
 
@@ -185,7 +164,7 @@ const JobOverview: React.FC = () => {
           </h1>
         </div>
 
-        <div id='button group' className='flex flex-row gap-4'>
+        <div id='button group' className='flex flex-row gap-2.5 items-center'>
           {/* <Button className="bg-gray-300/50 cursor-pointer text-black px-4 py-2 rounded-lg hover:bg-hover-primary transition">
             <Share className="w-5 h-5 inline" />
             Share
@@ -201,7 +180,7 @@ const JobOverview: React.FC = () => {
               <p>Share</p>
             </TooltipContent>
           </Tooltip>
-          <TrackCandidateDialog batch_id={jobId as string} />  {/* TODO: pass Batch_id instead of job_id*/}
+          <TrackCandidateDialog batch_id={jobData.job.current_batch_id as string} />  {/* TODO: pass Batch_id instead of job_id*/}
           <AddCandidatePopup job_id={jobId as string} />
 
           {/* <Button className="bg-green-600 cursor-pointer text-primary-foreground px-4 py-2 rounded-lg hover:bg-hover-primary transition">
@@ -228,14 +207,14 @@ const JobOverview: React.FC = () => {
               <p>Rerank Applications</p>
             </TooltipContent>
           </Tooltip>
-          <RubricVersionSwitcher activeVersion={activeVersion} handleVersionChange={handleVersionChange} versionData={version_data} />
+          <RubricVersionSwitcher activeVersion={activeVersion} handleVersionChange={handleVersionChange} versionData={jobData.criteria} />
         </div>
       </div>
 
       {/* Analytics */}
       <div className='flex flex-wrap gap-4'>
-        <TotalApplicationCard data={application_stats} />
-        <AnalyticsCard title='Avg. Match Score' value={"76%"} desc='based on skills & exp.' icon={<TargetIcon className='h-5 w-5' />} />
+        <TotalApplicationCard data={jobData.dashboard} />
+        <AnalyticsCard title='Avg. Match Score' value={`${jobData.dashboard.avg_score}%`} desc='based on skills & exp.' icon={<TargetIcon className='h-5 w-5' />} />
       </div>
 
 

@@ -13,30 +13,37 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Progress } from "@/components/ui/progress";
-import { Plus, CheckCircle2, XCircle, Clock, FileText, AlertCircle, Monitor } from "lucide-react";
-import { useState } from "react";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-
+import {
+  CheckCircle2,
+  XCircle,
+  Clock,
+  FileText,
+  AlertCircle,
+  Monitor,
+  Loader2,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
+import axios from "@/axiosConfig";
 
 type UploadData = {
   total_files: number;
   processed_files: number;
   failed_files: number;
+  status: string;
+  created_at: string;
   failed_files_names?: {
     name: string;
     reason?: string;
   }[];
 };
 
-export default function TrackCandidateDialog({ batch_id }: { batch_id: string }) {
-  const [open, setOpen] = useState(false);
-
-  const data: UploadData = {
-    total_files: 40,
-    processed_files: 20,
-    failed_files: 5,
-    failed_files_names: [
+// for testing without backend
+const  failed_files_names = [
       {
         name: "resume1.pdf",
         reason: "File format not supported",
@@ -71,187 +78,305 @@ export default function TrackCandidateDialog({ batch_id }: { batch_id: string })
         name: "resume5.pdf",
         reason: "Invalid content",
       },
-    ],
-  };
+    ]
 
-  const pending_files = data.total_files - data.processed_files - data.failed_files;
-  const success_files = data.processed_files;
 
-  // Calculate percentages
-  const successPercent = (success_files / data.total_files) * 100;
-  const failedPercent = (data.failed_files / data.total_files) * 100;
-  const pendingPercent = (pending_files / data.total_files) * 100;
+export default function TrackCandidateDialog({
+  batch_id,
+}: {
+  batch_id: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [data, setData] = useState<UploadData | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
+  async function fetchUploadData(batch_id: string) {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const res = await axios.get(`/batch/get-summary/${batch_id}`);
+      if (res.status === 200) {
+        setData(res.data as UploadData);
+      }
+    } catch (error) {
+      console.error("Error fetching upload data:", error);
+      setError("Failed to load upload data");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  // Fetch data when dialog opens
+  useEffect(() => {
+    if (open && batch_id) {
+      fetchUploadData(batch_id);
+    }
+  }, [open, batch_id]);
+
+  // Calculate values only when data exists
+  const pending_files = data
+    ? data.total_files - data.processed_files - data.failed_files
+    : 0;
+  const success_files = data?.processed_files || 0;
+
+  const successPercent = data ? (success_files / data.total_files) * 100 : 0;
+  const failedPercent = data
+    ? (data.failed_files / data.total_files) * 100
+    : 0;
+  const pendingPercent = data ? (pending_files / data.total_files) * 100 : 0;
 
   const isComplete = pending_files === 0;
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}  >
-      <DialogTrigger asChild>
-        <Tooltip >
-          <TooltipTrigger>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <Tooltip >
+        <TooltipTrigger asChild>
+          <DialogTrigger asChild>
+            {/* <Button className="bg-primary cursor-pointer text-primary-foreground px-4 py-2 rounded-lg hover:bg-hover-primary transition">
+          <Plus className="w-4 h-4 mr-2 inline" />
+          Add Candidates
+        </Button> */}
 
             <Button className="bg-primary cursor-pointer text-primary-foreground px-3 py-2 rounded-lg hover:bg-hover-primary transition">
               <Monitor className="w-4 h-4 inline" />
             </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Track Resume Processing</p>
-          </TooltipContent>
-        </Tooltip>
-        {/* <Button className="bg-primary cursor-pointer text-primary-foreground px-4 py-2 rounded-lg hover:bg-hover-primary transition">
-          <Monitor className="w-4 h-4 inline" />
-          Track Upload
-        </Button> */}
-      </DialogTrigger>
-
-      <DialogContent className="sm:max-w-137.5" >
+          </DialogTrigger>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Track Uploaded Resumes</p>
+        </TooltipContent>
+      </Tooltip>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold flex items-center gap-2">
-            {isComplete ? (
+          <DialogTitle className="flex items-center gap-2">
+            {isLoading ? (
               <>
-                <CheckCircle2 className="h-6 w-6 text-success" />
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                Loading...
+              </>
+            ) : error ? (
+              <>
+                <AlertCircle className="h-5 w-5 text-destructive" />
+                Error Loading Data
+              </>
+            ) : isComplete ? (
+              <>
+                <CheckCircle2 className="h-5 w-5 text-green-500" />
                 Upload Complete
               </>
             ) : (
               <>
-                <Clock className="h-6 w-6 text-primary animate-pulse" />
+                <Clock className="h-5 w-5 text-blue-500 animate-pulse" />
                 Processing Resumes
               </>
             )}
           </DialogTitle>
-          <DialogDescription className="text-muted-foreground">
-            {isComplete
-              ? "Your upload has been processed successfully"
-              : "Your uploaded resumes are being processed"}
+          <DialogDescription>
+            {isLoading
+              ? "Fetching upload status..."
+              : error
+                ? error
+                : isComplete
+                  ? "Your upload has been processed successfully"
+                  : "Your uploaded resumes are being processed"}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
-          {/* Summary Cards */}
-          <div className="grid grid-cols-3 gap-3">
-            <div className="bg-success/10 rounded-lg p-4 border border-success/20">
-              <div className="flex items-center gap-2 mb-1">
-                <CheckCircle2 className="h-4 w-4 text-success" />
-                <span className="text-xs font-medium text-success uppercase">Success</span>
-              </div>
-              <p className="text-2xl font-bold text-success">{success_files}</p>
-            </div>
-
-            <div className="bg-destructive/10 rounded-lg p-4 border border-destructive/20">
-              <div className="flex items-center gap-2 mb-1">
-                <XCircle className="h-4 w-4 text-destructive" />
-                <span className="text-xs font-medium text-destructive uppercase">Failed</span>
-              </div>
-              <p className="text-2xl font-bold text-destructive">{data.failed_files}</p>
-            </div>
-
-            <div className="bg-warning/10 rounded-lg p-4 border border-warning/20">
-              <div className="flex items-center gap-2 mb-1">
-                <Clock className="h-4 w-4 text-warning" />
-                <span className="text-xs font-medium text-warning uppercase">Pending</span>
-              </div>
-              <p className="text-2xl font-bold text-warning">{pending_files}</p>
-            </div>
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex flex-col items-center justify-center py-12">
+            <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+            <p className="text-sm text-muted-foreground">
+              Loading upload data...
+            </p>
           </div>
+        )}
 
-          {/* Multi-colored Progress Bar */}
-          <div className="space-y-2">
-            <div className="flex justify-between items-center text-sm">
-              <span className="font-medium text-foreground">Overall Progress</span>
-              <span className="text-muted-foreground">
-                {data.processed_files + data.failed_files} / {data.total_files} files
-              </span>
-            </div>
+        {/* Error State */}
+        {error && !isLoading && (
+          <div className="flex flex-col items-center justify-center py-12">
+            <AlertCircle className="h-12 w-12 text-destructive mb-4" />
+            <p className="text-sm text-muted-foreground mb-4">{error}</p>
+            <Button
+              onClick={() => fetchUploadData(batch_id)}
+              variant="outline"
+            >
+              Retry
+            </Button>
+          </div>
+        )}
 
-            {/* Stacked Progress Bar */}
-            <div className="relative h-3 bg-muted rounded-full overflow-hidden">
-              <div className="absolute inset-0 flex">
-                {/* Success portion */}
-                <div
-                  className="bg-success transition-all duration-500"
-                  style={{ width: `${successPercent}%` }}
-                />
-                {/* Failed portion */}
-                <div
-                  className="bg-destructive transition-all duration-500"
-                  style={{ width: `${failedPercent}%` }}
-                />
-                {/* Pending portion - animated */}
-                <div
-                  className="bg-warning relative overflow-hidden transition-all duration-500"
-                  style={{ width: `${pendingPercent}%` }}
-                >
-                  {!isComplete && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
-                  )}
+        {/* Data Display */}
+        {data && !isLoading && !error && (
+          <div className="space-y-6">
+            {/* Summary Cards */}
+            <div className="grid grid-cols-3 gap-4">
+              <div className="rounded-lg border bg-green-50 p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-green-900">
+                      Success
+                    </p>
+                    <p className="text-2xl font-bold text-green-700">
+                      {success_files}
+                    </p>
+                  </div>
+                  <CheckCircle2 className="h-8 w-8 text-green-600" />
+                </div>
+              </div>
+
+              <div className="rounded-lg border bg-red-50 p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-red-900">Failed</p>
+                    <p className="text-2xl font-bold text-red-700">
+                      {data.failed_files}
+                    </p>
+                  </div>
+                  <XCircle className="h-8 w-8 text-red-600" />
+                </div>
+              </div>
+
+              <div className="rounded-lg border bg-blue-50 p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-blue-900">Pending</p>
+                    <p className="text-2xl font-bold text-blue-700">
+                      {pending_files}
+                    </p>
+                  </div>
+                  <Clock className="h-8 w-8 text-blue-600" />
                 </div>
               </div>
             </div>
 
-            {/* Legend */}
-            <div className="flex gap-4 text-xs text-muted-foreground">
-              <div className="flex items-center gap-1.5">
-                <div className="w-3 h-3 rounded-full bg-success" />
-                <span>Processed ({successPercent.toFixed(0)}%)</span>
+            {/* Multi-colored Progress Bar */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium">Overall Progress</h3>
+                <span className="text-sm text-muted-foreground">
+                  {data.processed_files + data.failed_files} / {data.total_files}{" "}
+                  files
+                </span>
               </div>
-              <div className="flex items-center gap-1.5">
-                <div className="w-3 h-3 rounded-full bg-destructive" />
-                <span>Failed ({failedPercent.toFixed(0)}%)</span>
+
+              {/* Stacked Progress Bar */}
+              <div className="relative h-4 w-full overflow-hidden rounded-full bg-gray-200">
+                {/* Success portion */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div
+                      className="absolute left-0 top-0 h-full bg-green-500 transition-all duration-500 cursor-pointer"
+                      style={{ width: `${successPercent}%` }}
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Successfully processed: {success_files} files</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                {/* Failed portion */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div
+                      className="absolute top-0 h-full bg-red-500 transition-all duration-500 cursor-pointer"
+                      style={{
+                        left: `${successPercent}%`,
+                        width: `${failedPercent}%`,
+                      }}
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Failed: {data.failed_files} files</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                {/* Pending portion - animated */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div
+                      className="absolute top-0 h-full bg-blue-400 transition-all duration-500 cursor-pointer"
+                      style={{
+                        left: `${successPercent + failedPercent}%`,
+                        width: `${pendingPercent}%`,
+                      }}
+                    >
+                      {!isComplete && (
+                        <div className="h-full w-full animate-pulse bg-blue-500/50" />
+                      )}
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Pending: {pending_files} files</p>
+                  </TooltipContent>
+                </Tooltip>
               </div>
-              <div className="flex items-center gap-1.5">
-                <div className="w-3 h-3 rounded-full bg-warning" />
-                <span>Pending ({pendingPercent.toFixed(0)}%)</span>
+
+              {/* Legend */}
+              <div className="flex flex-wrap gap-4 text-xs">
+                <div className="flex items-center gap-1">
+                  <div className="h-3 w-3 rounded-full bg-green-500" />
+                  <span>Processed ({successPercent.toFixed(0)}%)</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="h-3 w-3 rounded-full bg-red-500" />
+                  <span>Failed ({failedPercent.toFixed(0)}%)</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="h-3 w-3 rounded-full bg-blue-400" />
+                  <span>Pending ({pendingPercent.toFixed(0)}%)</span>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Failed Files Accordion */}
-          {data.failed_files > 0 && data.failed_files_names && (
-            <Accordion type="single" collapsible className="w-full">
-              <AccordionItem value="failed-files" className="border rounded-lg px-4">
-                <AccordionTrigger className="hover:no-underline py-3">
-                  <div className="flex items-center gap-2 text-sm font-medium">
-                    <AlertCircle className="h-4 w-4 text-destructive" />
-                    <span>View Failed Files ({data.failed_files})</span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-2 pt-2 pb-3 overflow-y-scroll max-h-60">
-                    {data.failed_files_names.map((file, index) => (
-                      <div
-                        key={index}
-                        className="flex items-start gap-3 p-3 bg-destructive/5 rounded-md border border-destructive/10"
-                      >
-                        <FileText className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground truncate">
-                            {file.name}
-                          </p>
-                          {file.reason && (
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {file.reason}
+            {/* Failed Files Accordion */}
+            {data.failed_files > 0 && data.failed_files_names && (
+              <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="failed-files">
+                  <AccordionTrigger className="text-sm font-medium">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4 text-red-500" />
+                      View Failed Files ({data.failed_files})
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                      {data.failed_files_names.map((file, index) => (
+                        <div
+                          key={index}
+                          className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-3"
+                        >
+                          <FileText className="h-4 w-4 text-red-600 mt-0.5 shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-red-900 break-all">
+                              {file.name}
                             </p>
-                          )}
+                            {file.reason && (
+                              <p className="text-xs text-red-700 mt-1">
+                                {file.reason}
+                              </p>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          )}
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            )}
 
-          {/* Action Button */}
-          <div className="flex justify-end pt-2">
-            <Button
-              onClick={() => setOpen(false)}
-              className="bg-primary hover:bg-hover-primary"
-            >
-              {isComplete ? "Done" : "Continue Processing"}
-            </Button>
+            {/* Action Button */}
+            <div className="flex justify-end">
+              <Button
+                onClick={() => setOpen(false)}
+                className="bg-primary hover:bg-hover-primary"
+              >
+                {isComplete ? "Done" : "Continue Processing"}
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
       </DialogContent>
     </Dialog>
   );
