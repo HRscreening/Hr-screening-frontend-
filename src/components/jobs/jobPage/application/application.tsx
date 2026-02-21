@@ -55,7 +55,7 @@ function Applications({ job_id,rubric_version }: { job_id: string, rubric_versio
           withCredentials: true,
         }
       );
-      console.log(rubric_version)
+      console.log(rubric_version, "rubric version in application fetch")
       setCurrentData(response.data as ApplicationsResponse);
     } catch (error) {
       console.error("Error loading application data:", error);
@@ -70,6 +70,8 @@ function Applications({ job_id,rubric_version }: { job_id: string, rubric_versio
     if (!job_id) return;
 
     getApplicationData(job_id, page, pageSize);
+    
+
   }, [job_id, page, pageSize]);
 
 

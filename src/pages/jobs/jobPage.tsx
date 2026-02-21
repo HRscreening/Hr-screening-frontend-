@@ -164,7 +164,7 @@ const JobOverview: React.FC = () => {
           </h1>
         </div>
 
-        <div id='button group' className='flex flex-row gap-2.5 items-center'>
+        <div  className='flex flex-row gap-2.5 items-center'>
           {/* <Button className="bg-gray-300/50 cursor-pointer text-black px-4 py-2 rounded-lg hover:bg-hover-primary transition">
             <Share className="w-5 h-5 inline" />
             Share
@@ -172,9 +172,9 @@ const JobOverview: React.FC = () => {
           <Tooltip >
             <TooltipTrigger>
 
-              <Button className="bg-primary cursor-pointer text-primary-foreground px-3 py-2 rounded-lg hover:bg-hover-primary transition">
+              <div className="bg-primary cursor-pointer text-primary-foreground px-3 py-2 rounded-lg hover:bg-hover-primary transition">
                 <Share2 className="w-4 h-4 inline" />
-              </Button>
+              </div>
             </TooltipTrigger>
             <TooltipContent>
               <p>Share</p>
@@ -189,9 +189,9 @@ const JobOverview: React.FC = () => {
           </Button> */}
           <Tooltip >
             <TooltipTrigger>
-              <Button className="bg-primary cursor-pointer text-primary-foreground px-3 py-2 rounded-lg hover:bg-hover-primary transition">
+              <div className="bg-primary cursor-pointer text-primary-foreground px-3 py-2 rounded-lg hover:bg-hover-primary transition">
                 <ListCheck className="w-4 h-4 inline" />
-              </Button>
+              </div>
             </TooltipTrigger>
             <TooltipContent>
               <p>Manage Criterias</p>
