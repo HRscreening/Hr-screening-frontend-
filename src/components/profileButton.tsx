@@ -1,4 +1,15 @@
-import React, { useState } from 'react'
+import {
+  Bell,
+  Check,
+  CreditCard,
+  SunMoon,
+  Settings,
+  LogOut,
+  User,
+  HelpCircle,
+  Building2,
+  Plus,
+} from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   DropdownMenu,
@@ -16,18 +27,6 @@ import {
 import { useTheme } from "next-themes";
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import {
-  Bell,
-  CreditCard,
-  SunMoon,
-  Settings,
-  LogOut,
-  User,
-  HelpCircle,
-  Building2,
-  Plus,
-  Check
-} from "lucide-react"
 
 type Organization = {
   id: string;

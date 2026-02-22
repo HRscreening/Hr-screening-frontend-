@@ -1,9 +1,10 @@
 import React from 'react';
-import { ChevronLeft, ChevronRight, } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { Separator } from "@/components/ui/separator";
 
 interface StepIndicatorProps {
   currentStep: number;
+  loading?: boolean;
   steps: {
     number: number;
     title: string;
@@ -13,30 +14,22 @@ interface StepIndicatorProps {
   handleStepClick: (stepNumber: number) => void;
   handleNext: () => void;
   handlePrevious: () => void;
-
 }
 
-
-
-const StepIndicator = ({ steps, currentStep, handleNext, handlePrevious }: StepIndicatorProps) => {
-
-
-
-
-
-
+const StepIndicator = ({ steps, currentStep, loading = false, handleNext, handlePrevious }: StepIndicatorProps) => {
   return (
-    <div className="w-full bg-card border-b rounded-lg border sticky top-0 z-100">
+    <div className="w-full bg-card border-b rounded-lg border sticky top-0 z-40">
       <div className="flex flex-col w-full items-center text-center">
         <h2 className="text-xl font-bold">Create Job</h2>
         <p className="text-sm text-muted-foreground mb-1">
           Fill in the details to create a new job listing
         </p>
-        <Separator orientation='horizontal'/>
+        <Separator orientation='horizontal' />
       </div>
 
       <div className="max-w-6xl mx-auto px-8 py-5">
         <div className="flex items-center justify-between gap-8">
+
           {/* Steps */}
           <div className="flex-1 flex items-center justify-center gap-4">
             {steps.map((step, index) => {
@@ -47,8 +40,8 @@ const StepIndicator = ({ steps, currentStep, handleNext, handlePrevious }: StepI
               return (
                 <React.Fragment key={step.number}>
                   <button
-                    // onClick={() => handleStepClick(step.number)}
                     className="group flex items-center gap-3 transition-all duration-300"
+                    disabled={loading}
                   >
                     <div
                       className={`
@@ -57,9 +50,8 @@ const StepIndicator = ({ steps, currentStep, handleNext, handlePrevious }: StepI
                         ${isActive
                           ? 'bg-primary shadow-md shadow-primary/25'
                           : isCompleted
-                            ? 'bg-primary/10 border-2 border-primary hover:bg-primary/20'
-                            : 'bg-muted border-2 border-border hover:border-muted-foreground/30'}
-                        ${!isActive && 'group-hover:scale-105'}
+                            ? 'bg-primary/10 border-2 border-primary'
+                            : 'bg-muted border-2 border-border'}
                       `}
                     >
                       {isCompleted && !isActive ? (
@@ -77,10 +69,10 @@ const StepIndicator = ({ steps, currentStep, handleNext, handlePrevious }: StepI
                       ) : (
                         <Icon
                           className={`w-5 h-5 transition-colors ${isActive
-                              ? 'text-primary-foreground'
-                              : isCompleted
-                                ? 'text-primary'
-                                : 'text-muted-foreground'
+                            ? 'text-primary-foreground'
+                            : isCompleted
+                              ? 'text-primary'
+                              : 'text-muted-foreground'
                             }`}
                         />
                       )}
@@ -105,9 +97,7 @@ const StepIndicator = ({ steps, currentStep, handleNext, handlePrevious }: StepI
                     <div className="flex-1 max-w-30 h-0.5 bg-border relative">
                       <div
                         className="absolute inset-0 bg-primary transition-all duration-500"
-                        style={{
-                          width: currentStep > step.number ? '100%' : '0%'
-                        }}
+                        style={{ width: currentStep > step.number ? '100%' : '0%' }}
                       />
                     </div>
                   )}
@@ -120,11 +110,11 @@ const StepIndicator = ({ steps, currentStep, handleNext, handlePrevious }: StepI
           <div className="flex items-center gap-3">
             <button
               onClick={handlePrevious}
-              disabled={currentStep === 1}
+              disabled={currentStep === 1 || loading}
               className={`
                 flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium
                 transition-all duration-200
-                ${currentStep === 1
+                ${(currentStep === 1 || loading)
                   ? 'text-muted-foreground cursor-not-allowed opacity-40'
                   : 'text-foreground hover:bg-accent active:scale-95'}
               `}
@@ -139,15 +129,26 @@ const StepIndicator = ({ steps, currentStep, handleNext, handlePrevious }: StepI
 
             <button
               onClick={handleNext}
-              // disabled={currentStep === steps.length}
+              disabled={loading}
               className={`
-                flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium
+                flex items-center gap-1.5 px-5 py-2 rounded-lg text-sm font-semibold
                 transition-all duration-200
-                bg-primary text-primary-foreground hover:bg-hover-primary shadow-sm active:scale-95'
-                `}
+                ${loading
+                  ? 'bg-primary/60 text-primary-foreground cursor-not-allowed opacity-70'
+                  : 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm active:scale-95'}
+              `}
             >
-              {currentStep === steps.length ? 'Complete' : 'Next'}
-              <ChevronRight className="w-4 h-4" />
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Processing…
+                </>
+              ) : (
+                <>
+                  {currentStep === steps.length ? 'Set Rubric' : 'Next'}
+                  <ChevronRight className="w-4 h-4" />
+                </>
+              )}
             </button>
           </div>
         </div>

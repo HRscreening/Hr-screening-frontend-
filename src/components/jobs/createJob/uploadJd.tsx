@@ -2,10 +2,12 @@ import React, { useState, useRef } from 'react';
 import { Upload, FileText, X, CheckCircle2, AlertCircle } from 'lucide-react';
 import axios from '@/axiosConfig';
 import Loader from '@/components/loader';
+import { normalizeExtractedJDResponse } from '@/utils/normalizeRubric';
+import type { ExtractedJD } from '@/types/types';
 
 interface UploadJdProps {
   setCurrentStep: (step: number) => void;
-  setExtractedJobData: (data: any) => void;
+  setExtractedJobData: (data: ExtractedJD) => void;
 }
 
 
@@ -150,22 +152,22 @@ const UploadJd = ({ setExtractedJobData, setCurrentStep, }: UploadJdProps) => {
       const formData = new FormData();
       formData.append('file', uploadedFile);
 
-      const response = await axios.post('/jobs/upload-jd', formData);
-      if (response.status === 200) {
-        // Proceed to next step
-        setExtractedJobData(response.data);
-        setCurrentStep(2);
-        console.log('File uploaded successfully');
-      } else {
-        console.log(response.data);
-
+      // Step 1: Upload JD file
+      const uploadResponse = await axios.post('/jobs/upload-jd', formData);
+      if (uploadResponse.status !== 200) {
         setError('Failed to upload file. Please try again.');
+        return;
       }
+
+      // Backend returns parsed rubric preview directly (no DB writes)
+      const normalized = normalizeExtractedJDResponse(uploadResponse.data);
+      setExtractedJobData(normalized);
+      setCurrentStep(2);
+      setIsLoading(false);
 
     } catch (error) {
       console.error('Error uploading file:', error);
       setError('An error occurred while uploading the file.');
-    } finally {
       setIsLoading(false);
     }
   };

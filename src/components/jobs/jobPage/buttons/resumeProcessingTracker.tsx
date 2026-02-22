@@ -13,8 +13,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Progress } from "@/components/ui/progress";
-import { Plus, CheckCircle2, XCircle, Clock, FileText, AlertCircle, Monitor } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, FileText, AlertCircle, Monitor } from "lucide-react";
 import { useState } from "react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
@@ -29,7 +28,7 @@ type UploadData = {
   }[];
 };
 
-export default function TrackCandidateDialog({ batch_id }: { batch_id: string }) {
+export default function TrackCandidateDialog({ batch_id: _batch_id }: { batch_id: string }) {
   const [open, setOpen] = useState(false);
 
   const data: UploadData = {

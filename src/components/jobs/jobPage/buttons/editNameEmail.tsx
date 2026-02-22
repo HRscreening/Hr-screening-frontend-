@@ -7,12 +7,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Edit } from "lucide-react";
-import axios from "@/axiosConfig";
 
 type EditNameEmailProps = {
   open: boolean;
@@ -26,11 +23,11 @@ type EditNameEmailProps = {
 
 
 const EditNameEmail = ({
-  applicationId,
+  applicationId: _applicationId,
   name,
   email,
   phone,
-  candidate_id,
+  candidate_id: _candidate_id,
   open,
   setOpen
 }: EditNameEmailProps) => {

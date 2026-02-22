@@ -1,4 +1,3 @@
-import React, { useState } from 'react';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -9,7 +8,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ChevronDown, Check, History } from 'lucide-react';
 
-import type { JobOverviewResponse, RubricVersionData } from '@/types/jobTypes';
+import type { RubricVersionData } from '@/types/jobTypes';
 
 interface RubricVersionSwitcherProps {
     versionData: RubricVersionData;

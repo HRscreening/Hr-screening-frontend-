@@ -20,7 +20,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import RubricVersionSwitcher from "@/components/jobs/jobPage/buttons/rubricVersionButton"
+import RubricManager from "@/components/jobs/jobPage/buttons/rubricManager"
 import TotalApplicationCard from '@/components/jobs/cards/totalApplicationCard';
 import AnalyticsCard from '@/components/jobs/cards/analyticsCard';
 import Applications from '@/components/jobs/jobPage/application/application';
@@ -37,29 +37,15 @@ const application_stats = {
   hired: 5,
 }
 
-const version_data: RubricVersionData = {
-  current_active_version: "v1",
-  active_rubric_id: "5488",
-  versions: [
-    { rubric_version: "v1", created_at: "2024-08-01", rubric_id: "5488" },
-    { rubric_version: "v2", created_at: "2024-08-01", rubric_id: "5487" },
-    { rubric_version: "v2", created_at: "2024-08-01", rubric_id: "5486" },
-    { rubric_version: "v2", created_at: "2024-08-01", rubric_id: "5485" },
-    { rubric_version: "v2", created_at: "2024-08-01", rubric_id: "5484" },
-    { rubric_version: "v2", created_at: "2024-08-01", rubric_id: "5483" },
-  ]
-}
-
-
 const JobOverview: React.FC = () => {
   const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
   const [jobData, setJobData] = useState<JobOverviewResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-
+  const [versionData, setVersionData] = useState<RubricVersionData | null>(null);
   // TODO:Pass this version to applications and criterias component to fetch data based on version
-  const [activeVersion, setActiveVersion] = useState(version_data.current_active_version);
+  const [activeVersion, setActiveVersion] = useState<string>("");
 
 
 
@@ -68,56 +54,13 @@ const JobOverview: React.FC = () => {
     const fetchJobData = async () => {
       try {
         setIsLoading(true);
-        // Replace with your actual API call
-        // const response = await fetch(`/api/jobs/${jobId}`);
-        // const data = await response.json();
-        // setJobData(data);
-
-        // Mock data
-        // const mockData: JobOverviewResponse = {
-        //   job: {
-        //     id: jobId || '',
-        //     title: 'Senior Software Engineer',
-        //     status: 'open',
-        //     target_headcount: 5,
-        //   },
-        //   dashboard: {
-        //     total_applications: 42,
-        //     by_status: {
-        //       APPLIED: 15,
-        //       SHORTLISTED: 12,
-        //       REJECTED: 10,
-        //       HIRED: 3,
-        //       WITHDRAWN: 2,
-        //     },
-        //   },
-        //   criteria: {
-        //     rubric_id: 'rubric-123',
-        //     version: 1,
-        //     threshold_score: 70,
-        //     criteria: {
-        //       mandatory_criteria: {
-        //         "experience": { weight: 50, value: "5+ years" },
-        //         "skills": { weight: 50, value: "JavaScript, React" },
-        //       },
-        //       screening_criteria: {
-        //         "culture_fit": { weight: 30 },
-        //       }
-        //     }
-        //   },
-        //   settings: {
-        //     voice_ai_enabled: true,
-        //     manual_rounds_count: 3,
-        //     is_confidential: false,
-        //     job_metadata: null,
-        //     closing_reason: null,
-        //   },
-        // };
-
         const res = await axios.get(`/jobs/get-job/${jobId}`);
 
         if (res.status === 200) {
           setJobData(res.data);
+          if (res.data?.criteria?.version) {
+            setActiveVersion(`v${res.data.criteria.version}`);
+          }
           return;
         }
 
@@ -132,10 +75,37 @@ const JobOverview: React.FC = () => {
       }
     };
 
+    const fetchRubricVersions = async () => {
+      try {
+        const res = await axios.get(`/jobs/${jobId}/rubrics/versions`);
+        const payload = res.data;
+        const versions = (payload?.versions ?? []).map((v: any) => ({
+          rubric_id: String(v.rubric_id),
+          rubric_version: `v${v.version}`,
+          created_at: v.created_at ? String(v.created_at) : "",
+          is_active: v.is_active ?? false,
+        }));
+        const active = (payload?.versions ?? []).find((v: any) => v.is_active) ?? null;
+        const mapped: RubricVersionData = {
+          current_active_version: active ? `v${active.version}` : (versions[0]?.rubric_version ?? "v1"),
+          active_rubric_id: payload?.active_rubric_id ? String(payload.active_rubric_id) : "",
+          versions,
+        };
+        setVersionData(mapped);
+        if (!activeVersion) {
+          setActiveVersion(mapped.current_active_version);
+        }
+      } catch (e) {
+        // Non-fatal: keep UI usable even if versions endpoint isn't available
+        console.warn("Failed to fetch rubric versions", e);
+      }
+    };
+
     if (jobId) {
       fetchJobData();
+      fetchRubricVersions();
     }
-  }, [jobId]);
+  }, [jobId]); // eslint-disable-line react-hooks/exhaustive-deps
 
 
 
@@ -166,8 +136,39 @@ const JobOverview: React.FC = () => {
   }
 
 
-  const handleVersionChange = (version: string) => {
-    setActiveVersion(version);
+  const handleVersionChange = async (version: string) => {
+    try {
+      setActiveVersion(version);
+      const found = versionData?.versions.find((v) => v.rubric_version === version);
+      if (!found || !jobId) return;
+
+      await axios.post(`/jobs/${jobId}/rubrics/${found.rubric_id}/activate`);
+
+      // Refresh job + versions so UI reflects the new active rubric
+      const [jobRes, versionsRes] = await Promise.all([
+        axios.get(`/jobs/get-job/${jobId}`),
+        axios.get(`/jobs/${jobId}/rubrics/versions`),
+      ]);
+      if (jobRes.status === 200) {
+        setJobData(jobRes.data);
+      }
+      const payload = versionsRes.data;
+      const versions = (payload?.versions ?? []).map((v: any) => ({
+        rubric_id: String(v.rubric_id),
+        rubric_version: `v${v.version}`,
+        created_at: v.created_at ? String(v.created_at) : "",
+      }));
+      const active = (payload?.versions ?? []).find((v: any) => v.is_active) ?? null;
+      setVersionData({
+        current_active_version: active ? `v${active.version}` : (versions[0]?.rubric_version ?? "v1"),
+        active_rubric_id: payload?.active_rubric_id ? String(payload.active_rubric_id) : "",
+        versions,
+      });
+      toast.success(`Activated rubric ${version}`);
+    } catch (e) {
+      console.error("Failed to activate rubric version", e);
+      toast.error("Failed to switch rubric version");
+    }
   };
 
 
@@ -210,12 +211,15 @@ const JobOverview: React.FC = () => {
           </Button> */}
           <Tooltip >
             <TooltipTrigger>
-              <Button className="bg-primary cursor-pointer text-primary-foreground px-3 py-2 rounded-lg hover:bg-hover-primary transition">
+              <Button
+                className="bg-primary cursor-pointer text-primary-foreground px-3 py-2 rounded-lg hover:bg-hover-primary transition"
+                onClick={() => navigate(`/jobs/${jobId}/rubric/edit`)}
+              >
                 <ListCheck className="w-4 h-4 inline" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Manage Criterias</p>
+              <p>Edit rubric</p>
             </TooltipContent>
           </Tooltip>
           <Tooltip >
@@ -228,7 +232,12 @@ const JobOverview: React.FC = () => {
               <p>Rerank Applications</p>
             </TooltipContent>
           </Tooltip>
-          <RubricVersionSwitcher activeVersion={activeVersion} handleVersionChange={handleVersionChange} versionData={version_data} />
+          <RubricManager
+            jobId={jobId as string}
+            jobData={jobData}
+            versionData={versionData}
+            onVersionChange={handleVersionChange}
+          />
         </div>
       </div>
 
@@ -238,8 +247,8 @@ const JobOverview: React.FC = () => {
         <AnalyticsCard title='Avg. Match Score' value={"76%"} desc='based on skills & exp.' icon={<TargetIcon className='h-5 w-5' />} />
       </div>
 
-
-      <Applications job_id={jobId as string} rubric_version='5488' />
+      {/* Rubric */}
+      <Applications job_id={jobId as string} rubric_version={jobData.criteria?.rubric_id ?? "5488"} />
 
 
     </div>

@@ -1,7 +1,7 @@
-import type { Criterion } from "./types";
+import type { RubricCriteriaJsonbV2 } from "./types";
 
 // enums should mirror backend enums
-export type JobStatus = "open" | "paused" | "closed" | "archived"; // Changed to lowercase to match backend
+export type JobStatus = "draft" | "open" | "paused" | "closed" | "archived"; // Mirrors backend (includes draft)
 
 export type ApplicationStatus =
   | "APPLIED"
@@ -31,10 +31,7 @@ export type Criteria = {
   rubric_id: string;
   version: number;
   threshold_score: number;
-  criteria: {
-    mandatory_criteria: Record<string, Criterion>;
-    screening_criteria: Record<string, Criterion>;
-  }
+  criteria: RubricCriteriaJsonbV2;
 }
 
 export type SettingsTypes = {
@@ -60,5 +57,6 @@ export interface RubricVersionData{
     rubric_id: string;
     rubric_version: string;
     created_at: string;
+    is_active?: boolean;
   }[]
 }

@@ -1,4 +1,4 @@
-import {useImperativeHandle,forwardRef}from 'react';
+import { useImperativeHandle, forwardRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -17,7 +17,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ChevronDown, ChevronUp, Info } from 'lucide-react';
 import { type ExtractedJD } from '@/types/types';
+import ParsedJdViewer from './parsedJdViewer';
+import { Button } from '@/components/ui/button';
 
 // Form validation schema
 const jobFormSchema = z.object({
@@ -39,11 +42,11 @@ type JobFormValues = z.infer<typeof jobFormSchema>;
 interface JobFormProps {
   extractedJD: ExtractedJD;
   onUpdate: (updatedJD: ExtractedJD) => void;
-  onNext?: () => void;
+  onNext?: (updatedJD: ExtractedJD) => void | Promise<void>;
 }
 
 const JobForm = forwardRef(function JobForm(
-  { extractedJD, onUpdate, onNext }:JobFormProps,
+  { extractedJD, onUpdate, onNext }: JobFormProps,
   ref
 ) {
   const form = useForm<JobFormValues>({
@@ -61,6 +64,7 @@ const JobForm = forwardRef(function JobForm(
   });
 
   const onSubmit = (values: JobFormValues) => {
+    // Collect all user-entered details into the temp JSON (no DB write yet)
     const updatedJD: ExtractedJD = {
       ...extractedJD,
       job_data: {
@@ -70,17 +74,68 @@ const JobForm = forwardRef(function JobForm(
     };
 
     onUpdate(updatedJD);
-    toast.success("Job details updated successfully");
-    onNext?.();
+    // Pass updatedJD so the parent has the freshest data for rubric generation
+    void onNext?.(updatedJD);
   };
 
   useImperativeHandle(ref, () => ({
-          
+
     submit: form.handleSubmit(onSubmit),
   }));
 
+  const [showParsedJd, setShowParsedJd] = useState(false);
+
   return (
     <div className="w-full max-w-4xl mx-auto p-6">
+      {/* Info banner — rubric will be generated on next step */}
+      <div className="mb-6 p-4 rounded-xl border border-primary/20 bg-primary/5 flex items-start gap-3">
+        <Info className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+        <div>
+          <p className="text-sm font-medium text-foreground">Complete your job details below</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Fill in or edit the details extracted from your JD. Location, salary, and degree information
+            you enter here will be used by AI when generating the rubric on the next step.
+          </p>
+        </div>
+      </div>
+
+      {/* Parsed JD Viewer (Collapsible) */}
+      {extractedJD._rrg && (
+        <Card className="mb-6 border-primary/20">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-base">Parsed Job Description</CardTitle>
+                <CardDescription className="text-sm">
+                  AI-extracted information from your uploaded JD
+                </CardDescription>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowParsedJd(!showParsedJd)}
+                className="gap-2"
+              >
+                {showParsedJd ? (
+                  <>
+                    Hide <ChevronUp className="w-4 h-4" />
+                  </>
+                ) : (
+                  <>
+                    View Details <ChevronDown className="w-4 h-4" />
+                  </>
+                )}
+              </Button>
+            </div>
+          </CardHeader>
+          {showParsedJd && (
+            <CardContent className="pt-0">
+              <ParsedJdViewer parsedJd={extractedJD._rrg} />
+            </CardContent>
+          )}
+        </Card>
+      )}
+
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           {/* Basic Information Card */}
@@ -134,7 +189,7 @@ const JobForm = forwardRef(function JobForm(
             <CardHeader>
               <CardTitle>Job Details</CardTitle>
               <CardDescription>
-                Additional information about the position
+                Additional information about the position — used for rubric generation
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -148,6 +203,9 @@ const JobForm = forwardRef(function JobForm(
                       <FormControl>
                         <Input placeholder="e.g., New York, NY (Remote)" {...field} />
                       </FormControl>
+                      <FormDescription className="text-xs">
+                        Will be used by AI to set location constraints in rubric
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -176,7 +234,19 @@ const JobForm = forwardRef(function JobForm(
                     <FormItem>
                       <FormLabel>Target Headcount *</FormLabel>
                       <FormControl>
-                        <Input type="number" min={1} placeholder="1" {...field} />
+                        <Input
+                          type="number"
+                          min={1}
+                          placeholder="1"
+                          value={field.value ?? 1}
+                          onChange={(e) => {
+                            const raw = e.target.value;
+                            field.onChange(raw === "" ? 1 : Number(raw));
+                          }}
+                          onBlur={field.onBlur}
+                          name={field.name}
+                          ref={field.ref}
+                        />
                       </FormControl>
                       <FormDescription>Number of positions to fill</FormDescription>
                       <FormMessage />
@@ -191,7 +261,20 @@ const JobForm = forwardRef(function JobForm(
                     <FormItem>
                       <FormLabel>Manual Interview Rounds</FormLabel>
                       <FormControl>
-                        <Input type="number" min={0} max={10} placeholder="0" {...field} />
+                        <Input
+                          type="number"
+                          min={0}
+                          max={10}
+                          placeholder="0"
+                          value={field.value ?? 0}
+                          onChange={(e) => {
+                            const raw = e.target.value;
+                            field.onChange(raw === "" ? 0 : Number(raw));
+                          }}
+                          onBlur={field.onBlur}
+                          name={field.name}
+                          ref={field.ref}
+                        />
                       </FormControl>
                       <FormDescription>Number of manual interview rounds</FormDescription>
                       <FormMessage />

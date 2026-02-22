@@ -3,7 +3,11 @@ import axios from "axios";
 import { useContextStore } from "@/store/contextStore";
 
 axios.defaults.baseURL =
-  import.meta.env.VITE_BACKEND_URL || "http://localhost:5000/api/v1";
+  import.meta.env.VITE_BACKEND_URL || "http://localhost:8000/api";
+
+// Helpful runtime visibility in DevTools console
+console.info("[axios] VITE_BACKEND_URL =", import.meta.env.VITE_BACKEND_URL);
+console.info("[axios] axios.defaults.baseURL =", axios.defaults.baseURL);
 
 // ❌ REMOVE THIS
 // axios.defaults.withCredentials = true;
