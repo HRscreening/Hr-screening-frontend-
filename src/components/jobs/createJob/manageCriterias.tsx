@@ -1,43 +1,28 @@
-import React, { useState, forwardRef, useImperativeHandle } from "react";
+import React, { forwardRef, useImperativeHandle, useMemo, useState } from "react";
+import { toast } from "sonner";
+import { DndContext, PointerSensor, closestCenter, useSensor, useSensors } from "@dnd-kit/core";
+import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { toast } from "sonner"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Slider } from "@/components/ui/slider";
 import {
-  Form,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, ChevronRight, Target, Scale, X } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { snakeCaseToTitle, titleToSnakeCase } from '@/utils/snakeCaseToTitle';
-import type { ExtractedJD, Criterion } from "@/types/types";
+  ArrowDown,
+  ArrowUp,
+  GripVertical,
+  Plus,
+  Trash2,
+  Target,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 
-
-// Form schema for threshold
-const thresholdSchema = z.object({
-  threshold_score: z.number().min(0).max(100),
-});
+import type { CriterionV2, ExtractedJD, RubricSectionV2, SubCriterionV2 } from "@/types/types";
+import { newCriterionFromName } from "@/utils/normalizeRubric";
+import { snakeCaseToTitle, titleToSnakeCase } from "@/utils/snakeCaseToTitle";
+import { applyImportanceToSections } from "@/utils/computeWeightsFromImportance";
 
 interface CriteriaManagerProps {
   extractedJD: ExtractedJD;
@@ -45,418 +30,285 @@ interface CriteriaManagerProps {
   onNext?: () => void;
 }
 
-// Individual Criterion Component
-interface CriterionItemProps {
-  name: string;
-  criterion: Criterion;
-  onUpdate: (criterion: Criterion) => void;
-  onDelete: () => void;
-  criterionType: 'mandatory' | 'screening';
+function clampInt(n: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, Math.round(n)));
 }
 
-const CriterionItem: React.FC<CriterionItemProps> = ({
-  name,
-  criterion,
-  onUpdate,
-  onDelete,
-  criterionType,
-}) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [newSubCriterionName, setNewSubCriterionName] = useState('');
+function normalizePriorities(criteria: CriterionV2[]): CriterionV2[] {
+  return criteria.map((c, idx) => ({ ...c, priority: idx + 1 }));
+}
 
-  const hasSubCriteria = criterion.sub_criteria && Object.keys(criterion.sub_criteria).length > 0;
-  const hasValue = criterion.value !== undefined && criterion.value !== null;
+function ensureSections(sections: RubricSectionV2[]): RubricSectionV2[] {
+  if (!sections?.length) {
+    return [{ key: "requirements", label: "Requirements", criteria: [] }];
+  }
+  return sections.map((s) => ({
+    ...s,
+    criteria: s.criteria ?? [],
+  }));
+}
 
-  const totalWeight = hasSubCriteria
-    ? criterion?.sub_criteria && Object.values(criterion?.sub_criteria).reduce((sum, sub) => sum + sub.weight, 0)
-    : 0;
+const TIER_COLORS = {
+  10: "bg-red-500",
+  9: "bg-red-400",
+  8: "bg-orange-500",
+  7: "bg-orange-400",
+  6: "bg-amber-500",
+  5: "bg-amber-400",
+  4: "bg-yellow-500",
+  3: "bg-yellow-400",
+  2: "bg-blue-400",
+  1: "bg-slate-400",
+} as Record<number, string>;
 
-  const isWeightValid = !hasSubCriteria || totalWeight && Math.abs(totalWeight - 100) < 0.01;
+function TierBadge({ importance, maxImp }: { importance: number; maxImp: number }) {
+  const color = TIER_COLORS[Math.round((importance / maxImp) * 10)] || "bg-primary";
+  let label = "Normal";
+  if (maxImp === 10) {
+    if (importance >= 9) label = "Critical";
+    else if (importance >= 7) label = "Highly Expected";
+    else if (importance >= 4) label = "Good to Have";
+    else label = "Bonus";
+  } else {
+    if (importance === 5) label = "Critical";
+    else if (importance === 4) label = "Important";
+    else if (importance >= 2) label = "Normal";
+    else label = "Bonus";
+  }
 
-  const handleWeightChange = (newWeight: number[]) => {
-    onUpdate({ ...criterion, weight: newWeight[0] });
+  return (
+    <div className="flex items-center gap-1.5">
+      <div className={`w-2 h-2 rounded-full ${color}`} />
+      <span className="text-xs font-medium text-muted-foreground">{label} ({importance}/{maxImp})</span>
+    </div>
+  );
+}
+
+// ─── Compact sub-criterion editor row ────────────────────────────────────────
+const SubCriteriaEditor: React.FC<{
+  subCriteria: SubCriterionV2[] | null;
+  onChange: (sub: SubCriterionV2[] | null) => void;
+}> = ({ subCriteria, onChange }) => {
+  const [newName, setNewName] = useState("");
+  const list = subCriteria ?? [];
+
+  const add = () => {
+    if (!newName.trim()) { toast.error("Enter sub-criterion name"); return; }
+    const name = titleToSnakeCase(newName);
+    if (list.some((s) => s.name === name)) { toast.error("Sub-criterion already exists"); return; }
+    onChange([...list, { name, display_name: snakeCaseToTitle(name), weight: 0, importance: 3, value: null }]);
+    setNewName("");
   };
 
-  const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    onUpdate({ ...criterion, value: value });
+  const update = (idx: number, updated: SubCriterionV2) => {
+    const next = [...list]; next[idx] = updated;
+    onChange(next.length ? next : null);
   };
 
-  const addValueField = () => {
-    onUpdate({ ...criterion, value: "" });
-  };
-
-  const removeValueField = () => {
-    const { value, ...rest } = criterion;
-    onUpdate(rest as Criterion);
-  };
-
-  const addSubCriterion = () => {
-    if (!newSubCriterionName.trim()) {
-      toast.error("First enter sub-criterion name");
-      return;
-    }
-
-    const subCriteria = criterion.sub_criteria || {};
-    const newSubCriteria = {
-      [titleToSnakeCase(newSubCriterionName)]: {
-        weight: 0,
-        sub_criteria: null, // No further nesting allowed
-      },
-      ...subCriteria,
-    };
-
-    onUpdate({ ...criterion, sub_criteria: newSubCriteria });
-    setNewSubCriterionName('');
-  };
-
-  const updateSubCriterion = (subName: string, updatedSub: Criterion) => {
-    if (!criterion.sub_criteria) return;
-
-    const newSubCriteria = {
-      ...criterion.sub_criteria,
-      [subName]: updatedSub,
-    };
-
-    onUpdate({ ...criterion, sub_criteria: newSubCriteria });
-  };
-
-  const deleteSubCriterion = (subName: string) => {
-    if (!criterion.sub_criteria) return;
-
-    const newSubCriteria = { ...criterion.sub_criteria };
-    delete newSubCriteria[subName];
-
-    onUpdate({
-      ...criterion,
-      sub_criteria: Object.keys(newSubCriteria).length > 0 ? newSubCriteria : null,
-    });
+  const del = (idx: number) => {
+    const next = list.filter((_, i) => i !== idx);
+    onChange(next.length ? next : null);
   };
 
   return (
-    <>
-      <div className="bg-card rounded-lg border border-border hover:border-primary/40 hover:shadow-sm transition-all">
-        <div className="p-5">
-          {/* Header */}
-          <div className="flex items-start justify-between gap-4 mb-4">
-            <div className="flex-1">
-              <h4 className="font-semibold text-base flex items-center gap-2">
-                {snakeCaseToTitle(name)}
-                {criterionType === 'mandatory' && (
-                  <span className="text-destructive">*</span>
-                )}
-              </h4>
-              {!isWeightValid && hasSubCriteria && (
-                <p className="text-xs text-destructive mt-1">
-                  Sub-criteria weights must sum to 100% (currently: {totalWeight?.toFixed(1)}%)
-                </p>
-              )}
-            </div>
+    <div className="mt-3 space-y-2">
+      {/* Header row */}
+      {list.length > 0 && (
+        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+          Specific Requirements ({list.length})
+        </span>
+      )}
 
-            <div className="flex items-center gap-2">
-              {hasSubCriteria && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsExpanded(!isExpanded)}
-                  className="h-8 w-8 p-0"
-                >
-                  <ChevronRight
-                    className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
-                  />
-                </Button>
-              )}
-              <Button
+      {/* Existing sub-criteria */}
+      {list.length > 0 && (
+        <div className="space-y-2 mt-2">
+          {list.map((s, idx) => (
+            <div key={s.name} className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-lg bg-muted/30 border border-border/50 px-3 py-2">
+              {/* Name & Constraint */}
+              <div className="flex-1 space-y-1">
+                <Input
+                  value={s.display_name}
+                  onChange={(e) => update(idx, { ...s, display_name: e.target.value })}
+                  className="h-7 text-sm bg-transparent border-0 shadow-none px-0 font-medium focus-visible:ring-0"
+                  placeholder="Requirement Name"
+                />
+                <Input
+                  value={s.value ?? ""}
+                  onChange={(e) => update(idx, { ...s, value: e.target.value || null })}
+                  placeholder="e.g. 5+ years, CS degree (Optional)"
+                  className="h-6 text-xs text-muted-foreground bg-transparent border-0 shadow-none px-0 focus-visible:ring-0"
+                />
+              </div>
+
+              {/* Importance Selector 1-5 */}
+              <div className="flex items-center gap-2 shrink-0 bg-background rounded-md border p-1">
+                {[1, 2, 3, 4, 5].map(tier => (
+                  <button
+                    key={tier}
+                    type="button"
+                    onClick={() => update(idx, { ...s, importance: tier })}
+                    className={`w-6 h-6 rounded flex items-center justify-center text-xs font-medium transition-all ${(s.importance ?? 3) === tier
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "hover:bg-muted text-muted-foreground"
+                      }`}
+                  >
+                    {tier}
+                  </button>
+                ))}
+              </div>
+
+              <button
                 type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowDeleteDialog(true)}
-                className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                onClick={() => del(idx)}
+                className="h-8 w-8 flex items-center justify-center rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors shrink-0"
               >
                 <Trash2 className="w-4 h-4" />
-              </Button>
+              </button>
             </div>
-          </div>
-
-          {/* Weight Slider */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-medium flex items-center gap-1.5">
-                <Scale className="w-3.5 h-3.5 text-muted-foreground" />
-                Weight
-              </label>
-              <span className="text-sm font-semibold text-primary">
-                {criterion.weight.toFixed(1)}%
-              </span>
-            </div>
-            <Slider
-              value={[criterion.weight]}
-              onValueChange={handleWeightChange}
-              min={0}
-              max={100}
-              step={0.1}
-              className="cursor-pointer"
-            />
-            <p className="text-xs text-muted-foreground">
-              Importance of this criterion in evaluation
-            </p>
-          </div>
-
-          {/* Value Input - Separate Section */}
-          {hasValue && (
-            <div className="mt-4 pt-4 border-t space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium flex items-center gap-1.5">
-                  <Target className="w-3.5 h-3.5 text-muted-foreground" />
-                  Target Value
-                </label>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={removeValueField}
-                        className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Remove target value</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              <Input
-                type="text"
-                value={criterion.value ?? ''}
-                onChange={handleValueChange}
-                placeholder="Enter target value"
-                className="h-9"
-              />
-              <p className="text-xs text-muted-foreground">
-                Expected value for this criterion
-              </p>
-            </div>
-          )}
-
-          {/* Add Value Button - Only show if no value exists */}
-          {!hasValue && (
-            <div className="mt-4 pt-4 border-t">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={addValueField}
-                      className="gap-1.5"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                      Add Target Value
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Add a target value for this criterion</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-          )}
-
-          {/* Add Sub-Criterion */}
-          <div className="mt-4 pt-4 border-t">
-            <div className="flex gap-2">
-              <Input
-                placeholder="Add sub-criterion (e.g., Python proficiency)"
-                value={snakeCaseToTitle(newSubCriterionName)}
-                onChange={(e) => setNewSubCriterionName(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addSubCriterion())}
-                className="flex-1 h-9"
-              />
-              <Button
-                type="button"
-                onClick={addSubCriterion}
-                size="sm"
-                variant="outline"
-                className="gap-1.5"
-              >
-                <Plus className="w-4 h-4" />
-                Add Sub
-              </Button>
-            </div>
-          </div>
-
-          {/* Sub-Criteria */}
-          {hasSubCriteria && isExpanded && (
-            <div className="mt-4 pt-4 border-t space-y-3">
-              <p className="text-sm font-medium text-muted-foreground mb-3">Sub-criteria</p>
-              {Object.entries(criterion.sub_criteria!).map(([subName, subCriterion]) => (
-                <SubCriterionItem
-                  key={subName}
-                  name={subName}
-                  criterion={subCriterion}
-                  onUpdate={(updated) => updateSubCriterion(subName, updated)}
-                  onDelete={() => deleteSubCriterion(subName)}
-                />
-              ))}
-            </div>
-          )}
+          ))}
         </div>
-      </div>
+      )}
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete criterion?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete "{snakeCaseToTitle(name)}"? This will also remove all sub-criteria.
-              This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={onDelete} className="bg-destructive hover:bg-destructive/90">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+      {/* Add new sub-criterion */}
+      <div className="flex gap-2 pt-1">
+        <Input
+          value={newName}
+          onChange={(e) => setNewName(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add(); } }}
+          placeholder="Add specific detail/requirement..."
+          className="h-8 text-sm"
+        />
+        <Button type="button" variant="secondary" size="sm" onClick={add} className="gap-1 h-8 shrink-0">
+          <Plus className="w-3.5 h-3.5" />
+          Add
+        </Button>
+      </div>
+    </div>
   );
 };
 
-// Sub-Criterion Component (simplified, no nesting)
-interface SubCriterionItemProps {
-  name: string;
-  criterion: Criterion;
-  onUpdate: (criterion: Criterion) => void;
+// ─── Main criterion row ──────────────────────────────────────────────────────
+const SortableCriterionRow: React.FC<{
+  criterion: CriterionV2;
+  index: number;
+  total: number;
+  showPriority: boolean;
+  onChange: (updated: CriterionV2) => void;
   onDelete: () => void;
-}
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+}> = ({ criterion, index, total, showPriority, onChange, onDelete, onMoveUp, onMoveDown }) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: criterion.name });
+  const [showSubs, setShowSubs] = useState(false);
 
-const SubCriterionItem: React.FC<SubCriterionItemProps> = ({
-  name,
-  criterion,
-  onUpdate,
-  onDelete,
-}) => {
-  const hasValue = criterion.value !== undefined && criterion.value !== null;
-
-  const handleWeightChange = (newWeight: number[]) => {
-    onUpdate({ ...criterion, weight: newWeight[0] });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
   };
 
-  const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    onUpdate({ ...criterion, value: value });
-  };
-
-  const addValueField = () => {
-    onUpdate({ ...criterion, value: "" });
-  };
-
-  const removeValueField = () => {
-    const { value, ...rest } = criterion;
-    onUpdate(rest as Criterion);
-  };
+  const hasSubs = Array.isArray(criterion.sub_criteria) && criterion.sub_criteria.length > 0;
+  const imp = criterion.importance ?? 5;
 
   return (
-    <div className="bg-muted/30 rounded-md p-4 border border-border/50">
-      <div className="flex items-start justify-between gap-4 mb-3">
-        <h5 className="font-medium text-sm">{snakeCaseToTitle(name)}</h5>
-        <div className="flex items-center gap-1">
-          {!hasValue && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={addValueField}
-                    className="h-7 w-7 p-0 text-muted-foreground hover:text-primary"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Add target value</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={onDelete}
-            className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </Button>
-        </div>
-      </div>
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="rounded-xl border border-border bg-card transition-all mb-3"
+    >
+      {/* ── Top bar: drag + name + controls ── */}
+      <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 px-3 py-3">
+        {/* Drag handle */}
+        <button
+          type="button"
+          {...attributes}
+          {...listeners}
+          className="text-muted-foreground/40 hover:text-muted-foreground cursor-grab active:cursor-grabbing shrink-0"
+          title="Drag to reorder"
+        >
+          <GripVertical className="w-4 h-4" />
+        </button>
 
-      {/* Weight Slider */}
-      <div className="space-y-2 mb-3">
-        <div className="flex items-center justify-between">
-          <label className="text-xs font-medium flex items-center gap-1.5">
-            <Scale className="w-3 h-3 text-muted-foreground" />
-            Weight
-          </label>
-          <span className="text-xs font-semibold text-primary">
-            {criterion.weight.toFixed(1)}%
+        {/* Priority badge */}
+        {showPriority && (
+          <span className="text-[11px] font-mono text-muted-foreground/60 shrink-0 w-5 text-center">
+            #{criterion.priority}
           </span>
+        )}
+
+        {/* Name & Constraint input container */}
+        <div className="flex-1 min-w-[200px] flex flex-col gap-1">
+          <Input
+            value={criterion.display_name || snakeCaseToTitle(criterion.name)}
+            onChange={(e) => onChange({ ...criterion, display_name: e.target.value })}
+            className="h-7 font-semibold text-sm bg-transparent border-0 shadow-none px-1 focus-visible:ring-0 focus-visible:border-b focus-visible:border-primary/50 rounded-none w-full"
+            placeholder="Skill or Category Name"
+          />
+          <Input
+            value={criterion.value ?? ""}
+            onChange={(e) => onChange({ ...criterion, value: e.target.value || null })}
+            placeholder="Constraint (e.g. 5+ years, Bachelor's in CS) - Optional"
+            className="h-6 text-xs text-muted-foreground bg-transparent border-0 shadow-none px-1 focus-visible:ring-0 w-full"
+          />
         </div>
-        <Slider
-          value={[criterion.weight]}
-          onValueChange={handleWeightChange}
-          min={0}
-          max={100}
-          step={0.1}
-          className="cursor-pointer"
-        />
+
+        {/* Tier badge / visual weight indicator */}
+        <div className="flex flex-col items-end gap-1 shrink-0 px-2 min-w-[120px]">
+          <TierBadge importance={imp} maxImp={10} />
+          {criterion.weight > 0 && (
+            <span className="text-[10px] text-muted-foreground">≈ {criterion.weight}% impact</span>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center gap-1 shrink-0">
+          <button
+            type="button" onClick={onMoveUp} disabled={index === 0}
+            className="h-8 w-8 flex items-center justify-center rounded hover:bg-accent disabled:opacity-30 transition-colors"
+          >
+            <ArrowUp className="w-4 h-4" />
+          </button>
+          <button
+            type="button" onClick={onMoveDown} disabled={index === total - 1}
+            className="h-8 w-8 flex items-center justify-center rounded hover:bg-accent disabled:opacity-30 transition-colors"
+          >
+            <ArrowDown className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowSubs(!showSubs)}
+            className={`h-8 w-8 flex items-center justify-center rounded transition-colors ${showSubs ? 'bg-primary/10 text-primary' : 'hover:bg-accent text-muted-foreground'}`}
+            title={showSubs ? "Close details" : "Add/Edit specific requirements"}
+          >
+            {showSubs ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </button>
+          <button
+            type="button" onClick={onDelete}
+            className="h-8 w-8 flex items-center justify-center rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors ml-1"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
-      {/* Value Input */}
-      {hasValue && (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <label className="text-xs font-medium flex items-center gap-1.5">
-              <Target className="w-3 h-3 text-muted-foreground" />
-              Target Value
-            </label>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={removeValueField}
-                    className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
-                  >
-                    <X className="w-3 h-3" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Remove target value</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-          <Input
-            type="text"
-            value={criterion.value ?? ''}
-            onChange={handleValueChange}
-            placeholder="Enter target value"
-            className="h-8 text-xs"
+      {/* ── Importance Slider (1-10) ── */}
+      <div className="px-4 pb-4 flex items-center gap-4">
+        <span className="text-xs font-semibold text-muted-foreground w-12 text-right">0</span>
+        <Slider
+          value={[imp]}
+          onValueChange={(v) => onChange({ ...criterion, importance: clampInt(v[0], 1, 10) })}
+          min={1} max={10} step={1}
+          className="flex-1 cursor-pointer"
+        />
+        <span className="text-xs font-semibold text-muted-foreground w-12 text-left">10</span>
+      </div>
+
+      {/* ── Sub-criteria panel ── */}
+      {(showSubs || hasSubs) && (
+        <div className="px-4 pb-4 bg-muted/10 border-t border-border/50 rounded-b-xl">
+          <SubCriteriaEditor
+            subCriteria={criterion.sub_criteria ?? null}
+            onChange={(sub) => onChange({ ...criterion, sub_criteria: sub })}
           />
         </div>
       )}
@@ -464,330 +316,196 @@ const SubCriterionItem: React.FC<SubCriterionItemProps> = ({
   );
 };
 
-// Main Criteria Manager Component
+// ─── Add criterion input row ─────────────────────────────────────────────────
+const AddCriterionRow: React.FC<{ onAdd: (name: string) => void }> = ({ onAdd }) => {
+  const [name, setName] = useState("");
+  return (
+    <div className="flex gap-2">
+      <Input
+        placeholder="Add a new skill or category (e.g., Communication Skills)"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); onAdd(name); setName(""); } }}
+        className="h-10"
+      />
+      <Button
+        type="button"
+        onClick={() => { onAdd(name); setName(""); }}
+        className="gap-2 h-10 shrink-0"
+      >
+        <Plus className="w-4 h-4" />
+        Add
+      </Button>
+    </div>
+  );
+};
+
+// ─── Main CriteriaManager ────────────────────────────────────────────────────
 const CriteriaManager = forwardRef(function CriteriaManager(
   { extractedJD, onUpdate, onNext }: CriteriaManagerProps,
-  ref
+  ref,
 ) {
-  const [newMandatoryName, setNewMandatoryName] = useState('');
-  const [newScreeningName, setNewScreeningName] = useState('');
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
-  const form = useForm<z.infer<typeof thresholdSchema>>({
-    resolver: zodResolver(thresholdSchema),
-    defaultValues: {
-      threshold_score: extractedJD.threshold_score,
-    },
-  });
+  // Automatically apply computed normalization weights for UI display purposes
+  const computedJDSections = useMemo(() => applyImportanceToSections(ensureSections(extractedJD.sections || [])), [extractedJD.sections]);
 
-  // Calculate total weights with null safety
-  const mandatoryTotal = extractedJD.criteria?.mandatory_criteria
-    ? Object.values(extractedJD.criteria.mandatory_criteria).reduce((sum, c) => sum + c.weight, 0)
-    : 0;
-
-  const screeningTotal = extractedJD.criteria?.screening_criteria
-    ? Object.values(extractedJD.criteria.screening_criteria).reduce((sum, c) => sum + c.weight, 0)
-    : 0;
-
-  const isMandatoryValid = Math.abs(mandatoryTotal - 100) < 0.01;
-  const isScreeningValid = Math.abs(screeningTotal - 100) < 0.01;
-
-  // Add new criterion
-  const addCriterion = (type: 'mandatory' | 'screening', name: string) => {
-    if (!name.trim()) {
-      toast.error("First enter criterion name");
-      return;
-    }
-
-    const criteriaKey = type === 'mandatory' ? 'mandatory_criteria' : 'screening_criteria';
-    const existingCriteria = extractedJD.criteria?.[criteriaKey] || {};
-
-    if (existingCriteria[name]) {
-      toast.error(`${name} already exists in ${type} criteria`);
-      return;
-    }
-
-    const updatedCriteria = {
-      [titleToSnakeCase(name)]: {
-        weight: 0,
-        sub_criteria: null,
-      },
-      ...existingCriteria
-    };
-
-    onUpdate({
-      ...extractedJD,
-      criteria: {
-        ...extractedJD.criteria,
-        [criteriaKey]: updatedCriteria,
-      },
-    });
-
-    if (type === 'mandatory') {
-      setNewMandatoryName('');
-    } else {
-      setNewScreeningName('');
-    }
-
-    toast.success(`Added ${name} to ${type} criteria`);
+  const updateSection = (key: string, updater: (s: RubricSectionV2) => RubricSectionV2) => {
+    const current = ensureSections(extractedJD.sections || []);
+    const next = current.map((s) => (s.key === key ? updater(s) : s));
+    onUpdate({ ...extractedJD, sections: next });
   };
 
-  // Update criterion
-  const updateCriterion = (
-    type: 'mandatory' | 'screening',
-    name: string,
-    updated: Criterion
-  ) => {
-    const criteriaKey = type === 'mandatory' ? 'mandatory_criteria' : 'screening_criteria';
-
-    onUpdate({
-      ...extractedJD,
-      criteria: {
-        ...extractedJD.criteria,
-        [criteriaKey]: {
-          ...(extractedJD.criteria?.[criteriaKey] || {}),
-          [name]: updated,
-        },
-      },
+  const addCriterion = (key: string, nameRaw: string) => {
+    const name = titleToSnakeCase(nameRaw);
+    if (!name) { toast.error("Enter a criterion name"); return; }
+    updateSection(key, (s) => {
+      if (s.criteria.some((c) => c.name === name)) { toast.error("This criterion already exists"); return s; }
+      const next = [...s.criteria, { ...newCriterionFromName(nameRaw, s.criteria.length + 1) }];
+      return { ...s, criteria: normalizePriorities(next) };
     });
-  };
-
-  // Delete criterion
-  const deleteCriterion = (type: 'mandatory' | 'screening', name: string) => {
-    const criteriaKey = type === 'mandatory' ? 'mandatory_criteria' : 'screening_criteria';
-    const newCriteria = { ...(extractedJD.criteria?.[criteriaKey] || {}) };
-    delete newCriteria[name];
-
-    onUpdate({
-      ...extractedJD,
-      criteria: {
-        ...extractedJD.criteria,
-        [criteriaKey]: newCriteria,
-      },
-    });
-
-    toast.success("Deleted Successfully");
   };
 
   const handleThresholdChange = (value: number[]) => {
-    onUpdate({
-      ...extractedJD,
-      threshold_score: value[0],
-    });
+    onUpdate({ ...extractedJD, threshold_score: clampInt(value[0], 0, 100) });
   };
 
   const handleSubmit = () => {
-    if (!isMandatoryValid) {
-      toast.error("Invalid Weights: Mandatory criteria weights must sum to 100%");
+    // Only validation: ensure at least one criterion exists across all sections
+    const totalCriteria = computedJDSections.reduce((sum, s) => sum + s.criteria.length, 0);
+    if (totalCriteria === 0) {
+      toast.error("Please add at least one criterion before continuing.");
       return;
     }
 
-    if (!isScreeningValid) {
-      toast.error("Invalid Weights: Screening criteria weights must sum to 100%");
-      return;
-    }
-
-    toast.success("Criteria saved successfully");
+    // Save with the computed weights
+    onUpdate({ ...extractedJD, sections: computedJDSections });
     onNext?.();
   };
 
-  useImperativeHandle(ref, () => ({
-    submit: handleSubmit,
-  }));
-
-
+  useImperativeHandle(ref, () => ({ submit: handleSubmit }));
 
   return (
-    <div className="w-full max-w-6xl mx-auto p-6">
-      <Form {...form} >
-        <form className="space-y-6">
-          {/* Threshold Score Card */}
-          <Card className="border-2 border-primary/20 bg-linear-to-br from-primary/5 to-transparent">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Target className="w-5 h-5" />
-                Threshold Score
-              </CardTitle>
-              <CardDescription>
-                Minimum score required for candidates to pass the screening
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Passing Score</span>
-                  <span className="text-3xl font-bold text-primary">
-                    {extractedJD.threshold_score}%
-                  </span>
-                </div>
-                <Slider
-                  value={[extractedJD.threshold_score]}
-                  onValueChange={handleThresholdChange}
-                  min={0}
-                  max={100}
-                  step={1}
-                  className="cursor-pointer"
-                />
-                <p className="text-sm text-muted-foreground">
-                  Candidates scoring below this threshold will be automatically rejected
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+    <div className="w-full max-w-5xl mx-auto p-4 sm:p-6 space-y-6">
+      <div className="space-y-1">
+        <h2 className="text-2xl font-semibold tracking-tight">Set Job Rubric</h2>
+        <p className="text-sm text-muted-foreground">
+          Define what's important for this role. Rate each skill precisely from 1 to 10. Our AI handles the grading scale automatically.
+        </p>
+      </div>
 
-          {/* Mandatory Criteria */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    Mandatory Criteria
-                    <span className="text-destructive text-xl">*</span>
-                  </CardTitle>
-                  <CardDescription>
-                    Essential requirements that candidates must meet
-                  </CardDescription>
-                </div>
-                <div className="text-right">
-                  <div
-                    className={`text-2xl font-bold ${isMandatoryValid ? 'text-green-600' : 'text-destructive'
-                      }`}
-                  >
-                    {mandatoryTotal.toFixed(1)}%
-                  </div>
-                  <div className="text-xs text-muted-foreground">Total Weight</div>
-                </div>
+      {/* ── Threshold card ── */}
+      <Card className="border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Target className="w-4 h-4 text-primary" />
+              Minimum Passing Score
+            </CardTitle>
+            <span className="text-3xl font-bold text-primary tabular-nums">{extractedJD.threshold_score}%</span>
+          </div>
+        </CardHeader>
+        <div className="px-6 pb-4">
+          <Slider
+            value={[extractedJD.threshold_score]}
+            onValueChange={handleThresholdChange}
+            min={0} max={100} step={1}
+            className="cursor-pointer"
+          />
+          <p className="text-xs text-muted-foreground mt-2">
+            Candidates scoring above this overall percentage advance to the next stage.
+          </p>
+        </div>
+      </Card>
+
+      {/* ── Sections ── */}
+      <div className="space-y-6">
+        {computedJDSections.map((section) => {
+          const hasCriteria = section.criteria.length > 0;
+
+          return (
+            <Card key={section.key} className="border border-border overflow-hidden">
+              {/* Section header */}
+              <div className="bg-muted/30 px-5 py-4 border-b">
+                <h3 className="text-lg font-semibold">{section.label}</h3>
               </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Add New Mandatory Criterion */}
-              <div className="flex gap-2 pb-2">
-                <Input
-                  placeholder="Add criterion (e.g., Bachelor's Degree, 5+ years experience)"
-                  value={newMandatoryName}
-                  onChange={(e) => setNewMandatoryName(e.target.value)}
-                  onKeyUp={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      addCriterion('mandatory', newMandatoryName);
-                    }
+
+              <CardContent className="p-5 space-y-4">
+                {/* Add criterion */}
+                <AddCriterionRow onAdd={(name) => addCriterion(section.key, name)} />
+
+                {hasCriteria && <div className="pt-2" />}
+
+                {/* DnD criterion list */}
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={(event) => {
+                    const { active, over } = event;
+                    if (!over || active.id === over.id) return;
+                    updateSection(section.key, (s) => {
+                      const oldIndex = s.criteria.findIndex((c) => c.name === active.id);
+                      const newIndex = s.criteria.findIndex((c) => c.name === over.id);
+                      if (oldIndex < 0 || newIndex < 0) return s;
+                      const moved = arrayMove(s.criteria, oldIndex, newIndex);
+                      return { ...s, criteria: normalizePriorities(moved) };
+                    });
                   }}
-                  className="flex-1"
-                />
-                <Button
-                  type="button"
-                  onClick={() => addCriterion('mandatory', newMandatoryName)}
-                  className="gap-2"
                 >
-                  <Plus className="w-4 h-4" />
-                  Add Criterion
-                </Button>
-              </div>
+                  <SortableContext items={section.criteria.map((c) => c.name)} strategy={verticalListSortingStrategy}>
+                    <div className="space-y-1">
+                      {section.criteria.map((c, idx) => (
+                        <SortableCriterionRow
+                          key={c.name}
+                          criterion={c}
+                          index={idx}
+                          total={section.criteria.length}
+                          showPriority={section.criteria.length > 1}
+                          onChange={(updated) =>
+                            updateSection(section.key, (s) => {
+                              const next = [...s.criteria]; next[idx] = updated;
+                              return { ...s, criteria: normalizePriorities(next) };
+                            })
+                          }
+                          onDelete={() =>
+                            updateSection(section.key, (s) => ({
+                              ...s,
+                              criteria: normalizePriorities(s.criteria.filter((x) => x.name !== c.name)),
+                            }))
+                          }
+                          onMoveUp={() =>
+                            updateSection(section.key, (s) => {
+                              if (idx === 0) return s;
+                              const next = [...s.criteria];
+                              [next[idx - 1], next[idx]] = [next[idx], next[idx - 1]];
+                              return { ...s, criteria: normalizePriorities(next) };
+                            })
+                          }
+                          onMoveDown={() =>
+                            updateSection(section.key, (s) => {
+                              if (idx >= s.criteria.length - 1) return s;
+                              const next = [...s.criteria];
+                              [next[idx + 1], next[idx]] = [next[idx], next[idx + 1]];
+                              return { ...s, criteria: normalizePriorities(next) };
+                            })
+                          }
+                        />
+                      ))}
 
-              {/* Mandatory Criteria List */}
-              {Object.keys(extractedJD.criteria?.mandatory_criteria || {}).length > 0 && (
-                <Separator />
-              )}
-
-              <div className="space-y-4">
-                {Object.entries(extractedJD.criteria?.mandatory_criteria || {}).map(([name, criterion]) => (
-                  <CriterionItem
-                    key={name}
-                    name={name}
-                    criterion={criterion}
-                    onUpdate={(updated) => updateCriterion('mandatory', name, updated)}
-                    onDelete={() => deleteCriterion('mandatory', name)}
-                    criterionType="mandatory"
-                  />
-                ))}
-
-                {Object.keys(extractedJD.criteria?.mandatory_criteria || {}).length === 0 && (
-                  <div className="text-center py-12 text-muted-foreground border border-dashed rounded-lg">
-                    <p className="text-sm font-medium">No mandatory criteria defined yet</p>
-                    <p className="text-xs mt-1">Add criteria that candidates must satisfy</p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Screening Criteria */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    Screening Criteria
-                    <Badge variant="secondary" className="text-xs">Optional</Badge>
-                  </CardTitle>
-                  <CardDescription>
-                    Additional factors for ranking and scoring candidates
-                  </CardDescription>
-                </div>
-                <div className="text-right">
-                  <div
-                    className={`text-2xl font-bold ${isScreeningValid ? 'text-green-600' : 'text-destructive'
-                      }`}
-                  >
-                    {screeningTotal.toFixed(1)}%
-                  </div>
-                  <div className="text-xs text-muted-foreground">Total Weight</div>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Add New Screening Criterion */}
-              <div className="flex gap-2 pb-2">
-                <Input
-                  placeholder="Add criterion (e.g., Leadership skills, Communication ability)"
-                  value={newScreeningName}
-                  onChange={(e) => setNewScreeningName(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      addCriterion('screening', newScreeningName);
-                    }
-                  }}
-                  className="flex-1"
-                />
-                <Button
-                  type="button"
-                  onClick={() => addCriterion('screening', newScreeningName)}
-                  className="gap-2"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add Criterion
-                </Button>
-              </div>
-
-              {/* Screening Criteria List */}
-              {Object.keys(extractedJD.criteria?.screening_criteria || {}).length > 0 && (
-                <Separator />
-              )}
-
-              <div className="space-y-4">
-                {Object.entries(extractedJD.criteria?.screening_criteria || {}).map(([name, criterion]) => (
-                  <CriterionItem
-                    key={name}
-                    name={name}
-                    criterion={criterion}
-                    onUpdate={(updated) => updateCriterion('screening', name, updated)}
-                    onDelete={() => deleteCriterion('screening', name)}
-                    criterionType="screening"
-                  />
-                ))}
-
-                {Object.keys(extractedJD.criteria?.screening_criteria || {}).length === 0 && (
-                  <div className="text-center py-12 text-muted-foreground border border-dashed rounded-lg">
-                    <p className="text-sm font-medium">No screening criteria defined yet</p>
-                    <p className="text-xs mt-1">Add criteria for evaluating candidates</p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-        </form>
-      </Form>
+                      {section.criteria.length === 0 && (
+                        <div className="text-center py-10 text-muted-foreground border border-dashed rounded-xl bg-muted/10">
+                          <p className="text-sm font-medium">No criteria added yet</p>
+                          <p className="text-xs mt-1">Add groups above to define what you're looking for</p>
+                        </div>
+                      )}
+                    </div>
+                  </SortableContext>
+                </DndContext>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
     </div>
   );
 });

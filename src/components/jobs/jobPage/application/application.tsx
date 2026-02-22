@@ -9,7 +9,7 @@ import { Search } from 'lucide-react';
 
 
 
-function Applications({ job_id,rubric_version }: { job_id: string, rubric_version: string }) {
+function Applications({ job_id, rubric_version: _rubric_version }: { job_id: string, rubric_version: string }) {
   const [isLoading, setIsLoading] = useState(false);
   const [currentData, setCurrentData] = useState<ApplicationsResponse | undefined>(undefined);
   const [page, setPage] = useState(1);

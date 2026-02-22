@@ -33,7 +33,7 @@ const Job = () => {
         id: job.id,
         title: job.title,
         status: job.status,
-        location: job.location,
+        location: job.location ?? "",
         created_at: job.created_at,
         jd_url: job.jd_url,
         head_count: job.target_headcount
@@ -61,6 +61,24 @@ const Job = () => {
 
   const handleJobClick = (jobId: string) => {
     navigate(`/jobs/${jobId}`);
+  };
+
+  const handleDeleteJob = async (jobId: string) => {
+    try {
+      const res = await axios.delete(`/jobs/${jobId}`);
+      if (res.data?.status === "success" && res.status === 200) {
+        toast.success("Job deleted successfully");
+        setJobs((prev) => prev.filter((job) => job.id !== jobId));
+      } else {
+        toast.error("Failed to delete job");
+      }
+    } catch (error: unknown) {
+      console.error("Error deleting job:", error);
+      const msg = error && typeof error === "object" && "response" in error
+        ? (error as { response?: { data?: { detail?: string } } }).response?.data?.detail
+        : null;
+      toast.error(msg || "Failed to delete job");
+    }
   };
 
   // Loading State
@@ -152,6 +170,7 @@ const Job = () => {
             key={job.id}
             job={job}
             onClick={() => handleJobClick(job.id)}
+            onDelete={handleDeleteJob}
           />
         ))}
       </div>

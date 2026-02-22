@@ -27,11 +27,11 @@ type EditNameEmailProps = {
 
 
 const EditNameEmail = ({
-  applicationId,
+  applicationId: _applicationId,
   name,
   email,
   phone,
-  candidate_id,
+  candidate_id: _candidate_id,
   open,
   setOpen
 }: EditNameEmailProps) => {

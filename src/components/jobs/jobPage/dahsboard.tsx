@@ -1,6 +1,5 @@
-import React from 'react'
 import { Briefcase } from 'lucide-react';
-import type { JobStatus, JobOverviewResponse, } from '@/types/jobTypes';
+import type { JobOverviewResponse } from '@/types/jobTypes';
 
 interface JobdahsboardProps {
   jobData:JobOverviewResponse | null;

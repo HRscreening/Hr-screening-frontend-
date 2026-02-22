@@ -54,6 +54,12 @@ export default function SignupForm({ onToggleMode }: SignupFormProps) {
       });
 
       if (res.status === 201) {
+        console.info("Signup request succeeded", {
+          status: res.status,
+          baseURL: res.config.baseURL,
+          url: res.config.url,
+          responseURL: (res.request as any)?.responseURL,
+        });
         toast.success("OTP sent to your email/phone.");
         setIsOTPSent(true);
       } else {
@@ -61,8 +67,17 @@ export default function SignupForm({ onToggleMode }: SignupFormProps) {
       }
     } catch (error) {
       console.error("Error sending OTP:", error);
-      if (error instanceof axios.AxiosError && error.response) {
-        toast.error(`${error.response.data.message}`);
+      if (error instanceof axios.AxiosError) {
+        if (error.response) {
+          const data: any = error.response.data;
+          toast.error(
+            data?.detail || data?.message || `Request failed (${error.response.status})`
+          );
+        } else {
+          const baseURL = (error.config as any)?.baseURL || "";
+          const url = (error.config as any)?.url || "";
+          toast.error(`Network error while calling ${baseURL}${url}. ${error.message}`);
+        }
       } else {
         toast.error("Failed to send OTP. Please try again");
       }

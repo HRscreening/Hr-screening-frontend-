@@ -8,6 +8,7 @@ export interface User {
 
 
 export const JOB_STATUS = {
+  DRAFT: "draft",
   OPEN: "open",
   PAUSED: "paused",
   CLOSED: "closed",
@@ -27,16 +28,35 @@ export type JobCardType = {
   head_count: number;
 }
 
-type SubCriterion = {
+export type SubCriterionV2 = {
+  name: string;
+  display_name: string;
   weight: number;
-  value?: string | null;  
-}
-
-
-export type Criterion = {
-  weight: number;
+  importance?: number;
   value?: string | null;
-  sub_criteria?: Readonly<Record<string, SubCriterion>> | null;
+  value_type?: "none";
+};
+
+export type CriterionV2 = {
+  name: string;
+  display_name: string;
+  weight: number;
+  importance?: number;
+  priority: number;
+  value?: string | null;
+  value_type?: "none";
+  sub_criteria?: SubCriterionV2[] | null;
+};
+
+export type RubricSectionV2 = {
+  key: string;
+  label: string;
+  criteria: CriterionV2[];
+};
+
+export type RubricCriteriaJsonbV2 = {
+  schema_version: 2;
+  sections: RubricSectionV2[];
 };
 
 export type JobData = {
@@ -52,13 +72,70 @@ export type JobData = {
 
 };
 
+/** Gate item from Step 2 gate derivation (backend rrg_final.requirements.gates_final) */
+export type GateFinal = {
+  canonical: string;
+  raw: string;
+  evidence_span?: string | null;
+  policy_reason: string;
+  confidence: number;
+  needs_review: boolean;
+};
+
+/** Backend RRG final shape (after normalization + gate derivation) */
+export type RRGRequirements = {
+  must_have: Array<{
+    raw: string;
+    canonical: string;
+    category: string;
+    evidence_span?: string | null;
+    extraction_confidence: number;
+    interpretation_confidence: number;
+  }>;
+  nice_to_have: Array<{
+    raw: string;
+    canonical: string;
+    category: string;
+    evidence_span?: string | null;
+    extraction_confidence: number;
+    interpretation_confidence: number;
+  }>;
+  gate_candidates?: unknown[];
+  gates_final?: GateFinal[];
+  needs_review_count?: number;
+};
+
+export type RRGFinal = {
+  metadata: {
+    role_family?: { value: string; confidence: number; evidence_span?: string | null };
+    seniority?: { value: string; confidence: number; evidence_span?: string | null };
+    role_type?: string;
+    role_type_confidence?: number;
+    years_experience_candidates?: Array<{ value: string; confidence: number; evidence_span?: string | null }>;
+    education_requirements?: unknown[];
+    needs_clarification?: boolean;
+  };
+  requirements: RRGRequirements;
+  context: {
+    responsibilities?: Array<{ text: string; evidence_span?: string | null }>;
+    constraints?: Array<{ type: string; value: string; evidence_span?: string | null }>;
+    outcomes_metrics?: Array<{ metric: string; evidence_span?: string | null }>;
+  };
+};
+
 export type ExtractedJD = {
+  domain: string;
+  domain_confidence: number;
   job_data: JobData;
   threshold_score: number;
-  criteria: {
-    mandatory_criteria: Record<string, Criterion>;
-    screening_criteria: Record<string, Criterion>;
-  };
+  raw_jd_text?: string | null;
+  sections: RubricSectionV2[];
+  /** From rrg_final when backend returns new pipeline response */
+  gates_final?: GateFinal[];
+  needs_review_count?: number;
+  needs_clarification?: boolean;
+  /** Raw RRG for displaying full parsed JD viewer */
+  _rrg?: RRGFinal;
 }
 
 

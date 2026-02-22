@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import type { Application, statusType } from '@/types/applicationTypes';
 import ViewAnalysis from "./viewAnalysisSheet"
 import { EllipsisVertical } from "lucide-react"
+import { Mic } from "lucide-react"
 import EditNameEmail from "@/components/jobs/jobPage/buttons/editNameEmail"
 import {
   DropdownMenu,
@@ -13,10 +14,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
-  Edit,
   Share,
   Info,
-  Mic,
   Trash,
   Star,
   FlagTriangleRight
@@ -91,8 +90,7 @@ export function MenuItems({ ...data }: MenuItemsProps) {
               setEditOpen(true);
             }}
           >
-            <Edit className="mr-2 h-4 w-4" />
-            Edit
+          Edit
           </DropdownMenuItem>
           <DropdownMenuItem onClick={handleShare}>
             <Share />

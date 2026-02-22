@@ -8,6 +8,7 @@ import Jobs from "@/pages/jobs/Jobs";
 import CreateJob from "@/pages/jobs/createJob";
 import Settings from "@/pages/settings";
 import JobPage from "@/pages/jobs/jobPage";
+import RubricEditorPage from "@/pages/jobs/rubricEditor";
 
 import NotFound from "@/pages/NotFound";
 
@@ -31,7 +32,9 @@ function App() {
             <Route path="jobs" element={<Jobs />} />
             <Route path="settings" element={<Settings />} />
             <Route path="create-job" element={<CreateJob />} />
-          <Route path="jobs/:jobId" element={<JobPage />} />
+            <Route path="jobs/:jobId" element={<JobPage />} />
+            <Route path="jobs/:jobId/rubric/edit" element={<RubricEditorPage mode="edit" />} />
+            <Route path="jobs/:jobId/rubric/new" element={<RubricEditorPage mode="new" />} />
 
             {/* Org-only */}
             <Route element={<RequireOrgContext />}>
