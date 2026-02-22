@@ -26,7 +26,7 @@ interface ProcessingResponse {
   message?: string;
 }
 
-export default function AddCandidatesDialog({job_id}: {job_id: string}) {
+export default function AddCandidatesDialog({ job_id }: { job_id: string }) {
   const [open, setOpen] = useState(false);
   const [source, setSource] = useState<'upload' | 'cloud'>('upload');
   const [cloudUrl, setCloudUrl] = useState("");
@@ -131,23 +131,24 @@ export default function AddCandidatesDialog({job_id}: {job_id: string}) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {/* <Button className="bg-primary cursor-pointer text-primary-foreground px-4 py-2 rounded-lg hover:bg-hover-primary transition">
+
+      <Tooltip >
+        <TooltipTrigger asChild>
+          <DialogTrigger asChild>
+            {/* <Button className="bg-primary cursor-pointer text-primary-foreground px-4 py-2 rounded-lg hover:bg-hover-primary transition">
           <Plus className="w-4 h-4 mr-2 inline" />
           Add Candidates
         </Button> */}
-        <Tooltip >
-            <TooltipTrigger>
 
-              <Button className="bg-primary cursor-pointer text-primary-foreground px-3 py-2 rounded-lg hover:bg-hover-primary transition">
-                <Plus className="w-4 h-4 inline" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Add Candidates</p>
-            </TooltipContent>
-          </Tooltip>
-      </DialogTrigger>
+            <Button className="bg-primary cursor-pointer text-primary-foreground px-3 py-2 rounded-lg hover:bg-hover-primary transition">
+              <Plus className="w-4 h-4 inline" />
+            </Button>
+          </DialogTrigger>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Add Candidates</p>
+        </TooltipContent>
+      </Tooltip>
 
       <DialogContent className="sm:max-w-137.5" onCloseAutoFocus={handleClose}>
         <DialogHeader>
@@ -155,7 +156,7 @@ export default function AddCandidatesDialog({job_id}: {job_id: string}) {
             {batchStarted ? 'Processing Started!' : 'Add Candidates'}
           </DialogTitle>
           <DialogDescription>
-            {batchStarted 
+            {batchStarted
               ? 'Your resumes are being processed by AI'
               : 'Choose how to import candidate resumes'
             }
@@ -211,7 +212,7 @@ export default function AddCandidatesDialog({job_id}: {job_id: string}) {
             {source === 'upload' && (
               <div className="space-y-3">
                 <Label className="text-sm font-medium">Upload Resume Archive</Label>
-                
+
                 {!selectedFile ? (
                   <div
                     onDrop={handleDrop}
@@ -320,7 +321,7 @@ export default function AddCandidatesDialog({job_id}: {job_id: string}) {
               <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
                 <CheckCircle2 className="w-10 h-10 text-green-600 dark:text-green-400" />
               </div>
-              
+
               <div className="space-y-2">
                 <h3 className="text-lg font-semibold">Processing Started Successfully!</h3>
                 <p className="text-sm text-muted-foreground">
@@ -341,6 +342,6 @@ export default function AddCandidatesDialog({job_id}: {job_id: string}) {
           </div>
         )}
       </DialogContent>
-    </Dialog>
+    </Dialog >
   );
 }

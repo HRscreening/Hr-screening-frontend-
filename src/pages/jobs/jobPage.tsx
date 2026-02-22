@@ -25,17 +25,9 @@ import TotalApplicationCard from '@/components/jobs/cards/totalApplicationCard';
 import AnalyticsCard from '@/components/jobs/cards/analyticsCard';
 import Applications from '@/components/jobs/jobPage/application/application';
 import Loader from '@/components/loader';
-import type { JobOverviewResponse, RubricVersionData } from '@/types/jobTypes';
+// import type { JobOverviewResponse, RubricVersionData } from '@/types/jobTypes';
+import type { JobOverviewResponse} from '@/types/newJobType';
 
-
-const application_stats = {
-  totalApplications: 100,
-  applied: 60,
-  shortlisted: 15,
-  rejected: 10,
-  interviewed: 10,
-  hired: 5,
-}
 
 const JobOverview: React.FC = () => {
   const { jobId } = useParams<{ jobId: string }>();
@@ -45,7 +37,7 @@ const JobOverview: React.FC = () => {
 
   const [versionData, setVersionData] = useState<RubricVersionData | null>(null);
   // TODO:Pass this version to applications and criterias component to fetch data based on version
-  const [activeVersion, setActiveVersion] = useState<string>("");
+  const [activeVersion, setActiveVersion] = useState<string | undefined>(undefined);
 
 
 
@@ -58,9 +50,7 @@ const JobOverview: React.FC = () => {
 
         if (res.status === 200) {
           setJobData(res.data);
-          if (res.data?.criteria?.version) {
-            setActiveVersion(`v${res.data.criteria.version}`);
-          }
+          setActiveVersion(res.data.criteria.current_active_version); // Set active version from fetched data
           return;
         }
 
@@ -186,7 +176,7 @@ const JobOverview: React.FC = () => {
           </h1>
         </div>
 
-        <div id='button group' className='flex flex-row gap-4'>
+        <div id='button group' className='flex flex-row gap-2.5 items-center'>
           {/* <Button className="bg-gray-300/50 cursor-pointer text-black px-4 py-2 rounded-lg hover:bg-hover-primary transition">
             <Share className="w-5 h-5 inline" />
             Share
@@ -202,7 +192,7 @@ const JobOverview: React.FC = () => {
               <p>Share</p>
             </TooltipContent>
           </Tooltip>
-          <TrackCandidateDialog batch_id={jobId as string} />  {/* TODO: pass Batch_id instead of job_id*/}
+          <TrackCandidateDialog batch_id={jobData.job.current_batch_id as string} />  {/* TODO: pass Batch_id instead of job_id*/}
           <AddCandidatePopup job_id={jobId as string} />
 
           {/* <Button className="bg-green-600 cursor-pointer text-primary-foreground px-4 py-2 rounded-lg hover:bg-hover-primary transition">
@@ -232,19 +222,14 @@ const JobOverview: React.FC = () => {
               <p>Rerank Applications</p>
             </TooltipContent>
           </Tooltip>
-          <RubricManager
-            jobId={jobId as string}
-            jobData={jobData}
-            versionData={versionData}
-            onVersionChange={handleVersionChange}
-          />
+          <RubricVersionSwitcher activeVersion={activeVersion} handleVersionChange={handleVersionChange} versionData={jobData.criteria} />
         </div>
       </div>
 
       {/* Analytics */}
       <div className='flex flex-wrap gap-4'>
-        <TotalApplicationCard data={application_stats} />
-        <AnalyticsCard title='Avg. Match Score' value={"76%"} desc='based on skills & exp.' icon={<TargetIcon className='h-5 w-5' />} />
+        <TotalApplicationCard data={jobData.dashboard} />
+        <AnalyticsCard title='Avg. Match Score' value={`${jobData.dashboard.avg_score}%`} desc='based on skills & exp.' icon={<TargetIcon className='h-5 w-5' />} />
       </div>
 
       {/* Rubric */}

@@ -10,7 +10,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
+import axios from "@/axiosConfig";
+import type { CandidateCreate, CandidateUpdate } from "@/types/candidateHandlerSchema";
+import { CandidateCreateSchema, CandidateUpdateSchema } from "@/types/candidateHandlerSchema";
+import { ZodError } from "zod";
+import { z } from "zod";
 type EditNameEmailProps = {
   open: boolean;
   setOpen: (value: boolean) => void;
@@ -50,27 +54,59 @@ const EditNameEmail = ({
     setError(null);
 
     try {
-    //   await axios.put(`/applications/${applicationId}`, {
-    //     name: nameInput,
-    //     email: emailInput,
-    //     phone: phoneInput,
-    //     candidate_id,
-    //   });
+      if (!nameInput || !emailInput) {
+        setError("Full name and email are required.");
+        return;
+      }
 
-    setTimeout(() => {
-      // Simulate successful update
-      setLoading(false);
-      setOpen(false);
-    }
-    , 1000);
+      if(nameInput.trim().toLocaleLowerCase() == "na")  {
+        setError("Please enter a valid name.");
+        return;
+      }
+
+      if (!candidate_id) {
+        // CREATE
+
+        const validated = CandidateCreateSchema.parse({
+          full_name: nameInput,
+          email: emailInput,
+          phone: phoneInput || undefined,
+        });
+
+        await axios.post(
+          `/application/attach-candidate/${applicationId}`,
+          validated
+        );
+
+      } else {
+        // UPDATE
+
+        const validated = CandidateUpdateSchema.parse({
+          full_name: nameInput || undefined,
+          email: emailInput || undefined,
+          phone: phoneInput || undefined,
+        });
+
+        await axios.patch(
+          `/candidate/edit/${candidate_id}`,
+          validated
+        );
+      }
 
       setOpen(false);
+
     } catch (err) {
+      console.log(err);
+      if (err instanceof ZodError) {
+       setError("Invalid input")
+       return;
+      }
       setError("An error occurred while updating the information.");
     } finally {
       setLoading(false);
     }
   }
+
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

@@ -3,12 +3,20 @@ import type { RubricCriteriaJsonbV2 } from "./types";
 // enums should mirror backend enums
 export type JobStatus = "draft" | "open" | "paused" | "closed" | "archived"; // Mirrors backend (includes draft)
 
+// export type ApplicationStatus =
+//   | "APPLIED"
+//   | "SHORTLISTED"
+//   | "REJECTED"
+//   | "HIRED"
+//   | "WITHDRAWN";
+
+
 export type ApplicationStatus =
-  | "APPLIED"
-  | "SHORTLISTED"
-  | "REJECTED"
-  | "HIRED"
-  | "WITHDRAWN";
+  | "applied"
+  | "in_review"
+  | "rejected"
+  | "hired"
+  | "shortlisted";
 
 export type Job = {
   id: string;
@@ -60,3 +68,5 @@ export interface RubricVersionData{
     is_active?: boolean;
   }[]
 }
+
+
