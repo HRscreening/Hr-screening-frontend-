@@ -52,6 +52,9 @@ export type JobData = {
 
 };
 
+
+import type {InterviewFormTypes} from "@/types/interviewTypes";
+
 export type ExtractedJD = {
   job_data: JobData;
   threshold_score: number;
@@ -59,6 +62,7 @@ export type ExtractedJD = {
     mandatory_criteria: Record<string, Criterion>;
     screening_criteria: Record<string, Criterion>;
   };
+  interview_details?: InterviewFormTypes;
 }
 
 

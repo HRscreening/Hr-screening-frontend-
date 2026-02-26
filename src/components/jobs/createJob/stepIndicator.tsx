@@ -146,7 +146,7 @@ const StepIndicator = ({ steps, currentStep, handleNext, handlePrevious }: StepI
                 bg-primary text-primary-foreground hover:bg-hover-primary shadow-sm active:scale-95'
                 `}
             >
-              {currentStep === steps.length ? 'Complete' : 'Next'}
+              {currentStep === steps.length ? 'Complete' : currentStep === 3 ? 'skip' : 'Next'}
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
