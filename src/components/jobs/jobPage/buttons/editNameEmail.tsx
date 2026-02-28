@@ -11,10 +11,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import axios from "@/axiosConfig";
-import type { CandidateCreate, CandidateUpdate } from "@/types/candidateHandlerSchema";
+// import type { CandidateCreate, CandidateUpdate } from "@/types/candidateHandlerSchema";
 import { CandidateCreateSchema, CandidateUpdateSchema } from "@/types/candidateHandlerSchema";
 import { ZodError } from "zod";
-import { z } from "zod";
+
+
 type EditNameEmailProps = {
   open: boolean;
   setOpen: (value: boolean) => void;
@@ -64,7 +65,7 @@ const EditNameEmail = ({
         return;
       }
 
-      if (!candidate_id) {
+      if (!_candidate_id) {
         // CREATE
 
         const validated = CandidateCreateSchema.parse({
@@ -74,7 +75,7 @@ const EditNameEmail = ({
         });
 
         await axios.post(
-          `/application/attach-candidate/${applicationId}`,
+          `/application/attach-candidate/${_applicationId}`,
           validated
         );
 
@@ -88,7 +89,7 @@ const EditNameEmail = ({
         });
 
         await axios.patch(
-          `/candidate/edit/${candidate_id}`,
+          `/candidate/edit/${_candidate_id}`,
           validated
         );
       }

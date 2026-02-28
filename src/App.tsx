@@ -16,6 +16,7 @@ import RequireAuth from "@/guards/RequireAuth";
 import RequireOrgContext from "@/guards/RequireOrgContext";
 import RequireOrgRole from "@/guards/RequireOrgRole";
 
+import PanelAvailabilityForm from "@/pages/panelAvailabilityForm";
 
 function App() {
   return (
@@ -52,6 +53,7 @@ function App() {
 
         {/* 404 */}
         <Route path="*" element={<NotFound />} />
+        <Route path="/panelist/availability" element={<PanelAvailabilityForm />} />
       </Routes>
 
       <Toaster />

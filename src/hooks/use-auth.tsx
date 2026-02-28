@@ -30,6 +30,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    // Skip fetching user on public routes
+    const publicRoutes = ["/panelist/availability"];
+    if (publicRoutes.includes(window.location.pathname)) {
+      setLoading(false);
+      return;
+    }
     fetchUser();
   }, []);
 

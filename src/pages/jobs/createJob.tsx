@@ -5,6 +5,7 @@ import UploadJd from '@/components/jobs/createJob/uploadJd';
 import { toast } from 'sonner';
 import { type ExtractedJD } from '@/types/types';
 import JobForm from '@/components/jobs/createJob/jobForm';
+import InterviewForm from '@/components/jobs/createJob/InterviewForm';
 import ManageCriterias from '@/components/jobs/createJob/manageCriterias';
 import axios from "@/axiosConfig"
 import { useNavigate } from 'react-router-dom';
@@ -13,6 +14,7 @@ const steps = [
   { number: 1, title: 'Upload JD', description: 'Upload job description', icon: Upload },
   { number: 2, title: 'Basic Details', description: 'Fill essential information', icon: FileText },
   { number: 3, title: 'Set Rubric', description: 'Review & finalize rubric', icon: Sparkles },
+  { number: 4,title: 'Create & Review Criteria',description: 'Finalize and publish',icon: Sparkles}
 ];
 
 // Friendly status messages shown during rubric generation
@@ -30,7 +32,9 @@ const CreateJob = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = React.useState<number>(1);
   const [extractedJData, setExtractedJobData] = React.useState<ExtractedJD | null>(null);
+
   const jobFormRef = React.useRef<{ submit: () => void } | null>(null);
+  const interviewFormRef = React.useRef<{ submit: () => void } | null>(null);
   const criteriaRef = React.useRef<{ submit: () => void } | null>(null);
 
   /** Global loading state — also disables the Next button */
@@ -105,6 +109,12 @@ const CreateJob = () => {
     }
   };
 
+
+  const handleInterviewInfoAndGoNext = (details: ExtractedJD["interview_details"]) => {
+    setExtractedJobData(prev => prev ? { ...prev, interview_details: details } : prev);
+    setCurrentStep(4);
+  }
+
   const handleNext = () => {
     if (loading) return; // prevent double-click
 
@@ -116,14 +126,23 @@ const CreateJob = () => {
       jobFormRef.current?.submit();
       return;
     }
+
     if (currentStep === 3) {
+      interviewFormRef.current?.submit();
+      return;
+    }
+
+    if (currentStep === 4) {
       criteriaRef.current?.submit();
       return;
     }
+
     if (currentStep < steps.length) {
       setCurrentStep(currentStep + 1);
     }
   };
+
+
 
   const handlePrevious = () => {
     if (loading) return;
@@ -191,7 +210,24 @@ const CreateJob = () => {
         />
       )}
 
-      {currentStep === 3 && extractedJData?.sections && (
+      {
+        currentStep === 3 && (
+          // ✅ Correct
+          <InterviewForm
+            ref={interviewFormRef}
+            interviewDetails={extractedJData?.interview_details}
+            onUpdate={(details) =>
+              setExtractedJobData(prev => prev ? { ...prev, interview_details: details } : prev)
+            }
+            onNext={() => setCurrentStep(4)}   
+          />
+        )
+      }
+
+      
+
+
+      {currentStep === 4 && extractedJData?.sections && (
         <ManageCriterias
           ref={criteriaRef}
           extractedJD={extractedJData}
@@ -216,7 +252,7 @@ const CreateJob = () => {
               <p className="text-base font-semibold text-foreground">
                 {currentStep === 2 ? "Generating Rubric with AI" : "Saving Your Job"}
               </p>
-              <p className="text-sm text-muted-foreground leading-relaxed min-h-[40px] transition-all duration-500">
+              <p className="text-sm text-muted-foreground leading-relaxed min-h-10 transition-all duration-500">
                 {statusMsg || "Processing…"}
               </p>
             </div>
