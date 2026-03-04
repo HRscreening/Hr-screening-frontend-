@@ -1,111 +1,10 @@
 import React, { useState } from 'react';
 import { TableCell, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import type { Application, statusType } from '@/types/applicationTypes';
 import ViewAnalysis from "./viewAnalysisSheet"
-import { Mic } from "lucide-react"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import axios from '@/axiosConfig';
-import { toast } from 'sonner';
 import MenuItems from './applicationMenuButton';
-
-
-interface StatusProps {
-  status: statusType;
-  application_id: string;
-  setCurrentStatus: React.Dispatch<React.SetStateAction<statusType>>;
-}
-
-export function Status({ status, setCurrentStatus, application_id }: StatusProps) {
-
-  const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      applied: {
-        label: 'Applied',
-        className: 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-50 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800'
-      },
-      in_review: {
-        label: 'In Review',
-        className: 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-50 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800'
-      },
-      shortlisted: {
-        label: 'Shortlisted',
-        className: 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800'
-      },
-      interview_scheduled: {
-        label: 'Interview',
-        className: 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-50 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800'
-      },
-      rejected: {
-        label: 'Rejected',
-        className: 'bg-red-50 text-red-700 border-red-200 hover:bg-red-50 dark:bg-red-950 dark:text-red-300 dark:border-red-800'
-      },
-      hired: {
-        label: 'Hired',
-        className: 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800'
-      },
-    };
-
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.applied;
-    return (
-      <Badge variant="outline" className={cn('font-medium', config.className)}>
-        {config.label}
-      </Badge>
-    );
-  };
-
-  async function handleStatusChange(newStatus: statusType) {
-    try {
-
-      const res = await axios.patch(`/application/change-status/${application_id}`, {
-        "new_status": newStatus,
-      });
-
-      if (res.status === 200) {
-        setCurrentStatus(newStatus);
-        toast.success("Status updated successfully");
-        return;
-      }
-
-    } catch (error) {
-      console.error("Error updating status:", error);
-      toast.error("Failed to update status. Please try again.");
-
-    }
-  }
-
-  const statusValues = [
-    { value: 'applied', label: 'Applied' },
-    { value: 'rejected', label: 'Rejected' },
-    { value: 'in_review', label: 'In Review' },
-    { value: 'shortlisted', label: 'Shortlisted' },
-    { value: 'hired', label: 'Hired' },
-  ]
-
-  return (
-    <DropdownMenu >
-      <DropdownMenuTrigger asChild>
-        {getStatusBadge(status)}
-      </DropdownMenuTrigger>
-      <DropdownMenuContent >
-        {
-          statusValues.map((statusOption) => (
-            <DropdownMenuItem key={statusOption.value} onClick={handleStatusChange.bind(null, statusOption.value as statusType)}>
-              {statusOption.label}
-            </DropdownMenuItem>
-          ))
-        }
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
-}
-
+import { Status } from '@/components/jobs/jobPage/buttons/statusButton';
 
 interface ApplicationRowProps {
   application: Application;
@@ -123,6 +22,8 @@ const avatarColors = [
   'bg-teal-500',
 ];
 
+
+/*
 
 type InterviewStage = {
   stage: number;
@@ -189,7 +90,7 @@ function InterviewProgressBar() {
   );
 }
 
-
+*/
 
 const ApplicationRow: React.FC<ApplicationRowProps> = ({ application, onViewDetails }) => {
   const { candidate, scores, status, id } = application;
@@ -242,9 +143,9 @@ const ApplicationRow: React.FC<ApplicationRowProps> = ({ application, onViewDeta
           </div>
         </div>
       </TableCell>
-      <TableCell>
+      {/* <TableCell>
         <InterviewProgressBar />
-      </TableCell>
+      </TableCell> */}
 
       <TableCell>
         <div className="cursor-pointer flex items-center gap-3"
@@ -277,7 +178,7 @@ const ApplicationRow: React.FC<ApplicationRowProps> = ({ application, onViewDeta
       </TableCell>
 
       <TableCell>
-        <Status status={currentStatus} application_id={application.id} setCurrentStatus={setCurrentStatus} />
+        <Status status={currentStatus} application_id={application.id} setCurrentStatus={setCurrentStatus} currentRound={application.current_round} />
       </TableCell>
 
       <TableCell className="text-right ">

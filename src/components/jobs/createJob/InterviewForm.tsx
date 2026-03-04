@@ -1,7 +1,6 @@
 import { useImperativeHandle, forwardRef, useState } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { toast } from 'sonner';
 import { format } from 'date-fns';
 import {
   Plus,
@@ -20,6 +19,9 @@ import {
   ClipboardList,
   CalendarDays,
   Link2,
+  Clock,
+  FileText,
+  Globe,
 } from 'lucide-react';
 
 import {
@@ -65,12 +67,11 @@ interface InterviewFormProps {
    * Pre-populated data from `extractedJData.interview_details`.
    */
   interviewDetails?: InterviewFormTypes | null;
-  onUpdate: (data: InterviewFormTypes) => void;
   /**
-   * Pass `() => setCurrentStep(4)` here — NOT `handleNext`.
-   * handleNext at step 3 calls submit() again → infinite loop.
+   * Called with validated form data. In the create-job wizard this
+   * fires the API calls to create round configs, then navigates.
    */
-  onNext?: () => void;
+  onUpdate: (data: InterviewFormTypes) => void;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -82,13 +83,16 @@ function buildNewRound(index: number): InterviewRound {
   const end = new Date(start);
   end.setHours(11, 0, 0, 0);
   return {
-    number: index + 1,
-    name: '',
-    panel: [{ name: '', email: '', role: '' }],
+    round_number: index + 1,
+    title: '',
+    panelists: [{ name: '', email: '', role: '' }],
     start_date: start,
     end_date: end,
-    mode: 'Video Call',
-    meeting_link_rules: '',
+    interview_type: 'Video Call',
+    instructions: '',
+    duration_minutes: 60,
+    meet_link: '',
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   };
 }
 
@@ -99,6 +103,28 @@ const MODE_OPTIONS = [
 ] as const;
 
 type ModeValue = (typeof MODE_OPTIONS)[number]['value'];
+
+// Common IANA timezones for the dropdown
+const TIMEZONE_OPTIONS = [
+  'UTC',
+  'America/New_York',
+  'America/Chicago',
+  'America/Denver',
+  'America/Los_Angeles',
+  'America/Toronto',
+  'America/Sao_Paulo',
+  'Europe/London',
+  'Europe/Paris',
+  'Europe/Berlin',
+  'Europe/Moscow',
+  'Asia/Dubai',
+  'Asia/Kolkata',
+  'Asia/Shanghai',
+  'Asia/Tokyo',
+  'Asia/Singapore',
+  'Australia/Sydney',
+  'Pacific/Auckland',
+] as const;
 
 // ─── Date Picker ──────────────────────────────────────────────────────────────
 // Uses shadcn's built-in Calendar with captionLayout="dropdown" which gives
@@ -177,7 +203,7 @@ function PanelMemberRow({
   onRemove: () => void;
   canRemove: boolean;
 }) {
-  const base = `rounds.${roundIndex}.panel.${memberIndex}` as const;
+  const base = `rounds.${roundIndex}.panelists.${memberIndex}` as const;
 
   return (
     <div className="group/member grid grid-cols-1 md:grid-cols-[1fr_1.3fr_1fr_36px] gap-3 items-end p-4 rounded-xl bg-background border border-border/40 hover:border-border/70 hover:shadow-sm transition-all duration-200">
@@ -258,11 +284,11 @@ function RoundCard({
 
   const { fields: panelFields, append: appendPanel, remove: removePanel } = useFieldArray({
     control: form.control,
-    name: `rounds.${roundIndex}.panel`,
+    name: `rounds.${roundIndex}.panelists`,
   });
 
-  const roundName = form.watch(`rounds.${roundIndex}.name`);
-  const mode = form.watch(`rounds.${roundIndex}.mode`) as ModeValue | undefined;
+  const roundTitle = form.watch(`rounds.${roundIndex}.title`);
+  const mode = form.watch(`rounds.${roundIndex}.interview_type`) as ModeValue | undefined;
   const startDate = form.watch(`rounds.${roundIndex}.start_date`);
   const endDate = form.watch(`rounds.${roundIndex}.end_date`);
 
@@ -287,8 +313,8 @@ function RoundCard({
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0 flex-1">
               <div className="flex items-center gap-2.5 min-w-0">
-                {roundName ? (
-                  <span className="text-sm font-semibold truncate">{roundName}</span>
+                {roundTitle ? (
+                  <span className="text-sm font-semibold truncate">{roundTitle}</span>
                 ) : (
                   <span className="text-sm text-muted-foreground italic">Untitled round</span>
                 )}
@@ -339,10 +365,10 @@ function RoundCard({
 
         {expanded && (
           <CardContent className="px-5 py-6 space-y-7">
-            {/* Hidden: number field */}
+            {/* Hidden: round_number field */}
             <FormField
               control={form.control}
-              name={`rounds.${roundIndex}.number`}
+              name={`rounds.${roundIndex}.round_number`}
               render={({ field }) => (
                 <input
                   type="hidden"
@@ -354,14 +380,16 @@ function RoundCard({
               )}
             />
 
-            {/* Row 1: Name + Mode */}
+            {/* Row 1: Title + Interview Type */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <FormField
                 control={form.control}
-                name={`rounds.${roundIndex}.name`}
+                name={`rounds.${roundIndex}.title`}
                 render={({ field }) => (
                   <FormItem className="space-y-2">
-                    <FormLabel className="text-xs text-muted-foreground font-medium">Round Name</FormLabel>
+                    <FormLabel className="text-xs text-muted-foreground font-medium">
+                      Round Title <span className="text-primary">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Input placeholder="e.g. Technical Screen" className="h-10 bg-transparent" {...field} />
                     </FormControl>
@@ -371,16 +399,16 @@ function RoundCard({
               />
               <FormField
                 control={form.control}
-                name={`rounds.${roundIndex}.mode`}
+                name={`rounds.${roundIndex}.interview_type`}
                 render={({ field }) => (
                   <FormItem className="space-y-2">
                     <FormLabel className="text-xs text-muted-foreground font-medium">
-                      Mode <span className="text-primary">*</span>
+                      Interview Type <span className="text-primary">*</span>
                     </FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger className="h-10">
-                          <SelectValue placeholder="Select mode" />
+                          <SelectValue placeholder="Select type" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -394,6 +422,33 @@ function RoundCard({
                         ))}
                       </SelectContent>
                     </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Row 1b: Duration */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <FormField
+                control={form.control}
+                name={`rounds.${roundIndex}.duration_minutes`}
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
+                    <FormLabel className="text-xs text-muted-foreground font-medium flex items-center gap-1.5">
+                      <Clock className="h-3 w-3" />
+                      Duration (minutes) <span className="text-primary">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min={1}
+                        placeholder="60"
+                        className="h-10 bg-transparent"
+                        {...field}
+                        onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : '')}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -444,22 +499,71 @@ function RoundCard({
                   )}
                 />
               </div>
+              <FormField
+                control={form.control}
+                name={`rounds.${roundIndex}.timezone`}
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
+                    <FormLabel className="text-xs text-muted-foreground font-medium flex items-center gap-1.5">
+                      <Globe className="h-3 w-3" />
+                      Timezone <span className="text-primary">*</span>
+                    </FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="h-10">
+                          <SelectValue placeholder="Select timezone" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {TIMEZONE_OPTIONS.map((tz) => (
+                          <SelectItem key={tz} value={tz}>
+                            {tz.replace(/_/g, ' ')}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
             {/* Row 3: Meeting link */}
             <FormField
               control={form.control}
-              name={`rounds.${roundIndex}.meeting_link_rules`}
+              name={`rounds.${roundIndex}.meet_link`}
               render={({ field }) => (
                 <FormItem className="space-y-2">
                   <FormLabel className="text-xs text-muted-foreground font-medium flex items-center gap-1.5">
                     <Link2 className="h-3 w-3" />
-                    Meeting Link / Location
+                    Meeting Link
                   </FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="https://meet.google.com/... or office address"
+                      placeholder="https://meet.google.com/..."
                       className="h-10 bg-transparent"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Row 3b: Instructions */}
+            <FormField
+              control={form.control}
+              name={`rounds.${roundIndex}.instructions`}
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <FormLabel className="text-xs text-muted-foreground font-medium flex items-center gap-1.5">
+                    <FileText className="h-3 w-3" />
+                    Instructions
+                  </FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="e.g. Please be prepared to discuss your previous projects and answer technical questions."
+                      className="min-h-20 resize-y text-sm bg-transparent"
                       {...field}
                     />
                   </FormControl>
@@ -471,7 +575,7 @@ function RoundCard({
             {/* Row 4: Panel members */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <SectionLabel icon={Users}>Panel Members</SectionLabel>
+                <SectionLabel icon={Users}>Panelists</SectionLabel>
                 <Button
                   type="button"
                   variant="outline"
@@ -480,7 +584,7 @@ function RoundCard({
                   className="h-7 text-xs gap-1.5 border-dashed hover:border-primary/40 hover:text-primary hover:bg-primary/5 transition-all -mt-3"
                 >
                   <UserPlus className="h-3 w-3" />
-                  Add Member
+                  Add Panelist
                 </Button>
               </div>
 
@@ -497,9 +601,9 @@ function RoundCard({
                 ))}
               </div>
 
-              {form.formState.errors?.rounds?.[roundIndex]?.panel?.root && (
+              {form.formState.errors?.rounds?.[roundIndex]?.panelists?.root && (
                 <p className="text-sm text-destructive">
-                  {form.formState.errors.rounds[roundIndex].panel.root?.message}
+                  {form.formState.errors.rounds[roundIndex].panelists.root?.message}
                 </p>
               )}
             </div>
@@ -588,7 +692,7 @@ function FormSectionHeader({
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 const InterviewForm = forwardRef(function InterviewForm(
-  { interviewDetails, onUpdate, onNext }: InterviewFormProps,
+  { interviewDetails, onUpdate }: InterviewFormProps,
   ref
 ) {
   const form = useForm<InterviewFormTypes>({
@@ -611,8 +715,6 @@ const InterviewForm = forwardRef(function InterviewForm(
 
   const onSubmit = (values: InterviewFormTypes) => {
     onUpdate(values);
-    toast.success('Interview details saved');
-    onNext?.();
   };
 
   useImperativeHandle(ref, () => ({

@@ -31,7 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Skip fetching user on public routes
-    const publicRoutes = ["/panelist/availability"];
+    const publicRoutes = ["/panelist/availability","/interview/book"];
     if (publicRoutes.includes(window.location.pathname)) {
       setLoading(false);
       return;

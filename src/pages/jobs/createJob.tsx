@@ -1,9 +1,10 @@
 import React from 'react'
 import StepIndicator from '@/components/jobs/createJob/stepIndicator'
-import { Upload, FileText, Sparkles } from 'lucide-react';
+import { Upload, FileText, Sparkles, CalendarDays } from 'lucide-react';
 import UploadJd from '@/components/jobs/createJob/uploadJd';
 import { toast } from 'sonner';
 import { type ExtractedJD } from '@/types/types';
+import type { InterviewFormTypes } from '@/types/interviewTypes';
 import JobForm from '@/components/jobs/createJob/jobForm';
 import InterviewForm from '@/components/jobs/createJob/InterviewForm';
 import ManageCriterias from '@/components/jobs/createJob/manageCriterias';
@@ -14,7 +15,7 @@ const steps = [
   { number: 1, title: 'Upload JD', description: 'Upload job description', icon: Upload },
   { number: 2, title: 'Basic Details', description: 'Fill essential information', icon: FileText },
   { number: 3, title: 'Set Rubric', description: 'Review & finalize rubric', icon: Sparkles },
-  { number: 4,title: 'Create & Review Criteria',description: 'Finalize and publish',icon: Sparkles}
+  { number: 4, title: 'Interview Setup', description: 'Configure interview rounds', icon: CalendarDays },
 ];
 
 // Friendly status messages shown during rubric generation
@@ -32,6 +33,9 @@ const CreateJob = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = React.useState<number>(1);
   const [extractedJData, setExtractedJobData] = React.useState<ExtractedJD | null>(null);
+
+  /** Job ID returned by set-rubric — needed for interview round creation */
+  const [jobId, setJobId] = React.useState<string | null>(null);
 
   const jobFormRef = React.useRef<{ submit: () => void } | null>(null);
   const interviewFormRef = React.useRef<{ submit: () => void } | null>(null);
@@ -110,10 +114,55 @@ const CreateJob = () => {
   };
 
 
-  const handleInterviewInfoAndGoNext = (details: ExtractedJD["interview_details"]) => {
-    setExtractedJobData(prev => prev ? { ...prev, interview_details: details } : prev);
-    setCurrentStep(4);
-  }
+  /**
+   * Step 4: Create interview rounds via backend API, then navigate to job page.
+   */
+  const handleCreateInterviewRounds = async (details: InterviewFormTypes) => {
+    if (!jobId) {
+      toast.error('Job not found. Please go back and create the job first.');
+      return;
+    }
+
+    const rounds = details.rounds;
+    if (!rounds || rounds.length === 0) {
+      toast.success('Job created! Skipping interview setup.');
+      navigate(`/jobs/${jobId}`, { replace: true });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setStatusMsg('Creating interview rounds…');
+
+      const res = await axios.post('/interview/bulk-create-round-configs', {
+        job_id: jobId,
+        rounds: rounds.map((round) => ({
+          title: round.title,
+          round_number: round.round_number,
+          interview_type: round.interview_type,
+          instructions: round.instructions || null,
+          duration_minutes: round.duration_minutes,
+          panelists: round.panelists,
+          meet_link: round.meet_link || null,
+          start_date: round.start_date.toISOString(),
+          end_date: round.end_date.toISOString(),
+          timezone: round.timezone,
+        })),
+      });
+      console.log(res);
+      
+
+      toast.success('Interview rounds created! Taking you to the job page…');
+      navigate(`/jobs/${jobId}`, { replace: true });
+    } catch (error: any) {
+      console.error('Error creating interview rounds:', error);
+      const detail = error?.response?.data?.detail || error?.response?.data?.message;
+      toast.error(detail ? String(detail) : 'Failed to create interview rounds. Please try again.');
+    } finally {
+      setLoading(false);
+      setStatusMsg('');
+    }
+  };
 
   const handleNext = () => {
     if (loading) return; // prevent double-click
@@ -128,12 +177,12 @@ const CreateJob = () => {
     }
 
     if (currentStep === 3) {
-      interviewFormRef.current?.submit();
+      criteriaRef.current?.submit();
       return;
     }
 
     if (currentStep === 4) {
-      criteriaRef.current?.submit();
+      interviewFormRef.current?.submit();
       return;
     }
 
@@ -157,6 +206,9 @@ const CreateJob = () => {
   /**
    * Step 3 → DB Write (only place tables are written).
    */
+  /**
+   * Step 3 → DB Write: Create Job + Rubric, store job_id, then proceed to step 4.
+   */
   async function handleSetRubric() {
     if (!extractedJData) { toast.error("Missing job data. Please start over."); return; }
     try {
@@ -174,8 +226,10 @@ const CreateJob = () => {
       const response = await axios.post('/jobs/set-rubric', payload);
 
       if (response.status === 201) {
-        toast.success('Job created successfully! Taking you to the job page…');
-        navigate(`/jobs/${response.data.job_id}`, { replace: true });
+        const createdJobId = response.data.job_id;
+        setJobId(createdJobId);
+        toast.success('Job & rubric saved! Now configure interview rounds.');
+        setCurrentStep(4);
       }
     } catch (error) {
       console.error('Error setting rubric:', error);
@@ -210,29 +264,20 @@ const CreateJob = () => {
         />
       )}
 
-      {
-        currentStep === 3 && (
-          // ✅ Correct
-          <InterviewForm
-            ref={interviewFormRef}
-            interviewDetails={extractedJData?.interview_details}
-            onUpdate={(details) =>
-              setExtractedJobData(prev => prev ? { ...prev, interview_details: details } : prev)
-            }
-            onNext={() => setCurrentStep(4)}   
-          />
-        )
-      }
-
-      
-
-
-      {currentStep === 4 && extractedJData?.sections && (
+      {currentStep === 3 && extractedJData?.sections && (
         <ManageCriterias
           ref={criteriaRef}
           extractedJD={extractedJData}
           onUpdate={(updatedJD) => setExtractedJobData(updatedJD)}
           onNext={handleSetRubric}
+        />
+      )}
+
+      {currentStep === 4 && jobId && (
+        <InterviewForm
+          ref={interviewFormRef}
+          interviewDetails={extractedJData?.interview_details}
+          onUpdate={handleCreateInterviewRounds}
         />
       )}
 
@@ -250,7 +295,11 @@ const CreateJob = () => {
             {/* Title */}
             <div className="text-center space-y-1.5">
               <p className="text-base font-semibold text-foreground">
-                {currentStep === 2 ? "Generating Rubric with AI" : "Saving Your Job"}
+                {currentStep === 2
+                  ? "Generating Rubric with AI"
+                  : currentStep === 4
+                    ? "Setting Up Interviews"
+                    : "Saving Your Job"}
               </p>
               <p className="text-sm text-muted-foreground leading-relaxed min-h-10 transition-all duration-500">
                 {statusMsg || "Processing…"}
@@ -273,7 +322,9 @@ const CreateJob = () => {
             <p className="text-xs text-muted-foreground text-center">
               {currentStep === 2
                 ? "This usually takes 20–40 seconds. Please don't close the page."
-                : "Saving to database…"}
+                : currentStep === 4
+                  ? "Creating interview rounds…"
+                  : "Saving to database…"}
             </p>
           </div>
         </div>

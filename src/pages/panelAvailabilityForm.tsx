@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { set, z } from "zod";
 import {
     format,
     isAfter,
@@ -479,6 +479,10 @@ export default function SlotAvailabilityForm() {
     const [submitSuccess, setSubmitSuccess] = useState(false);
     const [fetchError, setFetchError] = useState<string | null>(null);
 
+    const [CalendarNotConnected, setCalendarNotConnected] = useState(false);
+    const [connecting, setConnecting] = useState(false);
+    // const [provider, setProvider] = useState("Google");//currently only supporting this
+
     useEffect(() => {
         if (!token) {
             setFetchError("No token found. Please use the link from your email invitation.");
@@ -488,7 +492,19 @@ export default function SlotAvailabilityForm() {
         (async () => {
             try {
                 const res = await axios.get(`/panel/get-details-for-form?token=${token}`);
-                setConfig(res.data);
+
+                const data = res.data;
+
+                console.log("data", data);
+
+
+                if (data.status === "no_calendar") {
+                    setCalendarNotConnected(true);
+
+                }
+                else {
+                    setConfig(res.data);
+                }
             } catch (err: any) {
                 setFetchError(
                     err?.response?.data?.detail ||
@@ -559,7 +575,7 @@ export default function SlotAvailabilityForm() {
                 })),
             }));
             await axios.post(`/panel/submit-availability?token=${token}`, available_slots);
-              setSubmitSuccess(true);
+            setSubmitSuccess(true);
             toast.success("Availability submitted!");
         } catch (err: any) {
             toast.error(
@@ -596,6 +612,63 @@ export default function SlotAvailabilityForm() {
                 </div>
             </div>
         );
+    }
+
+
+    if (CalendarNotConnected) {
+
+
+
+        const handleConnect = async () => {
+            setConnecting(true);
+            try {
+                const currentPage =
+                    window.location.pathname + window.location.search;
+
+                const res = await axios.get(
+                    `/oauth/google/calendar?redirect_to=${encodeURIComponent(currentPage)}`
+                );
+
+                window.location.href = res.data;
+
+            } catch {
+                toast.error("Failed to connect calendar. Please try again.");
+            }
+            setConnecting(false);
+        };
+
+        return (
+            <div className="min-h-screen flex items-center justify-center p-4">
+                <div className="max-w-sm w-full text-center space-y-4">
+                    <div className="h-16 w-16 rounded-full bg-blue-500/10 flex items-center justify-center mx-auto">
+                        <CalendarDays className="h-8 w-8 text-blue-500" />
+                    </div>
+                    <div className="space-y-1">
+                        <h2 className="text-base font-semibold">Connect Your Calendar</h2>
+                        <p className="text-sm text-muted-foreground">
+                            You need to connect Google Calendar before submitting your availability.
+                        </p>
+                    </div>
+                    <Button
+                        className="w-full h-9 text-sm font-medium"
+                        onClick={handleConnect}
+                        disabled={connecting}
+                    >
+                        {connecting ? (
+                            <span className="flex items-center gap-2">
+                                <span className="h-3.5 w-3.5 rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground animate-spin" />
+                                Connecting…
+                            </span>
+                        ) : (
+                            <span className="flex items-center gap-2">
+                                <CalendarDays className="h-3.5 w-3.5" />
+                                Connect Google Calendar
+                            </span>
+                        )}
+                    </Button>
+                </div>
+            </div>
+        )
     }
 
     // ── Non-open statuses ─────────────────────────────────────────────────────

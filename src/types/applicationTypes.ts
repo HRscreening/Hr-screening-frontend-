@@ -15,10 +15,10 @@ export interface Candidate {
 
 export type ApplicationStatus = 
   | 'applied' 
-  | 'in_review' 
   | 'interview_scheduled' 
   | 'offer_extended' 
-  | 'rejected' 
+  | 'rejected'
+  | 'drop_off' 
   | 'hired';
 
 // export interface AIAnalysis {
@@ -42,7 +42,7 @@ export interface Score {
   is_latest: boolean;
 }
 
-export type statusType = 'applied' | 'in_review' | 'shortlisted' | 'rejected' | 'offered';
+export type statusType = 'applied' | 'shortlisted' | 'offer_extended' | 'rejected' | 'hired' | `round_${number}` | 'drop_off';
 
 export interface Application {
   id: string;

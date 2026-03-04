@@ -19,6 +19,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import ApplicationRow from "@/components/jobs/jobPage/application/applicantRow";
 import type { Application, ApplicationsResponse } from '@/types/applicationTypes';
+// import Job from '@/pages/jobs/Jobs';
 
 interface ApplicationsTableProps {
   data?: ApplicationsResponse;
@@ -93,10 +94,10 @@ const ApplicationsTable: React.FC<ApplicationsTableProps> = ({
           <TableHeader >
             <TableRow>
               <TableHead>Candidate</TableHead>
-              <TableHead>Progress</TableHead>
-              <TableHead>Match</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              {/* <TableHead>Progress</TableHead> */}
+              <TableHead className="w-36">Match</TableHead>
+              <TableHead className="w-36">Status</TableHead>
+              <TableHead className="w-24 text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

@@ -17,6 +17,7 @@ export interface JobOverviewInfo {
   location: string | null;
   target_headcount: number | null;
   current_batch_id: string | null;
+  manual_rounds_count: number;
 }
 
 export interface DashboardInfo {
