@@ -1508,7 +1508,7 @@ function SelectionSummary({
     compact?: boolean;
 }) {
     const selectedCount = Object.values(selections).filter(Boolean).length;
-    const requiredCount = 1; // backend only accepts one slot at a time
+    // const requiredCount = 1; // backend only accepts one slot at a time
     const canSubmit = selectedCount >= 1 && Object.values(selections).some(Boolean);
 
     // The single active slot ID and its previous value
