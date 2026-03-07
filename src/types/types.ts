@@ -123,6 +123,8 @@ export type RRGFinal = {
   };
 };
 
+import type {InterviewFormTypes} from "@/types/interviewTypes";
+
 export type ExtractedJD = {
   domain: string;
   domain_confidence: number;
@@ -136,6 +138,11 @@ export type ExtractedJD = {
   needs_clarification?: boolean;
   /** Raw RRG for displaying full parsed JD viewer */
   _rrg?: RRGFinal;
+  criteria: {
+    mandatory_criteria: Record<string, CriterionV2>;
+    screening_criteria: Record<string, CriterionV2>;
+  };
+  interview_details?: InterviewFormTypes;
 }
 
 

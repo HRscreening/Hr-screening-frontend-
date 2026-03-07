@@ -9,6 +9,8 @@ import CreateJob from "@/pages/jobs/createJob";
 import Settings from "@/pages/settings";
 import JobPage from "@/pages/jobs/jobPage";
 import RubricEditorPage from "@/pages/jobs/rubricEditor";
+import JobSettingsPage from "@/pages/jobs/jobSettings";
+import RoundSettings from "@/pages/jobs/roundSettings"
 
 import NotFound from "@/pages/NotFound";
 
@@ -16,6 +18,8 @@ import RequireAuth from "@/guards/RequireAuth";
 import RequireOrgContext from "@/guards/RequireOrgContext";
 import RequireOrgRole from "@/guards/RequireOrgRole";
 
+import PanelAvailabilityForm from "@/pages/panelAvailabilityForm";
+import CandidateSlotBooking from "@/pages/slotBookingPage";
 
 function App() {
   return (
@@ -35,6 +39,8 @@ function App() {
             <Route path="jobs/:jobId" element={<JobPage />} />
             <Route path="jobs/:jobId/rubric/edit" element={<RubricEditorPage mode="edit" />} />
             <Route path="jobs/:jobId/rubric/new" element={<RubricEditorPage mode="new" />} />
+            <Route path="jobs/:jobId/settings" element={<JobSettingsPage />} />
+            <Route path="jobs/:jobId/settings/rounds" element={<RoundSettings />} />
 
             {/* Org-only */}
             <Route element={<RequireOrgContext />}>
@@ -52,7 +58,10 @@ function App() {
 
         {/* 404 */}
         <Route path="*" element={<NotFound />} />
-      </Routes>
+        <Route path="/panelist/availability" element={<PanelAvailabilityForm />} />
+        <Route path="/interview/book" element={<CandidateSlotBooking  />} />
+        <Route path="/interview/reschedule" element={<CandidateSlotBooking is_reschedule={true} />} />
+      </Routes> 
 
       <Toaster />
     </BrowserRouter>

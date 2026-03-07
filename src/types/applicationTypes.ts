@@ -15,10 +15,10 @@ export interface Candidate {
 
 export type ApplicationStatus = 
   | 'applied' 
-  | 'in_review' 
   | 'interview_scheduled' 
   | 'offer_extended' 
-  | 'rejected' 
+  | 'rejected'
+  | 'drop_off' 
   | 'hired';
 
 // export interface AIAnalysis {
@@ -36,12 +36,13 @@ export interface Score {
   ai_confidence: number;
   created_at: string;
   grounding_data: GroundingData;
+  breakdown: Breakdown;
   is_overridden: boolean;
   version: number;
   is_latest: boolean;
 }
 
-export type statusType = 'applied' | 'in_review' | 'shortlisted' | 'rejected' | 'offered';
+export type statusType = 'applied' | 'shortlisted' | 'offer_extended' | 'rejected' | 'hired' | `round_${number}` | 'drop_off';
 
 export interface Application {
   id: string;
@@ -60,7 +61,7 @@ export interface Application {
   ai_analysis: AIAnalysis;
   candidate: Candidate;
   resume: Resume;
-  scores: Score[];
+  scores: Score;
 }
 
 export interface Pagination {
@@ -97,6 +98,30 @@ export interface AIAnalysis {
 export interface GroundingData {
   [key: string]: any; // Matches Dict[str, Any] - completely flexible
 }
+
+// Sub-criterion score
+export type SubCriterionScore = {
+  score: number; // 0–100
+  reason?: string | null;
+  evidence?: string[] | null;
+};
+
+// Criterion score
+export type CriterionScore = {
+  score: number;
+  reason?: string | null;
+  evidence?: string[] | null;
+  sub_criteria?: Record<string, SubCriterionScore>; 
+  // using Record because in BreakdownSchema it's stored as dict
+};
+
+// Breakdown schema
+export type Breakdown = {
+  mandatory_criteria: Record<string, CriterionScore>;
+  screening_criteria: Record<string, CriterionScore>;
+};
+
+
 export interface Resume {
   id: string;
   raw_file_url: string;
