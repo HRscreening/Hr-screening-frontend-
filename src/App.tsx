@@ -59,8 +59,9 @@ function App() {
         {/* 404 */}
         <Route path="*" element={<NotFound />} />
         <Route path="/panelist/availability" element={<PanelAvailabilityForm />} />
-        <Route path="/interview/book" element={<CandidateSlotBooking />} />
-      </Routes>
+        <Route path="/interview/book" element={<CandidateSlotBooking  />} />
+        <Route path="/interview/reschedule" element={<CandidateSlotBooking is_reschedule={true} />} />
+      </Routes> 
 
       <Toaster />
     </BrowserRouter>

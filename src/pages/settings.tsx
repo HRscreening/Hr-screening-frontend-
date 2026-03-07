@@ -302,7 +302,7 @@ interface ProviderRowProps {
 const ProviderRow = ({
   provider,
   onConnect,
-  onDisconnect,
+  // onDisconnect,
   onViewDetails,
 }: ProviderRowProps) => {
   const { status, account } = provider;

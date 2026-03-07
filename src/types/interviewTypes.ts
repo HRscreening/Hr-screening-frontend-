@@ -62,3 +62,38 @@ export const interviewFormSchema = z.object({
 export type PanelMember = z.infer<typeof panelMemberSchema>;
 export type InterviewRound = z.infer<typeof roundSchema>;
 export type InterviewFormTypes = z.infer<typeof interviewFormSchema>;
+
+
+export type RoundTimeLine = {
+    
+}
+
+
+
+export type TimelineData = {
+    id: string;
+    event_type:string;
+    label: string;
+    actor: string;
+    details: object;
+    summary: string;
+    created_at: string;
+}
+
+
+export type RoundData = {
+        id: string;
+        round_number: number;
+        title: string;
+        is_completed: boolean;
+        status: string;
+        is_summary_available: boolean;
+        is_transcript_available: boolean;
+        timeline: TimelineData[] | null;
+    } 
+
+
+export type InterviewTabData = {
+    currentRound: RoundData | null;
+    pastRounds: RoundData[] | null;
+}
