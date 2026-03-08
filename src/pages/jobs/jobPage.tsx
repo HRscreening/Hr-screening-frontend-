@@ -1,4 +1,4 @@
-import React, { useState, useEffect} from 'react';
+import React, { useEffect} from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import {
   Share2,
   RefreshCcw,
   ListCheck,
+  Settings,
   TargetIcon,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -20,26 +21,32 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import RubricManager from "@/components/jobs/jobPage/buttons/rubricManager"
+// import RubricManager from "@/components/jobs/jobPage/buttons/rubricManager"
+import RubricVersionSwitcher from "@/components/jobs/jobPage/buttons/rubricVersionButton"
 import TotalApplicationCard from '@/components/jobs/cards/totalApplicationCard';
 import AnalyticsCard from '@/components/jobs/cards/analyticsCard';
 import Applications from '@/components/jobs/jobPage/application/application';
 import Loader from '@/components/loader';
-// import type { JobOverviewResponse, RubricVersionData } from '@/types/jobTypes';
-import type { JobOverviewResponse} from '@/types/newJobType';
-
+import { useJobPageStore } from '@/store/jobPageStore';
+import type { RubricVersionData } from '@/types/jobTypes';
 
 const JobOverview: React.FC = () => {
   const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
-  const [jobData, setJobData] = useState<JobOverviewResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
-  const [versionData, setVersionData] = useState<RubricVersionData | null>(null);
-  // TODO:Pass this version to applications and criterias component to fetch data based on version
-  const [activeVersion, setActiveVersion] = useState<string | undefined>(undefined);
+  // ── Zustand store (replaces local state — no more prop drilling) ──
+  const {
+    jobData, versionData, activeVersion, isLoading,
+    initJob, setJobData, setVersionData, setActiveVersion, setIsLoading, reset,
+  } = useJobPageStore();
 
 
+
+  // Initialise store when jobId changes & clean up on unmount
+  useEffect(() => {
+    if (jobId) initJob(jobId);
+    return () => { reset(); };
+  }, [jobId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch job data
   useEffect(() => {
@@ -50,13 +57,9 @@ const JobOverview: React.FC = () => {
 
         if (res.status === 200) {
           setJobData(res.data);
-          setActiveVersion(res.data.criteria.current_active_version); // Set active version from fetched data
+          setActiveVersion(res.data.criteria.current_active_version);
           return;
         }
-
-        // console.log("Using mock data for job overview",res.data);
-
-        // setJobData(mockData);
       } catch (error) {
         console.error('Error fetching job data:', error);
         toast.error('Failed to load job data');
@@ -86,7 +89,6 @@ const JobOverview: React.FC = () => {
           setActiveVersion(mapped.current_active_version);
         }
       } catch (e) {
-        // Non-fatal: keep UI usable even if versions endpoint isn't available
         console.warn("Failed to fetch rubric versions", e);
       }
     };
@@ -176,17 +178,33 @@ const JobOverview: React.FC = () => {
           </h1>
         </div>
 
-        <div id='button group' className='flex flex-row gap-2.5 items-center'>
+        <div  className='flex flex-row gap-2.5 items-center'>
           {/* <Button className="bg-gray-300/50 cursor-pointer text-black px-4 py-2 rounded-lg hover:bg-hover-primary transition">
             <Share className="w-5 h-5 inline" />
             Share
           </Button> */}
+          <Tooltip 
+          >
+            <TooltipTrigger
+            onClick={()=>navigate(`/jobs/${jobId}/settings`)}
+            >
+
+              <div className="bg-primary cursor-pointer text-primary-foreground px-3 py-2 rounded-lg hover:bg-hover-primary transition">
+                <Settings className="w-4 h-4 inline" />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent
+           
+            >
+              <p>Settings</p>
+            </TooltipContent>
+          </Tooltip>
           <Tooltip >
             <TooltipTrigger>
 
-              <Button className="bg-primary cursor-pointer text-primary-foreground px-3 py-2 rounded-lg hover:bg-hover-primary transition">
+              <div className="bg-primary cursor-pointer text-primary-foreground px-3 py-2 rounded-lg hover:bg-hover-primary transition">
                 <Share2 className="w-4 h-4 inline" />
-              </Button>
+              </div>
             </TooltipTrigger>
             <TooltipContent>
               <p>Share</p>
@@ -201,12 +219,12 @@ const JobOverview: React.FC = () => {
           </Button> */}
           <Tooltip >
             <TooltipTrigger>
-              <Button
+              <div
                 className="bg-primary cursor-pointer text-primary-foreground px-3 py-2 rounded-lg hover:bg-hover-primary transition"
                 onClick={() => navigate(`/jobs/${jobId}/rubric/edit`)}
               >
                 <ListCheck className="w-4 h-4 inline" />
-              </Button>
+              </div>
             </TooltipTrigger>
             <TooltipContent>
               <p>Edit rubric</p>
@@ -232,8 +250,8 @@ const JobOverview: React.FC = () => {
         <AnalyticsCard title='Avg. Match Score' value={`${jobData.dashboard.avg_score}%`} desc='based on skills & exp.' icon={<TargetIcon className='h-5 w-5' />} />
       </div>
 
-      {/* Rubric */}
-      <Applications job_id={jobId as string} rubric_version={jobData.criteria?.rubric_id ?? "5488"} />
+      {/* Applications — reads jobId, activeVersion, maxRound from Zustand store */}
+      <Applications />
 
 
     </div>

@@ -103,42 +103,6 @@ const UploadJd = ({ setExtractedJobData, setCurrentStep, }: UploadJdProps) => {
 
 
 
-  // const handleContinue = async () => {
-  //   try {
-
-  //     const formData = new FormData();
-  //     if (uploadedFile) {
-  //       formData.append('file', uploadedFile);
-  //     } else {
-  //       setError('No file uploaded');
-  //       return;
-  //     }
-
-  //     await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulate loading time
-  //     // const response = await axios.post('/jobs/upload-jd', formData);
-
-  //     setTimeout(() => {
-  //     }, 2000);
-  //     // if (response.status === 200) {
-  //     //   // Proceed to next step
-  //     //   setExtractedJobData(response.data);
-  //     //   setCurrentStep(2);
-  //     //   console.log('File uploaded successfully');
-  //     // } else {
-  //     //   console.log(response.data);
-
-  //     //   setError('Failed to upload file. Please try again.');
-  //     // }
-
-  //   } catch (error) {
-  //     console.error('Error uploading file:', error);
-  //     setError('An error occurred while uploading the file. Please try again.');
-  //   }
-  //     setIsLoading(false);
-
-
-  // }
-
   const handleContinue = async () => {
     try {
       if (!uploadedFile) {
@@ -211,7 +175,7 @@ const UploadJd = ({ setExtractedJobData, setCurrentStep, }: UploadJdProps) => {
               type="file"
               onChange={handleFileInput}
               accept=".pdf,.doc,.docx,.txt"
-              className="hidden"
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
             />
 
             {!uploadedFile ? (

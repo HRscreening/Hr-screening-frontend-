@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react';
 import ApplicationsTable from "@/components/jobs/jobPage/application/applicationTable";
 import type { ApplicationsResponse, Application } from '@/types/applicationTypes';
-// import applicationData from '@/assets/test.json';
 import axios from "@/axiosConfig"
 import { Separator } from "@/components/ui/separator";
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
+import { useJobId, useActiveVersion } from '@/store/jobPageStore';
 
 
 
-function Applications({ job_id, rubric_version: _rubric_version }: { job_id: string, rubric_version: string }) {
+function Applications() {
+  const jobId = useJobId();
+  const activeVersion = useActiveVersion();
   const [isLoading, setIsLoading] = useState(false);
   const [currentData, setCurrentData] = useState<ApplicationsResponse | undefined>(undefined);
   const [page, setPage] = useState(1);
@@ -44,7 +46,7 @@ function Applications({ job_id, rubric_version: _rubric_version }: { job_id: str
     try {
       setIsLoading(true);
 
-      //TODO: fliter query param to be added once backend supports filtering applications based on status and other params.
+      //TODO: filter query param to be added once backend supports filtering applications based on status and other params.
       const response = await axios.get(
         `jobs/get-applications/${jobId}`,
         {
@@ -55,7 +57,7 @@ function Applications({ job_id, rubric_version: _rubric_version }: { job_id: str
           withCredentials: true,
         }
       );
-      console.log(rubric_version)
+      console.log(activeVersion, "rubric version in application fetch")
       setCurrentData(response.data as ApplicationsResponse);
     } catch (error) {
       console.error("Error loading application data:", error);
@@ -67,10 +69,12 @@ function Applications({ job_id, rubric_version: _rubric_version }: { job_id: str
 
 
   useEffect(() => {
-    if (!job_id) return;
+    if (!jobId) return;
 
-    getApplicationData(job_id, page, pageSize);
-  }, [job_id, page, pageSize]);
+    getApplicationData(jobId, page, pageSize);
+    
+
+  }, [jobId, page, pageSize]);
 
 
   const handlePageChange = (newPage: number) => {
