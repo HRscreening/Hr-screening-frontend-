@@ -356,6 +356,12 @@ const CriteriaManager = forwardRef(function CriteriaManager(
     onUpdate({ ...extractedJD, sections: next });
   };
 
+  const updateSectionImportance = (key: string, importance: number) => {
+    const current = ensureSections(extractedJD.sections || []);
+    const next = current.map((s) => (s.key === key ? { ...s, importance } : s));
+    onUpdate({ ...extractedJD, sections: next });
+  };
+
   const addCriterion = (key: string, nameRaw: string) => {
     const name = titleToSnakeCase(nameRaw);
     if (!name) { toast.error("Enter a criterion name"); return; }
@@ -426,8 +432,28 @@ const CriteriaManager = forwardRef(function CriteriaManager(
           return (
             <Card key={section.key} className="border border-border overflow-hidden">
               {/* Section header */}
-              <div className="bg-muted/30 px-5 py-4 border-b">
-                <h3 className="text-lg font-semibold">{section.label}</h3>
+              <div className="bg-muted/30 px-5 py-4 border-b space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">{section.label}</h3>
+                  <div className="flex items-center gap-3">
+                    <TierBadge importance={section.importance ?? 5} maxImp={10} />
+                    {(section.weight ?? 0) > 0 && (
+                      <span className="text-xs font-medium text-muted-foreground bg-background px-2 py-0.5 rounded border">
+                        {section.weight}% of total
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-xs text-muted-foreground w-24 shrink-0">Section Impact</span>
+                  <Slider
+                    value={[section.importance ?? 5]}
+                    onValueChange={(v) => updateSectionImportance(section.key, clampInt(v[0], 1, 10))}
+                    min={1} max={10} step={1}
+                    className="flex-1 cursor-pointer"
+                  />
+                  <span className="text-xs font-semibold text-muted-foreground w-8 text-right">{section.importance ?? 5}/10</span>
+                </div>
               </div>
 
               <CardContent className="p-5 space-y-4">

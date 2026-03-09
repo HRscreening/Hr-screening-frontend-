@@ -61,7 +61,7 @@ export interface Application {
   ai_analysis: AIAnalysis;
   candidate: Candidate;
   resume: Resume;
-  scores: Score;
+  scores: Score[];  // backend always returns an array
 }
 
 export interface Pagination {

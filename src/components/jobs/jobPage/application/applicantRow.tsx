@@ -9,6 +9,8 @@ import { Status } from '@/components/jobs/jobPage/buttons/statusButton';
 interface ApplicationRowProps {
   application: Application;
   onViewDetails: (application: Application) => void;
+  onApplicationDeleted?: () => void;
+  jobId?: string;
 }
 
 const avatarColors = [
@@ -95,8 +97,8 @@ function InterviewProgressBar() {
 const ApplicationRow: React.FC<ApplicationRowProps> = ({ application, onViewDetails }) => {
   const { candidate, scores, status, id } = application;
   const [currentStatus, setCurrentStatus] = React.useState<statusType>(status);
-  // const latestScore = scores;
-  const matchPercentage = scores?.overall_score || 0;
+  const activeScore = scores?.[0] ?? null;
+  const matchPercentage = activeScore?.overall_score ?? 0;
   const fullName = candidate?.full_name;
   const email = candidate?.email;
   const [openAnalysis, setOpenAnalysis] = useState<boolean>(false);
@@ -134,11 +136,11 @@ const ApplicationRow: React.FC<ApplicationRowProps> = ({ application, onViewDeta
             {getInitials(fullName)}
           </div>
           <div className="flex flex-col">
-            <span className="font-medium text-foreground">
-              {fullName ? fullName : 'NA'}
+            <span className={cn("font-medium", fullName ? "text-foreground" : "text-muted-foreground italic")}>
+              {fullName ? fullName : 'Unknown'}
             </span>
             <span className="text-sm text-muted-foreground">
-              {email ? email : 'No email provided'}
+              {email ? email : 'No email found'}
             </span>
           </div>
         </div>
@@ -182,7 +184,7 @@ const ApplicationRow: React.FC<ApplicationRowProps> = ({ application, onViewDeta
       </TableCell>
 
       <TableCell className="text-right ">
-        <ViewAnalysis overallScore={scores?.overall_score} breakdown={scores?.breakdown} aiAnalysis={application.ai_analysis} resume={application.resume} openSheet={openAnalysis} setOpenSheet={setOpenAnalysis} />
+        <ViewAnalysis overallScore={activeScore?.overall_score} breakdown={activeScore?.breakdown} aiAnalysis={application.ai_analysis} resume={application.resume} openSheet={openAnalysis} setOpenSheet={setOpenAnalysis} />
         <MenuItems applicationId={id} name={candidate?.full_name} email={candidate?.email} phone={candidate?.phone} candidate_id={candidate?.id} is_flagged={application.is_flagged} is_starred={application.is_starred} flag_reason={application.flag_reason} />
       </TableCell>
 

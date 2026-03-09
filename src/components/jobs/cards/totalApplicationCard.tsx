@@ -10,16 +10,19 @@ import {
 import type { Dashboard} from '@/types/jobTypes';
 
 type TotalApplicationCardProp = {
-    data: Dashboard;
+    data: Dashboard | null | undefined;
 }
 
 const TotalApplicationCard = ({ data }: TotalApplicationCardProp) => {
 
-    const appliedPercent = (data.by_status.applied || 0 / data.total_applications) * 100;
-    const shortlistedPercent = (data.by_status.shortlisted || 0 / data.total_applications) * 100;
-    const interviewedPercent = (data.by_status.in_review || 0 / data.total_applications) * 100;
-    const hiredPercent = (data.by_status.hired || 0 / data.total_applications) * 100;
-    const rejectedPercent = (data.by_status.rejected || 0 / data.total_applications) * 100;
+    if (!data) return null;
+
+    const denom = data.total_applications > 0 ? data.total_applications : 1;
+    const appliedPercent = ((data.by_status.applied ?? 0) / denom) * 100;
+    const shortlistedPercent = ((data.by_status.shortlisted ?? 0) / denom) * 100;
+    const interviewedPercent = ((data.by_status.in_review ?? 0) / denom) * 100;
+    const hiredPercent = ((data.by_status.hired ?? 0) / denom) * 100;
+    const rejectedPercent = ((data.by_status.rejected ?? 0) / denom) * 100;
 
     // const appliedPercent = (data.applied / data.totalApplications) * 100;
     // const shortlistedPercent = (data.shortlisted / data.totalApplications) * 100;

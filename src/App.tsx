@@ -20,6 +20,7 @@ import RequireOrgRole from "@/guards/RequireOrgRole";
 
 import PanelAvailabilityForm from "@/pages/panelAvailabilityForm";
 import CandidateSlotBooking from "@/pages/slotBookingPage";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 function App() {
   return (
@@ -36,7 +37,14 @@ function App() {
             <Route path="jobs" element={<Jobs />} />
             <Route path="settings" element={<Settings />} />
             <Route path="create-job" element={<CreateJob />} />
-            <Route path="jobs/:jobId" element={<JobPage />} />
+            <Route
+              path="jobs/:jobId"
+              element={
+                <ErrorBoundary fallbackTitle="Job page crashed">
+                  <JobPage />
+                </ErrorBoundary>
+              }
+            />
             <Route path="jobs/:jobId/rubric/edit" element={<RubricEditorPage mode="edit" />} />
             <Route path="jobs/:jobId/rubric/new" element={<RubricEditorPage mode="new" />} />
             <Route path="jobs/:jobId/settings" element={<JobSettingsPage />} />
