@@ -27,6 +27,9 @@ interface ApplicationsTableProps {
   onPageChange?: (page: number) => void;
   onPageSizeChange?: (pageSize: number) => void;
   onViewDetails?: (application: Application) => void;
+  onApplicationDeleted?: () => void;
+  jobId?: string;
+  isProcessing?: boolean;
 }
 
 const TableRowSkeleton = () => (
@@ -61,6 +64,9 @@ const ApplicationsTable: React.FC<ApplicationsTableProps> = ({
   onPageChange,
   onPageSizeChange,
   onViewDetails,
+  onApplicationDeleted,
+  jobId,
+  isProcessing: _isProcessing,
 }) => {
   const [pageSize, setPageSize] = useState(data?.pagination.page_size || 15);
   const currentPage = data?.pagination.page || 1;
@@ -111,6 +117,8 @@ const ApplicationsTable: React.FC<ApplicationsTableProps> = ({
                   key={application.id}
                   application={application}
                   onViewDetails={onViewDetails || (() => {})}
+                  onApplicationDeleted={onApplicationDeleted}
+                  jobId={jobId}
                 />
               ))
             ) : (

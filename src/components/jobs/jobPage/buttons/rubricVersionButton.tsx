@@ -9,10 +9,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ChevronDown, Check, History } from 'lucide-react';
 
-import type { CriteriaOverview} from '@/types/newJobType';
+import type { RubricVersionData } from '@/types/jobTypes';
 
 interface RubricVersionSwitcherProps {
-    versionData: CriteriaOverview;
+    versionData: RubricVersionData | null;
     activeVersion: string | undefined;
     handleVersionChange: (version: string) => void;
 }
@@ -42,7 +42,7 @@ const RubricVersionSwitcher = ({ versionData, activeVersion,handleVersionChange 
 
             <DropdownMenu>
                 <DropdownMenuTrigger className="flex items-center gap-2 bg-white border border-gray-300 hover:border-blue-500 rounded-md px-3 py-1.5 text-sm font-semibold text-gray-900 transition-all hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1">
-                    <span>{activeVersion}</span>
+                    <span>{activeVersion ?? "—"}</span>
                     <ChevronDown className="w-4 h-4 text-gray-500" />
                 </DropdownMenuTrigger>
 
@@ -57,16 +57,17 @@ const RubricVersionSwitcher = ({ versionData, activeVersion,handleVersionChange 
                     <DropdownMenuSeparator className="bg-gray-200 my-1" />
 
                     <div className="max-h-64 overflow-y-auto">
-                        {versionData.versions
-                            .sort((a, b) => b.version.localeCompare(a.version))
+                        {(versionData?.versions ?? [])
+                            .slice()
+                            .sort((a, b) => b.rubric_version.localeCompare(a.rubric_version))
                             .map((version, index) => (
                                 <DropdownMenuItem
-                                    key={`${version.version}-${index}`}
-                                    onClick={() => handleVersionChange(version.version)}
+                                    key={`${version.rubric_id}-${version.rubric_version}-${index}`}
+                                    onClick={() => handleVersionChange(version.rubric_version)}
                                     className={`
                     flex items-center justify-between px-3 py-2.5 rounded-md cursor-pointer
                     transition-colors
-                    ${activeVersion === version.version
+                    ${activeVersion === version.rubric_version
                                             ? 'bg-blue-50 text-blue-700'
                                             : 'text-gray-700 hover:bg-gray-100'
                                         }
@@ -74,19 +75,19 @@ const RubricVersionSwitcher = ({ versionData, activeVersion,handleVersionChange 
                                 >
                                     <div className="flex flex-col gap-0.5">
                                         <span className="font-semibold text-sm">
-                                            {version.version}
-                                            {activeVersion === version.version && (
+                                            {version.rubric_version}
+                                            {activeVersion === version.rubric_version && (
                                                 <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
                                                     Current
                                                 </span>
                                             )}
                                         </span>
                                         <span className="text-xs text-gray-500">
-                                            Created {formatDate(version.created_at)}
+                                            Created {version.created_at ? formatDate(version.created_at) : "—"}
                                         </span>
                                     </div>
 
-                                    {activeVersion === version.version && (
+                                    {activeVersion === version.rubric_version && (
                                         <Check className="w-4 h-4 text-blue-600" />
                                     )}
                                 </DropdownMenuItem>

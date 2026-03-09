@@ -31,8 +31,29 @@ export function computeWeightsFromImportance(items: any[], maxImp: number = 10):
     }));
 }
 
+function computeSectionWeights(sections: RubricSectionV2[]): RubricSectionV2[] {
+    const totalImp = sections.reduce((sum, s) => sum + (s.importance ?? 5), 0);
+
+    if (totalImp === 0) {
+        const eq = Math.floor(100 / sections.length);
+        const rem = 100 - eq * sections.length;
+        return sections.map((s, i) => ({ ...s, weight: eq + (i < rem ? 1 : 0) }));
+    }
+
+    const factor = 100.0 / totalImp;
+    const weights = sections.map(s => Math.round((s.importance ?? 5) * factor));
+    const diff = 100 - weights.reduce((a, b) => a + b, 0);
+    if (diff !== 0) {
+        const maxIdx = weights.indexOf(Math.max(...weights));
+        weights[maxIdx] += diff;
+    }
+
+    return sections.map((s, i) => ({ ...s, weight: Math.max(0, weights[i]) }));
+}
+
 export function applyImportanceToSections(sections: RubricSectionV2[]): RubricSectionV2[] {
-    return sections.map(section => {
+    // First: compute per-criterion and per-sub-criterion weights
+    const withCriteriaWeights = sections.map(section => {
         const criteriaWithSubWeights = section.criteria.map(c => {
             if (c.sub_criteria && c.sub_criteria.length > 0) {
                 return { ...c, sub_criteria: computeWeightsFromImportance(c.sub_criteria, 5) };
@@ -44,4 +65,12 @@ export function applyImportanceToSections(sections: RubricSectionV2[]): RubricSe
             criteria: computeWeightsFromImportance(criteriaWithSubWeights, 10),
         };
     });
+
+    // Then: compute section-level weights from section importance
+    if (withCriteriaWeights.length > 1) {
+        return computeSectionWeights(withCriteriaWeights);
+    } else if (withCriteriaWeights.length === 1) {
+        return [{ ...withCriteriaWeights[0], weight: 100 }];
+    }
+    return withCriteriaWeights;
 }

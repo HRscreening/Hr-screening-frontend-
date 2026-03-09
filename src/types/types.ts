@@ -51,6 +51,8 @@ export type CriterionV2 = {
 export type RubricSectionV2 = {
   key: string;
   label: string;
+  weight?: number;
+  importance?: number;
   criteria: CriterionV2[];
 };
 

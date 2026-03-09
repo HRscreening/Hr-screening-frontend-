@@ -1,4 +1,4 @@
-import React, { useEffect} from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -40,7 +40,14 @@ const JobOverview: React.FC = () => {
     initJob, setJobData, setVersionData, setActiveVersion, setIsLoading, reset,
   } = useJobPageStore();
 
+  // Track active batch for progress tracker
+  const [activeBatchId, setActiveBatchId] = useState<string>("");
+  const [trackerOpen, setTrackerOpen] = useState(false);
 
+  const handleBatchStarted = useCallback((batchId: string) => {
+    setActiveBatchId(batchId);
+    setTrackerOpen(true);
+  }, []);
 
   // Initialise store when jobId changes & clean up on unmount
   useEffect(() => {
@@ -57,7 +64,11 @@ const JobOverview: React.FC = () => {
 
         if (res.status === 200) {
           setJobData(res.data);
-          setActiveVersion(res.data.criteria.current_active_version);
+          setActiveVersion(res.data?.criteria?.current_active_version);
+          // Sync batch_id from server if we don't have one yet
+          if (!activeBatchId && res.data?.job?.current_batch_id) {
+            setActiveBatchId(res.data.job.current_batch_id);
+          }
           return;
         }
       } catch (error) {
@@ -127,6 +138,7 @@ const JobOverview: React.FC = () => {
     );
   }
 
+  const dashboard = jobData.dashboard ?? { total_applications: 0, by_status: {}, avg_score: 0 };
 
   const handleVersionChange = async (version: string) => {
     try {
@@ -210,8 +222,8 @@ const JobOverview: React.FC = () => {
               <p>Share</p>
             </TooltipContent>
           </Tooltip>
-          <TrackCandidateDialog batch_id={jobData.job.current_batch_id as string} />  {/* TODO: pass Batch_id instead of job_id*/}
-          <AddCandidatePopup job_id={jobId as string} />
+          <TrackCandidateDialog batch_id={activeBatchId || (jobData.job.current_batch_id ?? "") as string} job_id={jobId as string} externalOpen={trackerOpen} onOpenChange={setTrackerOpen} />
+          <AddCandidatePopup job_id={jobId as string} onBatchStarted={handleBatchStarted} />
 
           {/* <Button className="bg-green-600 cursor-pointer text-primary-foreground px-4 py-2 rounded-lg hover:bg-hover-primary transition">
             <Sparkle className="w-5 h-5 inline" />
@@ -240,14 +252,14 @@ const JobOverview: React.FC = () => {
               <p>Rerank Applications</p>
             </TooltipContent>
           </Tooltip>
-          <RubricVersionSwitcher activeVersion={activeVersion} handleVersionChange={handleVersionChange} versionData={jobData.criteria} />
+          <RubricVersionSwitcher activeVersion={activeVersion} handleVersionChange={handleVersionChange} versionData={versionData} />
         </div>
       </div>
 
       {/* Analytics */}
       <div className='flex flex-wrap gap-4'>
-        <TotalApplicationCard data={jobData.dashboard} />
-        <AnalyticsCard title='Avg. Match Score' value={`${jobData.dashboard.avg_score}%`} desc='based on skills & exp.' icon={<TargetIcon className='h-5 w-5' />} />
+        <TotalApplicationCard data={dashboard as any} />
+        <AnalyticsCard title='Avg. Match Score' value={`${(dashboard as any).avg_score ?? 0}%`} desc='based on skills & exp.' icon={<TargetIcon className='h-5 w-5' />} />
       </div>
 
       {/* Applications — reads jobId, activeVersion, maxRound from Zustand store */}

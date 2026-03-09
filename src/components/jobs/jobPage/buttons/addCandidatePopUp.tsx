@@ -99,7 +99,7 @@
 //       } catch (error) {
 //         console.error('Error during AI processing:', error);
 //         if (axios.isAxiosError(error)) {
-//           setError(error.response?.data?.message || 'Failed to process resumes. Please try again.');
+//           setError(error.response?.data?.detail || error.response?.data?.message || 'Failed to process resumes. Please try again.');
 //         } else {
 //           setError('An unexpected error occurred. Please try again.');
 //         }
@@ -377,7 +377,7 @@ interface ProcessingResponse {
   message?: string;
 }
 
-export default function AddCandidatesDialog({ job_id }: { job_id: string }) {
+export default function AddCandidatesDialog({ job_id, onBatchStarted }: { job_id: string; onBatchStarted?: (batchId: string) => void }) {
   const [open, setOpen] = useState(false);
   const [source, setSource] = useState<'upload' | 'cloud'>('upload');
   const [cloudUrl, setCloudUrl] = useState("");
@@ -437,6 +437,9 @@ export default function AddCandidatesDialog({ job_id }: { job_id: string }) {
 
           if (res.status === 202) {
             setBatchStarted(true);
+            if (res.data.batch_id && onBatchStarted) {
+              onBatchStarted(res.data.batch_id);
+            }
           }
         }
 
@@ -447,12 +450,15 @@ export default function AddCandidatesDialog({ job_id }: { job_id: string }) {
 
           if (res.status === 202) {
             setBatchStarted(true);
+            if (res.data.batch_id && onBatchStarted) {
+              onBatchStarted(res.data.batch_id);
+            }
           }
         }
       } catch (error) {
         console.error('Error during AI processing:', error);
         if (axios.isAxiosError(error)) {
-          setError(error.response?.data?.message || 'Failed to process resumes. Please try again.');
+          setError(error.response?.data?.detail || error.response?.data?.message || 'Failed to process resumes. Please try again.');
         } else {
           setError('An unexpected error occurred. Please try again.');
         }
