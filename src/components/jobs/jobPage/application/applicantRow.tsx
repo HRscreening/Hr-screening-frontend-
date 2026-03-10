@@ -101,6 +101,8 @@ const ApplicationRow: React.FC<ApplicationRowProps> = ({ application, onViewDeta
   const matchPercentage = activeScore?.overall_score ?? 0;
   const fullName = candidate?.full_name;
   const email = candidate?.email;
+  const currentTitle = candidate?.current_title;
+  const currentCompany = candidate?.current_company;
   const [openAnalysis, setOpenAnalysis] = useState<boolean>(false);
 
 
@@ -145,9 +147,25 @@ const ApplicationRow: React.FC<ApplicationRowProps> = ({ application, onViewDeta
           </div>
         </div>
       </TableCell>
-      {/* <TableCell>
-        <InterviewProgressBar />
-      </TableCell> */}
+
+      <TableCell>
+        {currentTitle || currentCompany ? (
+          <div className="flex flex-col">
+            {currentTitle && (
+              <span className="text-sm text-foreground font-medium truncate max-w-40">
+                {currentTitle}
+              </span>
+            )}
+            {currentCompany && (
+              <span className="text-xs text-muted-foreground truncate max-w-40">
+                {currentCompany}
+              </span>
+            )}
+          </div>
+        ) : (
+          <span className="text-sm text-muted-foreground italic opacity-50">—</span>
+        )}
+      </TableCell>
 
       <TableCell>
         <div className="cursor-pointer flex items-center gap-3"
@@ -184,7 +202,7 @@ const ApplicationRow: React.FC<ApplicationRowProps> = ({ application, onViewDeta
       </TableCell>
 
       <TableCell className="text-right ">
-        <ViewAnalysis overallScore={activeScore?.overall_score} breakdown={activeScore?.breakdown} aiAnalysis={application.ai_analysis} resume={application.resume} openSheet={openAnalysis} setOpenSheet={setOpenAnalysis} />
+        <ViewAnalysis overallScore={activeScore?.overall_score} breakdown={activeScore?.breakdown} groundingData={activeScore?.grounding_data} aiAnalysis={application.ai_analysis} resume={application.resume} openSheet={openAnalysis} setOpenSheet={setOpenAnalysis} />
         <MenuItems applicationId={id} name={candidate?.full_name} email={candidate?.email} phone={candidate?.phone} candidate_id={candidate?.id} is_flagged={application.is_flagged} is_starred={application.is_starred} flag_reason={application.flag_reason} />
       </TableCell>
 

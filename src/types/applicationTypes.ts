@@ -3,6 +3,8 @@ export interface Candidate {
   full_name: string | null;
   email: string | null;
   phone: string | null;
+  current_title: string | null;
+  current_company: string | null;
 }
 
 // export interface Resume {
@@ -95,31 +97,40 @@ export interface AIAnalysis {
   [key: string]: string[]; // Matches Optional[Dict[str, List[str]]]
 }
 
-export interface GroundingData {
-  [key: string]: any; // Matches Dict[str, Any] - completely flexible
-}
-
-// Sub-criterion score
+// Sub-criterion score (from score_post_processor output)
 export type SubCriterionScore = {
-  score: number; // 0–100
-  reason?: string | null;
-  evidence?: string[] | null;
+  score: number;         // 0–100
+  reasoning?: string | null;
 };
 
-// Criterion score
+// Criterion score (from score_post_processor output)
 export type CriterionScore = {
   score: number;
-  reason?: string | null;
-  evidence?: string[] | null;
-  sub_criteria?: Record<string, SubCriterionScore>; 
-  // using Record because in BreakdownSchema it's stored as dict
+  raw_llm_score?: number;
+  reasoning?: string | null;
+  requirement_level?: 'must' | 'should' | 'nice';
+  sub_criteria?: Record<string, SubCriterionScore>;
 };
 
-// Breakdown schema
-export type Breakdown = {
-  mandatory_criteria: Record<string, CriterionScore>;
-  screening_criteria: Record<string, CriterionScore>;
+// Section score (one entry per rubric section)
+export type SectionScore = {
+  score: number;         // weighted section score (0–100)
+  raw_score?: number;    // unweighted section score
+  criteria_scores: Record<string, CriterionScore>;
 };
+
+// Breakdown — keyed by rubric section key (e.g. "technical_skills", "experience")
+export type Breakdown = Record<string, SectionScore>;
+
+// Grounding data per criterion — evidence from the resume
+export type GroundingCriterion = {
+  jd_requirement?: string;
+  evidence?: string[];
+  match_assessment?: 'exceeds' | 'strong' | 'partial' | 'weak' | 'none';
+};
+
+// Grounding data — keyed by section key → criterion name
+export type GroundingData = Record<string, Record<string, GroundingCriterion>>;
 
 
 export interface Resume {
