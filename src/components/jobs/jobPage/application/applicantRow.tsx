@@ -184,7 +184,7 @@ const ApplicationRow: React.FC<ApplicationRowProps> = ({ application, onViewDeta
       </TableCell>
 
       <TableCell className="text-right ">
-        <ViewAnalysis overallScore={activeScore?.overall_score} breakdown={activeScore?.breakdown} aiAnalysis={application.ai_analysis} resume={application.resume} openSheet={openAnalysis} setOpenSheet={setOpenAnalysis} />
+        <ViewAnalysis overallScore={activeScore?.overall_score} breakdown={activeScore?.breakdown} aiAnalysis={application.ai_analysis} resume={application.resume} openSheet={openAnalysis} setOpenSheet={setOpenAnalysis} application_id={id} />
         <MenuItems applicationId={id} name={candidate?.full_name} email={candidate?.email} phone={candidate?.phone} candidate_id={candidate?.id} is_flagged={application.is_flagged} is_starred={application.is_starred} flag_reason={application.flag_reason} />
       </TableCell>
 

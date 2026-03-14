@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
     Accordion,
     AccordionContent,
@@ -6,8 +6,8 @@ import {
     AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
-// import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
     Dialog,
     DialogContent,
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow, format } from "date-fns";
+import axios from "@/axiosConfig";
 import {
     CheckCircle2,
     Clock,
@@ -28,223 +29,164 @@ import {
     Cpu,
     AlertCircle,
     CircleDot,
-    CheckCheck,
     Send,
     CalendarCheck,
-    Users,
     Link,
     BookOpen,
+    RefreshCw,
+    XCircle,
+    ExternalLink,
 } from "lucide-react";
+import { toast } from "sonner";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
-export type TimelineData = {
-    id: string;
-    event_type: string;
-    label: string;
+export type TimelineEventData = {
     actor: string;
-    details: object;
+    event_type: string;
     summary: string;
     created_at: string;
 };
 
-export type RoundData = {
+export type InterviewData = {
     id: string;
     round_number: number;
-    title: string;
-    is_completed: boolean;
     status: string;
+    is_complete: boolean;
+    meet_link: string | null;
+    interview_type: string;
+    scheduled_at: string | null;
     is_notes_available: boolean;
     is_summary_available: boolean;
     is_transcript_available: boolean;
-    notes?: string | null;
-    summary?: string | null;
-    transcript?: string | null;
-    timeline: TimelineData[] | null;
+    notes: string | null;
+    summary: string | null;
+    transcript: string | null;
+};
+
+export type RoundConfigData = {
+    title: string;
+    duration_minutes: number;
+};
+
+export type RoundData = {
+    interview: InterviewData;
+    round_config: RoundConfigData;
+    timeline_events: TimelineEventData[];
 };
 
 export type InterviewTabData = {
-    currentRound: RoundData | null;
-    pastRounds: RoundData[] | null;
-};
-
-// ─── Sample Data ───────────────────────────────────────────────────────────────
-
-const SAMPLE_DATA: InterviewTabData = {
-    currentRound: {
-        id: "round-001",
-        round_number: 2,
-        title: "System Design Round",
-        is_completed: false,
-        status: "scheduled",
-        is_notes_available: false,
-        is_summary_available: false,
-        is_transcript_available: false,
-        notes: null,
-        summary: null,
-        transcript: null,
-        timeline: [
-            {
-                id: "t4",
-                event_type: "SLOT_BOOKING_LINK_SENT",
-                label: "Booking link sent to candidate",
-                actor: "system",
-                details: { candidate_email: "candidate@email.com" },
-                summary: "Booking link sent to candidate@email.com",
-                created_at: "2026-03-05T12:00:00+00:00",
-            },
-            {
-                id: "t3",
-                event_type: "PANELIST_AVAILABILITY_SUBMITTED",
-                label: "Panelist submitted availability",
-                actor: "alice@company.com",
-                details: { slots_count: 3, panelist_email: "alice@company.com" },
-                summary: "alice@company.com submitted 3 availability slot(s)",
-                created_at: "2026-03-05T11:30:00+00:00",
-            },
-            {
-                id: "t2",
-                event_type: "PANELIST_AVAILABILITY_REQUESTED",
-                label: "Availability request sent to panelists",
-                actor: "system",
-                details: { panelist_count: 2, panelist_emails: ["alice@company.com", "bob@company.com"] },
-                summary: "Availability request sent to 2 panelist(s)",
-                created_at: "2026-03-05T10:01:00+00:00",
-            },
-            {
-                id: "t1",
-                event_type: "INTERVIEW_CREATED",
-                label: "Interview round created",
-                actor: "hr",
-                details: { round_title: "System Design Round", round_number: 2 },
-                summary: "Interview created for System Design Round (Round 2)",
-                created_at: "2026-03-05T10:00:00+00:00",
-            },
-        ],
-    },
-    pastRounds: [
-        {
-            id: "round-000",
-            round_number: 1,
-            title: "Technical Round",
-            is_completed: true,
-            status: "completed",
-            is_notes_available: true,
-            is_summary_available: true,
-            is_transcript_available: true,
-            notes: `## Interview Notes — Technical Round\n\n**Candidate:** Strong problem-solving skills demonstrated throughout.\n\n### Data Structures & Algorithms\n- Solved two medium-level LeetCode problems correctly\n- Explained time/space complexity clearly\n- Minor issue with edge case handling in tree traversal\n\n### System Knowledge\n- Good understanding of REST APIs\n- Familiar with SQL and basic indexing\n- Could improve on distributed systems concepts\n\n**Overall Impression:** Solid candidate, recommend moving forward.`,
-            summary: `The candidate performed well in the Technical Round. They demonstrated strong algorithmic thinking and were able to solve both coding problems within the allotted time. Communication was clear and they showed good understanding of trade-offs. Key strengths include data structures knowledge and clean code. Areas for improvement include distributed systems and edge case handling. Recommendation: Proceed to next round.`,
-            transcript: `Interviewer: Good morning! Let's start with a quick introduction.\n\nCandidate: Hi, I'm excited to be here. I have 3 years of experience in backend development, primarily with Node.js and Python.\n\nInterviewer: Great. Let's dive into the first problem — implement a function to find the lowest common ancestor of two nodes in a binary tree.\n\nCandidate: Sure. So the key insight here is... [continued for 45 minutes]\n\nInterviewer: Excellent approach. One last question — how would you design a URL shortener?\n\nCandidate: I'd start with a hash function to generate a 6-character code, use a key-value store like Redis for fast lookups, and add a relational DB for persistence and analytics...\n\nInterviewer: That's a solid answer. Thanks for your time today.`,
-            timeline: [
-                {
-                    id: "p1",
-                    event_type: "INTERVIEW_CREATED",
-                    label: "Interview round created",
-                    actor: "hr",
-                    details: { round_title: "Technical Round", round_number: 1 },
-                    summary: "Interview created for Technical Round (Round 1)",
-                    created_at: "2026-03-04T18:53:45+00:00",
-                },
-                {
-                    id: "p2",
-                    event_type: "PANELIST_AVAILABILITY_REQUESTED",
-                    label: "Availability request sent to panelists",
-                    actor: "system",
-                    details: { panelist_count: 1, panelist_emails: ["keshavraj09898@gmail.com"] },
-                    summary: "Availability request sent to 1 panelist(s)",
-                    created_at: "2026-03-04T18:53:45+00:00",
-                },
-                {
-                    id: "p3",
-                    event_type: "PANELIST_AVAILABILITY_SUBMITTED",
-                    label: "Panelist submitted availability",
-                    actor: "keshavraj09898@gmail.com",
-                    details: { slots_count: 2, panelist_email: "keshavraj09898@gmail.com" },
-                    summary: "keshavraj09898@gmail.com submitted 2 availability slot(s)",
-                    created_at: "2026-03-04T18:55:51+00:00",
-                },
-                {
-                    id: "p4",
-                    event_type: "SLOT_COMPUTATION_SUCCESS",
-                    label: "Interview slots computed successfully",
-                    actor: "system",
-                    details: { panel_mode: "sequential", slot_count: 4, panelist_email: "keshavraj09898@gmail.com" },
-                    summary: "4 interview slot(s) computed (sequential mode)",
-                    created_at: "2026-03-04T18:55:51+00:00",
-                },
-                {
-                    id: "p5",
-                    event_type: "SLOT_BOOKING_LINK_SENT",
-                    label: "Booking link sent to candidate",
-                    actor: "system",
-                    details: { candidate_email: "keshavraj09898@gmail.com" },
-                    summary: "Booking link sent to keshavraj09898@gmail.com",
-                    created_at: "2026-03-04T18:55:51+00:00",
-                },
-                {
-                    id: "p6",
-                    event_type: "SLOT_BOOKED",
-                    label: "Candidate booked an interview slot",
-                    actor: "keshavraj09898@gmail.com",
-                    details: {
-                        slots: [{ slot_id: "s1", slot_end: "2026-03-05T10:59:00+00:00", slot_start: "2026-03-05T09:30:00+00:00", panelist_email: "keshavraj09898@gmail.com" }],
-                        panel_mode: "sequential",
-                    },
-                    summary: "Candidate booked 1 sequential slot(s)",
-                    created_at: "2026-03-04T18:57:00+00:00",
-                },
-                {
-                    id: "p7",
-                    event_type: "INTERVIEW_COMPLETED",
-                    label: "Interview marked as completed",
-                    actor: "hr",
-                    details: { duration_minutes: 62 },
-                    summary: "Interview completed after 62 minutes",
-                    created_at: "2026-03-05T11:01:00+00:00",
-                },
-            ],
-        },
-    ],
+    current_round: RoundData | null;
+    past_rounds: RoundData[];
 };
 
 // ─── Event Type Config ─────────────────────────────────────────────────────────
 
 const EVENT_CONFIG: Record<string, { icon: React.ElementType; color: string; dot: string }> = {
-    INTERVIEW_CREATED: { icon: BookOpen, color: "text-blue-600 dark:text-blue-400", dot: "bg-blue-500" },
-    PANELIST_AVAILABILITY_REQUESTED: { icon: Send, color: "text-violet-600 dark:text-violet-400", dot: "bg-violet-500" },
-    PANELIST_AVAILABILITY_SUBMITTED: { icon: Users, color: "text-cyan-600 dark:text-cyan-400", dot: "bg-cyan-500" },
-    SLOT_COMPUTATION_SUCCESS: { icon: Cpu, color: "text-amber-600 dark:text-amber-400", dot: "bg-amber-500" },
-    SLOT_BOOKING_LINK_SENT: { icon: Link, color: "text-orange-600 dark:text-orange-400", dot: "bg-orange-500" },
-    SLOT_BOOKED: { icon: CalendarCheck, color: "text-emerald-600 dark:text-emerald-400", dot: "bg-emerald-500" },
-    INTERVIEW_COMPLETED: { icon: CheckCheck, color: "text-green-600 dark:text-green-400", dot: "bg-green-500" },
-    DEFAULT: { icon: CircleDot, color: "text-muted-foreground", dot: "bg-muted-foreground" },
+    "Interview Created":                 { icon: BookOpen,     color: "text-blue-600 dark:text-blue-400",      dot: "bg-blue-500"     },
+    "Booking Link Sent":                 { icon: Link,         color: "text-orange-600 dark:text-orange-400",  dot: "bg-orange-500"   },
+    "Interview Scheduled":               { icon: CalendarCheck,color: "text-emerald-600 dark:text-emerald-400",dot: "bg-emerald-500"  },
+    "Interview Rescheduled":             { icon: RefreshCw,    color: "text-amber-600 dark:text-amber-400",    dot: "bg-amber-500"    },
+    "Interview Canceled":                { icon: XCircle,      color: "text-red-600 dark:text-red-400",        dot: "bg-red-500"      },
+    "Candidate Requested for new slots": { icon: Send,         color: "text-violet-600 dark:text-violet-400",  dot: "bg-violet-500"   },
+    DEFAULT:                             { icon: CircleDot,    color: "text-muted-foreground",                  dot: "bg-muted-foreground" },
 };
 
 // ─── Status Config ─────────────────────────────────────────────────────────────
 
 const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
-    completed: { label: "Completed", className: "bg-green-50 text-green-700 border-green-200 dark:bg-green-950/20 dark:border-green-800" },
-    scheduled: { label: "Scheduled", className: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/20 dark:border-blue-800" },
-    pending: { label: "Pending", className: "bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-950/20 dark:border-yellow-800" },
-    cancelled: { label: "Cancelled", className: "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/20 dark:border-red-800" },
+    "Collecting Availability": { label: "Collecting Availability", className: "bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-950/20 dark:border-yellow-800" },
+    "Ready to Book":           { label: "Ready to Book",           className: "bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-950/20 dark:border-cyan-800" },
+    "Scheduled":               { label: "Scheduled",               className: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/20 dark:border-blue-800" },
+    "Completed":               { label: "Completed",               className: "bg-green-50 text-green-700 border-green-200 dark:bg-green-950/20 dark:border-green-800" },
+    "Canceled":                { label: "Cancelled",               className: "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/20 dark:border-red-800" },
+    "In Progress":             { label: "In Progress",             className: "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/20 dark:border-purple-800" },
+    "Awaiting Feedback":       { label: "Awaiting Feedback",       className: "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/20 dark:border-orange-800" },
+    "Feedback Collected":      { label: "Feedback Collected",      className: "bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/20 dark:border-teal-800" },
 };
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
 function actorLabel(actor: string): { label: string; isSystem: boolean } {
-    if (actor === "system") return { label: "System", isSystem: true };
-    if (actor === "hr") return { label: "HR", isSystem: false };
-    return { label: actor.split("@")[0], isSystem: false };
+    const lower = actor.toLowerCase();
+    if (lower === "system") return { label: "System", isSystem: true };
+    return { label: actor, isSystem: false };
+}
+
+// Renders text with \n as real line breaks, preserving font/spacing
+function SummaryText({ text }: { text: string }) {
+    const lines = text.split("\n");
+    return (
+        <span>
+            {lines.map((line, i) => (
+                <React.Fragment key={i}>
+                    {line}
+                    {i < lines.length - 1 && <br />}
+                </React.Fragment>
+            ))}
+        </span>
+    );
+}
+
+// ─── Skeleton Loaders ──────────────────────────────────────────────────────────
+
+function RoundSkeleton() {
+    return (
+        <div className="border border-border/60 rounded-xl overflow-hidden bg-card">
+            <div className="px-4 py-3.5 border-b border-border/40 bg-muted/10">
+                <div className="flex items-center gap-3">
+                    <Skeleton className="w-7 h-7 rounded-lg" />
+                    <div className="flex-1 space-y-1.5">
+                        <Skeleton className="h-3.5 w-40" />
+                        <Skeleton className="h-2.5 w-20" />
+                    </div>
+                    <Skeleton className="h-5 w-20 rounded-full" />
+                </div>
+            </div>
+            <div className="px-4 py-4 space-y-4">
+                <div className="flex items-center gap-3">
+                    <Skeleton className="h-7 w-20 rounded-md" />
+                    <Skeleton className="h-7 w-24 rounded-md" />
+                    <Skeleton className="h-7 w-16 rounded-md" />
+                </div>
+                <div className="space-y-2">
+                    <Skeleton className="h-3 w-32" />
+                    <div className="pl-5 space-y-3">
+                        {[1, 2, 3].map((i) => (
+                            <div key={i} className="flex gap-3">
+                                <div className="flex-1 border border-border/40 rounded-lg px-3 py-2.5 space-y-1.5">
+                                    <Skeleton className="h-3 w-3/4" />
+                                    <Skeleton className="h-2.5 w-24" />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function PageSkeleton() {
+    return (
+        <div className="px-5 py-5 space-y-5">
+            <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                    <Skeleton className="w-1.5 h-1.5 rounded-full" />
+                    <Skeleton className="h-3 w-24" />
+                </div>
+                <RoundSkeleton />
+            </div>
+        </div>
+    );
 }
 
 // ─── Timeline ─────────────────────────────────────────────────────────────────
 
-function TimelineView({ timeline }: { timeline: TimelineData[] }) {
+function TimelineView({ timeline }: { timeline: TimelineEventData[] }) {
     return (
         <div className="relative pl-5">
-            {/* Vertical line */}
             <div className="absolute left-2.25 top-2 bottom-2 w-px bg-border/60" />
-
             <div className="space-y-0">
                 {timeline.map((event, idx) => {
                     const cfg = EVENT_CONFIG[event.event_type] ?? EVENT_CONFIG.DEFAULT;
@@ -253,17 +195,18 @@ function TimelineView({ timeline }: { timeline: TimelineData[] }) {
                     const isLast = idx === timeline.length - 1;
 
                     return (
-                        <div key={event.id} className={cn("relative flex gap-3", !isLast && "pb-4")}>
-                            {/* Dot */}
-                            <div className={cn("absolute -left-5 mt-0.75 w-4.5 h-4.5 rounded-full border-2 border-background flex items-center justify-center shrink-0", cfg.dot)}>
+                        <div key={`${event.event_type}-${idx}`} className={cn("relative flex gap-3", !isLast && "pb-4")}>
+                            <div className={cn(
+                                "absolute -left-5 mt-0.75 w-4.5 h-4.5 rounded-full border-2 border-background flex items-center justify-center shrink-0",
+                                cfg.dot
+                            )}>
                                 <Icon className="w-2.5 h-2.5 text-white" />
                             </div>
 
-                            {/* Content */}
                             <div className="flex-1 min-w-0 bg-card border border-border/50 rounded-lg px-3 py-2.5 hover:border-border/80 transition-colors">
                                 <div className="flex items-start justify-between gap-2">
                                     <p className="text-xs font-medium text-foreground leading-snug">
-                                        {event.summary}
+                                        <SummaryText text={event.summary} />
                                     </p>
                                     <span className="text-[10px] text-muted-foreground/60 shrink-0 tabular-nums mt-0.5">
                                         {format(new Date(event.created_at), "HH:mm")}
@@ -290,8 +233,8 @@ function TimelineView({ timeline }: { timeline: TimelineData[] }) {
 
 // ─── Availability Indicators ───────────────────────────────────────────────────
 
-function AvailabilityIndicators({ round, onOpen }: {
-    round: RoundData;
+function AvailabilityIndicators({ interview, onOpen }: {
+    interview: InterviewData;
     onOpen: (type: "summary" | "transcript" | "notes") => void;
 }) {
     const indicators = [
@@ -299,7 +242,7 @@ function AvailabilityIndicators({ round, onOpen }: {
             key: "summary" as const,
             label: "Summary",
             icon: FileText,
-            available: round.is_summary_available,
+            available: interview.is_summary_available,
             availableClass: "border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 dark:border-blue-800 dark:text-blue-400 dark:bg-blue-950/20 dark:hover:bg-blue-950/40",
             unavailableClass: "border-border/40 text-muted-foreground/40 bg-muted/20 cursor-not-allowed",
         },
@@ -307,7 +250,7 @@ function AvailabilityIndicators({ round, onOpen }: {
             key: "transcript" as const,
             label: "Transcript",
             icon: Mic,
-            available: round.is_transcript_available,
+            available: interview.is_transcript_available,
             availableClass: "border-violet-200 text-violet-700 bg-violet-50 hover:bg-violet-100 dark:border-violet-800 dark:text-violet-400 dark:bg-violet-950/20 dark:hover:bg-violet-950/40",
             unavailableClass: "border-border/40 text-muted-foreground/40 bg-muted/20 cursor-not-allowed",
         },
@@ -315,7 +258,7 @@ function AvailabilityIndicators({ round, onOpen }: {
             key: "notes" as const,
             label: "Notes",
             icon: StickyNote,
-            available: round.is_notes_available,
+            available: interview.is_notes_available,
             availableClass: "border-amber-200 text-amber-700 bg-amber-50 hover:bg-amber-100 dark:border-amber-800 dark:text-amber-400 dark:bg-amber-950/20 dark:hover:bg-amber-950/40",
             unavailableClass: "border-border/40 text-muted-foreground/40 bg-muted/20 cursor-not-allowed",
         },
@@ -352,31 +295,48 @@ function RoundContent({ round, onOpen }: {
     round: RoundData;
     onOpen: (type: "summary" | "transcript" | "notes") => void;
 }) {
-    const statusCfg = STATUS_CONFIG[round.status] ?? STATUS_CONFIG.pending;
+    const statusCfg = STATUS_CONFIG[round.interview.status] ?? {
+        label: round.interview.status,
+        className: "bg-muted text-muted-foreground border-border",
+    };
 
     return (
         <div className="space-y-4">
             {/* Status + indicators row */}
             <div className="flex items-center gap-3 flex-wrap">
                 <Badge variant="outline" className={cn("text-xs gap-1", statusCfg.className)}>
-                    {round.is_completed
+                    {round.interview.is_complete
                         ? <CheckCircle2 className="w-3 h-3" />
                         : <Clock className="w-3 h-3" />
                     }
                     {statusCfg.label}
                 </Badge>
+                {round.round_config.duration_minutes && (
+                    <span className="text-xs text-muted-foreground/60 flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {round.round_config.duration_minutes} min
+                    </span>
+                )}
+                {
+                    round.interview.interview_type && (
+                        <span className="text-xs text-muted-foreground/60 flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            {round.interview.interview_type}
+                        </span>
+                    )
+                }
                 <div className="h-4 w-px bg-border/40" />
-                <AvailabilityIndicators round={round} onOpen={onOpen} />
+                <AvailabilityIndicators interview={round.interview} onOpen={onOpen} />
             </div>
 
             {/* Timeline */}
-            {round.timeline && round.timeline.length > 0 ? (
+            {round.timeline_events && round.timeline_events.length > 0 ? (
                 <div className="space-y-2">
                     <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                         <Calendar className="w-3 h-3" />
                         Activity Timeline
                     </p>
-                    <TimelineView timeline={round.timeline} />
+                    <TimelineView timeline={round.timeline_events} />
                 </div>
             ) : (
                 <div className="flex items-center gap-2 py-6 justify-center text-muted-foreground/40">
@@ -384,6 +344,77 @@ function RoundContent({ round, onOpen }: {
                     <span className="text-xs">No timeline activity yet</span>
                 </div>
             )}
+        </div>
+    );
+}
+
+// ─── Shared Round Accordion Trigger Content ────────────────────────────────────
+
+function RoundTriggerContent({
+    round,
+    isCurrent,
+}: {
+    round: RoundData;
+    isCurrent?: boolean;
+}) {
+    const statusCfg = STATUS_CONFIG[round.interview.status] ?? {
+        label: round.interview.status,
+        className: "bg-muted text-muted-foreground border-border",
+    };
+
+    return (
+        <div className="flex items-center gap-3 w-full min-w-0">
+            {/* Round number badge */}
+            <div className={cn(
+                "w-7 h-7 rounded-lg border flex items-center justify-center shrink-0",
+                isCurrent
+                    ? "bg-primary/10 border-primary/20"
+                    : round.interview.is_complete
+                        ? "bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-800"
+                        : "bg-muted border-border/40"
+            )}>
+                {!isCurrent && round.interview.is_complete ? (
+                    <CheckCircle2 className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
+                ) : (
+                    <span className={cn(
+                        "text-xs font-bold",
+                        isCurrent ? "text-primary" : "text-muted-foreground"
+                    )}>
+                        {round.interview.round_number}
+                    </span>
+                )}
+            </div>
+
+            {/* Title + subtitle */}
+            <div className="flex-1 text-left min-w-0">
+                <div className="flex items-center gap-2">
+                    <p className="text-sm font-semibold text-foreground truncate">
+                        {round.round_config.title}
+                    </p>
+                    {isCurrent && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shrink-0" />
+                    )}
+                </div>
+                {/* Show schedule inline in trigger if available */}
+                {isCurrent && round.interview.scheduled_at ? (
+                    <p className="text-xs text-muted-foreground mt-0.5 truncate flex items-center gap-1">
+                        <Calendar className="w-3 h-3 shrink-0 text-blue-500" />
+                        {round.interview.scheduled_at}
+                    </p>
+                ) : (
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                        Round {round.interview.round_number}
+                    </p>
+                )}
+            </div>
+
+            {/* Status badge + chevron */}
+            <div className="flex items-center gap-2 shrink-0">
+                <Badge variant="outline" className={cn("text-xs", statusCfg.className)}>
+                    {statusCfg.label}
+                </Badge>
+                <ChevronRight className="w-4 h-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-90" />
+            </div>
         </div>
     );
 }
@@ -407,19 +438,19 @@ function ContentDialog({
         summary: {
             title: "AI Summary",
             icon: FileText,
-            content: round.summary,
+            content: round.interview.summary,
             iconColor: "text-blue-500",
         },
         transcript: {
             title: "Interview Transcript",
             icon: Mic,
-            content: round.transcript,
+            content: round.interview.transcript,
             iconColor: "text-violet-500",
         },
         notes: {
             title: "Interviewer Notes",
             icon: StickyNote,
-            content: round.notes,
+            content: round.interview.notes,
             iconColor: "text-amber-500",
         },
     }[type];
@@ -434,16 +465,16 @@ function ContentDialog({
                         <Icon className={cn("w-4 h-4", config.iconColor)} />
                         {config.title}
                         <span className="text-muted-foreground font-normal text-sm ml-1">
-                            — {round.title}
+                            — {round.round_config.title}
                         </span>
                     </DialogTitle>
                 </DialogHeader>
                 <ScrollArea className="flex-1">
                     <div className="px-6 py-5">
                         {config.content ? (
-                            <div className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap font-mono bg-muted/30 rounded-lg p-4 border border-border/40">
-                                {config.content}
-                            </div>
+                            <p className="text-sm text-foreground/80 leading-relaxed bg-muted/30 rounded-lg p-4 border border-border/40">
+                                <SummaryText text={config.content} />
+                            </p>
                         ) : (
                             <div className="py-12 text-center text-muted-foreground/40 text-sm">
                                 No content available
@@ -458,13 +489,13 @@ function ContentDialog({
 
 // ─── Main Component ────────────────────────────────────────────────────────────
 
-export default function InterviewAnalysisSheet({
-    data = SAMPLE_DATA,
-}: {
-    data?: InterviewTabData;
+export default function InterviewAnalysisSheet({ application_id }: {
+    application_id: string;
 }) {
     const [dialogType, setDialogType] = useState<"summary" | "transcript" | "notes" | null>(null);
     const [dialogRound, setDialogRound] = useState<RoundData | null>(null);
+    const [data, setData] = useState<InterviewTabData | null>(null);
+    const [loading, setLoading] = useState(true);
 
     const openDialog = (round: RoundData, type: "summary" | "transcript" | "notes") => {
         setDialogRound(round);
@@ -476,21 +507,59 @@ export default function InterviewAnalysisSheet({
         setDialogRound(null);
     };
 
-    const { currentRound, pastRounds } = data;
-    const hasPastRounds = pastRounds && pastRounds.length > 0;
+    async function loadInterviewData() {
+        try {
+            setLoading(true);
+            const res = await axios.get(`/interview/get-interview-details/${application_id}`);
+            if (res.status === 200) {
+                setData(res.data);
+            } else {
+                throw new Error(`Failed to load interview data: ${res.data.message}`);
+            }
+        } catch (error) {
+            console.error("Error fetching interview data:", error);
+            toast.error("Failed to load interview data. Please try again later.");
+        } finally {
+            setLoading(false);
+        }
+    }
 
+    useEffect(() => {
+        loadInterviewData();
+    }, [application_id]);
+
+    // ── Loading ──
+    if (loading) {
+        return (
+            <div className="h-full overflow-hidden">
+                <ScrollArea className="h-full">
+                    <PageSkeleton />
+                </ScrollArea>
+            </div>
+        );
+    }
+
+    const currentRound = data?.current_round ?? null;
+    const pastRounds = data?.past_rounds ?? [];
+    const hasPastRounds = pastRounds.length > 0;
+
+    // ── Empty ──
     if (!currentRound && !hasPastRounds) {
         return (
-            <div className="flex flex-col h-full items-center justify-center gap-3 text-muted-foreground/40 py-20">
+            <div className="h-full flex items-center justify-center gap-3 text-muted-foreground/40 flex-col py-20">
                 <AlertCircle className="w-10 h-10 opacity-30" />
                 <p className="text-sm font-medium">No interview data available</p>
             </div>
         );
     }
 
+    // Default open value for the current round accordion
+    const currentRoundAccordionValue = currentRound ? `current-${currentRound.interview.id}` : undefined;
+
     return (
-        <div className="flex flex-col h-full">
-            <ScrollArea className="flex-1 min-h-0">
+        // h-full + overflow-hidden lets ScrollArea control all scrolling
+        <div className="h-full overflow-hidden">
+            <ScrollArea className="h-full">
                 <div className="px-5 py-5 space-y-5">
 
                     {/* ── Current Round ── */}
@@ -503,34 +572,47 @@ export default function InterviewAnalysisSheet({
                                 </p>
                             </div>
 
-                            <div className="border border-primary/20 rounded-xl overflow-hidden bg-primary/2 dark:bg-primary/4">
-                                {/* Round header */}
-                                <div className="px-4 py-3.5 border-b border-border/40 bg-muted/10">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-                                            <span className="text-xs font-bold text-primary">
-                                                {currentRound.round_number}
-                                            </span>
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-semibold text-foreground">
-                                                {currentRound.title}
-                                            </p>
-                                            <p className="text-xs text-muted-foreground mt-0.5">
-                                                Round {currentRound.round_number}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
+                            <Accordion
+                                type="single"
+                                collapsible
+                                defaultValue={currentRoundAccordionValue}
+                                className="border border-primary/20 rounded-xl overflow-hidden bg-primary/2 dark:bg-primary/4"
+                            >
+                                <AccordionItem value={currentRoundAccordionValue!} className="border-none">
+                                    <AccordionTrigger className="px-4 py-3.5 hover:no-underline hover:bg-muted/20 transition-colors [&>svg]:hidden group">
+                                        <RoundTriggerContent round={currentRound} isCurrent />
+                                    </AccordionTrigger>
 
-                                {/* Round body */}
-                                <div className="px-4 py-4">
-                                    <RoundContent
-                                        round={currentRound}
-                                        onOpen={(type) => openDialog(currentRound, type)}
-                                    />
-                                </div>
-                            </div>
+                                    <AccordionContent>
+                                        <div className="border-t border-border/40">
+                                            {/* Meet link banner — only in current round, inside expanded content */}
+                                            {currentRound.interview.meet_link && (
+                                                <div className="px-4 py-2.5 bg-emerald-50/60 dark:bg-emerald-950/20 border-b border-emerald-100 dark:border-emerald-900/40 flex items-center gap-2">
+                                                    <ExternalLink className="w-3.5 h-3.5 shrink-0 text-emerald-500" />
+                                                    <a
+                                                        href={currentRound.interview.meet_link}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline font-medium"
+                                                    >
+                                                        Join Meeting
+                                                    </a>
+                                                    <span className="text-muted-foreground/30 hidden sm:block">·</span>
+                                                    <span className="text-[11px] text-muted-foreground/40 truncate hidden sm:block">
+                                                        {currentRound.interview.meet_link}
+                                                    </span>
+                                                </div>
+                                            )}
+                                            <div className="px-4 py-4">
+                                                <RoundContent
+                                                    round={currentRound}
+                                                    onOpen={(type) => openDialog(currentRound, type)}
+                                                />
+                                            </div>
+                                        </div>
+                                    </AccordionContent>
+                                </AccordionItem>
+                            </Accordion>
                         </section>
                     )}
 
@@ -543,64 +625,37 @@ export default function InterviewAnalysisSheet({
                                     Past Rounds
                                 </p>
                                 <Badge variant="secondary" className="ml-auto text-xs">
-                                    {pastRounds!.length}
+                                    {pastRounds.length}
                                 </Badge>
                             </div>
 
                             <Accordion type="multiple" className="space-y-2">
-                                {pastRounds!.map((round) => {
-                                    const statusCfg = STATUS_CONFIG[round.status] ?? STATUS_CONFIG.pending;
+                                {pastRounds.map((round) => (
+                                    <AccordionItem
+                                        key={round.interview.id}
+                                        value={round.interview.id}
+                                        className="border border-border/60 rounded-xl overflow-hidden bg-card"
+                                    >
+                                        <AccordionTrigger className="px-4 py-3.5 hover:no-underline hover:bg-muted/30 transition-colors [&>svg]:hidden group">
+                                            <RoundTriggerContent round={round} isCurrent={false} />
+                                        </AccordionTrigger>
 
-                                    return (
-                                        <AccordionItem
-                                            key={round.id}
-                                            value={round.id}
-                                            className="border border-border/60 rounded-xl overflow-hidden bg-card"
-                                        >
-                                            <AccordionTrigger className="px-4 py-3.5 hover:no-underline hover:bg-muted/30 transition-colors [&>svg]:hidden group">
-                                                <div className="flex items-center gap-3 w-full">
-                                                    <div className={cn(
-                                                        "w-7 h-7 rounded-lg border flex items-center justify-center shrink-0",
-                                                        round.is_completed
-                                                            ? "bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-800"
-                                                            : "bg-muted border-border/40"
-                                                    )}>
-                                                        {round.is_completed
-                                                            ? <CheckCircle2 className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
-                                                            : <span className="text-xs font-bold text-muted-foreground">{round.round_number}</span>
-                                                        }
-                                                    </div>
-                                                    <div className="flex-1 text-left min-w-0">
-                                                        <p className="text-sm font-medium text-foreground truncate">
-                                                            {round.title}
-                                                        </p>
-                                                        <p className="text-xs text-muted-foreground mt-0.5">
-                                                            Round {round.round_number}
-                                                        </p>
-                                                    </div>
-                                                    <div className="flex items-center gap-2 shrink-0">
-                                                        <Badge variant="outline" className={cn("text-xs", statusCfg.className)}>
-                                                            {statusCfg.label}
-                                                        </Badge>
-                                                        <ChevronRight className="w-4 h-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-90" />
-                                                    </div>
-                                                </div>
-                                            </AccordionTrigger>
-
-                                            <AccordionContent>
-                                                <div className="px-4 pb-4 pt-1 border-t border-border/40">
-                                                    <RoundContent
-                                                        round={round}
-                                                        onOpen={(type) => openDialog(round, type)}
-                                                    />
-                                                </div>
-                                            </AccordionContent>
-                                        </AccordionItem>
-                                    );
-                                })}
+                                        <AccordionContent>
+                                            <div className="px-4 pb-4 pt-1 border-t border-border/40">
+                                                <RoundContent
+                                                    round={round}
+                                                    onOpen={(type) => openDialog(round, type)}
+                                                />
+                                            </div>
+                                        </AccordionContent>
+                                    </AccordionItem>
+                                ))}
                             </Accordion>
                         </section>
                     )}
+
+                    {/* bottom padding so last item isn't flush against edge */}
+                    <div className="h-2" />
                 </div>
             </ScrollArea>
 

@@ -23,7 +23,7 @@ const JobSettings = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await axios.get(`/interview/${jobId}/rounds/overview`);
+      const res = await axios.get(`/round/${jobId}/rounds/overview`);
       setOverviews(res.data);
     } catch (err) {
       console.error('Failed to fetch round overviews', err);

@@ -397,7 +397,7 @@ export default function RoundConfigCard({
     if (fullConfig) return;
     setLoadingDetail(true);
     try {
-      const res = await axios.get(`/interview/get-round-config/${overview.round_config_id}`);
+      const res = await axios.get(`/round/get-round-config/${overview.round_config_id}`);
       setFullConfig(res.data);
     } catch (err) {
       console.error('Failed to fetch round config', err);
