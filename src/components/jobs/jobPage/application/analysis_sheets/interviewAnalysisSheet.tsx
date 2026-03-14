@@ -518,7 +518,7 @@ export default function InterviewAnalysisSheet({ application_id }: {
             }
         } catch (error) {
             console.error("Error fetching interview data:", error);
-            toast.error("Failed to load interview data. Please try again later.");
+            // toast.error("Failed to load interview data. Please try again later.");
         } finally {
             setLoading(false);
         }

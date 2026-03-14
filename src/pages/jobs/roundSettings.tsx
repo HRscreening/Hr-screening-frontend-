@@ -1,13 +1,14 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { CalendarDays, AlertTriangle, Layers } from 'lucide-react';
+import { CalendarDays, AlertTriangle, Layers, Plus } from 'lucide-react';
 
 import axios from '@/axiosConfig';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Loader from '@/components/loader';
 import RoundConfigCard from '@/components/jobs/jobPage/roundConfigCard';
+import AddRoundCard from '@/components/jobs/jobPage/addRoundCard';
 import type { RoundOverview } from '@/types/roundConfigTypes';
 
 // ─── Main Page Component ──────────────────────────────────────────────────────
@@ -17,6 +18,7 @@ const JobSettings = () => {
   const [overviews, setOverviews] = useState<RoundOverview[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showAddCard, setShowAddCard] = useState(false);
 
   const fetchOverviews = useCallback(async () => {
     if (!jobId) return;
@@ -42,6 +44,11 @@ const JobSettings = () => {
     setOverviews((prev) => prev.filter((o) => o.round_config_id !== id));
   };
 
+  const handleRoundCreated = () => {
+    setShowAddCard(false);
+    fetchOverviews();
+  };
+
   if (loading) {
     return <Loader text="Loading interview rounds…" />;
   }
@@ -61,6 +68,8 @@ const JobSettings = () => {
     );
   }
 
+  const existingRoundNumbers = overviews.map((o) => o.round_number);
+
   return (
     <div className="w-full max-w-5xl mx-auto px-6 py-6 space-y-5">
       {/* Header */}
@@ -76,24 +85,54 @@ const JobSettings = () => {
             </p>
           </div>
         </div>
-        {overviews.length > 0 && (
-          <Badge variant="secondary" className="text-[10px] font-medium px-2.5 py-1 gap-1.5">
-            <CalendarDays className="h-3 w-3" />
-            {overviews.length} round{overviews.length !== 1 ? 's' : ''}
-          </Badge>
-        )}
+        <div className="flex items-center gap-2">
+          {overviews.length > 0 && (
+            <Badge variant="secondary" className="text-[10px] font-medium px-2.5 py-1 gap-1.5">
+              <CalendarDays className="h-3 w-3" />
+              {overviews.length} round{overviews.length !== 1 ? 's' : ''}
+            </Badge>
+          )}
+          {!showAddCard && (
+            <Button
+              size="sm"
+              className="h-8 text-xs gap-1.5"
+              onClick={() => setShowAddCard(true)}
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Add Round
+            </Button>
+          )}
+        </div>
       </div>
 
+      {/* Add Round Card — inline at the top */}
+      {showAddCard && (
+        <AddRoundCard
+          jobId={jobId!}
+          existingRoundNumbers={existingRoundNumbers}
+          onCreated={handleRoundCreated}
+          onCancel={() => setShowAddCard(false)}
+        />
+      )}
+
       {/* Round cards */}
-      {overviews.length === 0 ? (
+      {overviews.length === 0 && !showAddCard ? (
         <div className="flex flex-col items-center justify-center py-14 rounded-xl border-2 border-dashed border-border/40 bg-muted/5 text-center">
           <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
             <CalendarDays className="h-5 w-5 text-primary" />
           </div>
           <p className="text-sm font-semibold">No rounds configured</p>
           <p className="text-[11px] text-muted-foreground mt-1 max-w-[20rem] leading-relaxed">
-            Interview rounds are set up during job creation. None have been configured yet.
+            Start building your interview pipeline by adding the first round.
           </p>
+          <Button
+            size="sm"
+            className="mt-4 gap-1.5"
+            onClick={() => setShowAddCard(true)}
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Add First Round
+          </Button>
         </div>
       ) : (
         <div className="space-y-3">

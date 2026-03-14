@@ -23,7 +23,6 @@ import {
 } from "@/components/ui/tooltip"
 // import RubricManager from "@/components/jobs/jobPage/buttons/rubricManager"
 import RubricVersionSwitcher from "@/components/jobs/jobPage/buttons/rubricVersionButton"
-import  RoundSlotsStatus from "@/components/jobs/jobPage/buttons/roundSlotStatus"
 import TotalApplicationCard from '@/components/jobs/cards/totalApplicationCard';
 import AnalyticsCard from '@/components/jobs/cards/analyticsCard';
 import Applications from '@/components/jobs/jobPage/application/application';
@@ -254,7 +253,6 @@ const JobOverview: React.FC = () => {
               <p>Rerank Applications</p>
             </TooltipContent>
           </Tooltip>
-          <RoundSlotsStatus roundSlots={jobData.round_slots} />
           <RubricVersionSwitcher activeVersion={activeVersion} handleVersionChange={handleVersionChange} versionData={versionData} />
         </div>
       </div>

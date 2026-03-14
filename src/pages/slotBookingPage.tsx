@@ -812,7 +812,7 @@ export default function CandidateSlotBooking({ is_reschedule = false }: { is_res
             );
             if (res.status === 200) {
                 toast.success("Your request has been sent to HR. They will get back to you soon.");
-                window.close(); // close the booking page since they requested new slots
+                // window.close(); // close the booking page since they requested new slots
             }
         } catch (err: any) {
             toast.error(extractErrorMessage(err));

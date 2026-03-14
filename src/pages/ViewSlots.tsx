@@ -14,7 +14,6 @@ import axios from "@/axiosConfig";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import {
     Accordion,
     AccordionContent,
@@ -259,7 +258,7 @@ function SlotPillRow({ slots }: { slots: AvailableSlot[] }) {
                 .sort(([a], [b]) => a.localeCompare(b))
                 .map(([date, daySlots]) => (
                     <div key={date} className="flex items-center gap-2 min-w-0">
-                        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/45 shrink-0 w-[60px] text-right leading-none">
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/45 shrink-0 w-15 text-right leading-none">
                             {formatSlotDate(date + "T00:00:00")}
                         </span>
                         <div className="flex flex-wrap gap-1 flex-1 min-w-0">
@@ -321,7 +320,7 @@ function PanelistRow({
             <div className="flex items-stretch">
 
                 {/* ── COLUMN 1: Identity — fixed 200px ── */}
-                <div className="flex flex-col justify-between gap-3 px-4 py-4 border-r border-border/40 w-[200px] shrink-0">
+                <div className="flex flex-col justify-between gap-3 px-4 py-4 border-r border-border/40 w-50 shrink-0">
                     <div className="flex items-center gap-2.5 min-w-0">
                         <div
                             className={`h-9 w-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${palette.bg} ${palette.text}`}
@@ -350,7 +349,7 @@ function PanelistRow({
                 </div>
 
                 {/* ── COLUMN 2: Meta — fixed 210px ── */}
-                <div className="flex flex-col justify-center gap-3 px-4 py-4 border-r border-border/40 w-[210px] shrink-0">
+                <div className="flex flex-col justify-center gap-3 px-4 py-4 border-r border-border/40 w-52.5 shrink-0">
                     <div className="grid grid-cols-2 gap-x-3 gap-y-2.5">
                         <div>
                             <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/45 mb-0.5">
@@ -432,7 +431,7 @@ function PanelistRow({
                     {hasSlots ? (
                         <Accordion type="single" collapsible defaultValue="slots">
                             <AccordionItem value="slots" className="border-0">
-                                <AccordionTrigger className="py-0 pb-2.5 text-[11px] font-semibold text-muted-foreground/50 uppercase tracking-wider hover:text-foreground hover:no-underline [&[data-state=open]]:text-foreground transition-colors gap-2 [&>svg]:h-3.5 [&>svg]:w-3.5 [&>svg]:text-muted-foreground/40">
+                                <AccordionTrigger className="py-0 pb-2.5 text-[11px] font-semibold text-muted-foreground/50 uppercase tracking-wider hover:text-foreground hover:no-underline data-[state=open]:text-foreground transition-colors gap-2 [&>svg]:h-3.5 [&>svg]:w-3.5 [&>svg]:text-muted-foreground/40">
                                     <span className="flex items-center gap-1.5">
                                         <CalendarDays className="h-3.5 w-3.5 shrink-0" />
                                         {slotCount} slot{slotCount !== 1 ? "s" : ""}
@@ -475,7 +474,7 @@ function PanelistRow({
                 </div>
 
                 {/* ── COLUMN 4: Action — fixed 130px ── */}
-                <div className="flex flex-col items-center justify-center gap-2 px-4 py-4 border-l border-border/40 w-[130px] shrink-0">
+                <div className="flex flex-col items-center justify-center gap-2 px-4 py-4 border-l border-border/40 w-32.5 shrink-0">
                     <Button
                         size="sm"
                         variant={isRequestable ? "default" : "outline"}
@@ -523,25 +522,26 @@ function PanelistRow({
 function RowSkeleton() {
     return (
         <Card className="border-border/50 overflow-hidden">
-            <div className="flex items-stretch h-[88px]">
-                <div className="flex items-center gap-2.5 px-4 py-4 border-r border-border/40 w-[200px] shrink-0">
+            <div className="flex items-stretch h-22">
+                <div className="flex items-center gap-2.5 px-4 py-4 border-r border-border/40 w-50 shrink-0">
                     <Skeleton className="h-9 w-9 rounded-full shrink-0" />
                     <div className="space-y-1.5 flex-1 min-w-0">
                         <Skeleton className="h-3.5 w-24" />
                         <Skeleton className="h-3 w-16" />
                     </div>
                 </div>
-                <div className="flex items-center px-4 py-4 border-r border-border/40 w-[210px] shrink-0">
+                <div className="flex items-center px-4 py-4 border-r border-border/40 w-52.5 shrink-0">
                     <div className="grid grid-cols-2 gap-2.5 w-full">
                         {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-7" />)}
                     </div>
                 </div>
                 <div className="flex-1 px-5 py-4 flex items-center gap-1.5 flex-wrap">
                     {[80, 72, 68, 76, 70].map((w, i) => (
+                        // @ts-ignore
                         <Skeleton key={i} className="h-6 rounded" style={{ width: w }} />
                     ))}
                 </div>
-                <div className="px-4 py-4 border-l border-border/40 w-[130px] shrink-0 flex items-center">
+                <div className="px-4 py-4 border-l border-border/40 w-32.5 shrink-0 flex items-center">
                     <Skeleton className="h-8 w-full rounded-md" />
                 </div>
             </div>
