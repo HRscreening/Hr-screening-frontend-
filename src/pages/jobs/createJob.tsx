@@ -1,7 +1,7 @@
 import React from 'react'
 import StepIndicator from '@/components/jobs/createJob/stepIndicator'
 import { Upload, FileText, Sparkles, CalendarDays } from 'lucide-react';
-import UploadJd from '@/components/jobs/createJob/uploadJd';
+import JDSourceStep from '@/components/jobs/createJob/JDSourceStep';
 import { toast } from 'sonner';
 import { type ExtractedJD } from '@/types/types';
 import type { InterviewFormTypes } from '@/types/interviewTypes';
@@ -12,7 +12,7 @@ import axios from "@/axiosConfig"
 import { useNavigate } from 'react-router-dom';
 
 const steps = [
-  { number: 1, title: 'Upload JD', description: 'Upload job description', icon: Upload },
+  { number: 1, title: 'Job Description', description: 'Upload or build with AI', icon: Upload },
   { number: 2, title: 'Basic Details', description: 'Fill essential information', icon: FileText },
   { number: 3, title: 'Set Rubric', description: 'Review & finalize rubric', icon: Sparkles },
   { number: 4, title: 'Interview Setup', description: 'Configure interview rounds', icon: CalendarDays },
@@ -168,7 +168,7 @@ const CreateJob = () => {
     if (loading) return; // prevent double-click
 
     if (currentStep === 1 && !extractedJData) {
-      toast.error('Please upload a job description first.');
+      toast.error('Please complete the job description step first.');
       return;
     }
     if (currentStep === 2) {
@@ -228,6 +228,25 @@ const CreateJob = () => {
       if (response.status === 201) {
         const createdJobId = response.data.job_id;
         setJobId(createdJobId);
+
+        // Save the JD used to create this job as an active version so it's
+        // immediately ready — no manual activation needed.
+        if (extractedJData.raw_jd_text) {
+          try {
+            setStatusMsg("Saving JD version…");
+            const jdRes = await axios.post(`/jobs/${createdJobId}/jd-versions`, {
+              title: extractedJData.job_data?.title ?? 'Job Description',
+              content: extractedJData.raw_jd_text,
+            });
+            const jdId = jdRes.data?.id;
+            if (jdId) {
+              await axios.post(`/jobs/${createdJobId}/jd-versions/${jdId}/activate`);
+            }
+          } catch {
+            // Non-blocking — recruiter can manage JD from the JD & Apply panel
+          }
+        }
+
         toast.success('Job & rubric saved! Now configure interview rounds.');
         setCurrentStep(4);
       }
@@ -252,7 +271,12 @@ const CreateJob = () => {
       />
 
       {currentStep === 1 && (
-        <UploadJd setExtractedJobData={setExtractedJobData} setCurrentStep={setCurrentStep} />
+        <JDSourceStep
+          onComplete={(data) => {
+            setExtractedJobData(data);
+            setCurrentStep(2);
+          }}
+        />
       )}
 
       {currentStep === 2 && extractedJData && (

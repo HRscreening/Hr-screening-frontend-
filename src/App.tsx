@@ -23,6 +23,7 @@ import PanelistRescheduleAvailabilityForm from "@/pages/panelistRescheduleForm";
 import ViewSlots from "./pages/ViewSlots";
 // import PanelAvailabilityForm from "@/pages/panelAvailabilityForm";
 import CandidateSlotBooking from "@/pages/slotBookingPage";
+import PublicApplyPage from "@/pages/PublicApplyPage";
 import ErrorBoundary from "@/components/ErrorBoundary";
 
 function App() {
@@ -71,6 +72,8 @@ function App() {
 
         {/* 404 */}
         <Route path="*" element={<NotFound />} />
+        {/* Public — no auth required */}
+        <Route path="/apply/:slug" element={<PublicApplyPage />} />
         <Route path="/panelist/availability" element={<PanelAvailabilityForm />} />
         <Route path="/panelist/edit-slots" element={<PanelAvailabilityForm />} />
         <Route path="/panelist/reschedule" element={<PanelistRescheduleAvailabilityForm/>} />
