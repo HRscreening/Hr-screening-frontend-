@@ -211,6 +211,7 @@ const JobOverview: React.FC = () => {
               <p>Settings</p>
             </TooltipContent>
           </Tooltip>
+          
           <Tooltip >
             <TooltipTrigger>
 

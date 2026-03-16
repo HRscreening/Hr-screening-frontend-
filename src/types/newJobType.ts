@@ -1,3 +1,4 @@
+import type { RoundSlots } from "./jobTypes";
 export type JobStatus = "open" | "paused" | "closed" | "archived";
 
 export type ApplicationStatus =
@@ -41,5 +42,6 @@ export interface CriteriaOverview {
 export interface JobOverviewResponse {
   job: JobOverviewInfo;
   dashboard: DashboardInfo;
+  round_slots: RoundSlots[] | null;
   criteria: CriteriaOverview;
 }

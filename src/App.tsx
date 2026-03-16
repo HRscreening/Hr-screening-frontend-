@@ -18,7 +18,10 @@ import RequireAuth from "@/guards/RequireAuth";
 import RequireOrgContext from "@/guards/RequireOrgContext";
 import RequireOrgRole from "@/guards/RequireOrgRole";
 
-import PanelAvailabilityForm from "@/pages/panelAvailabilityForm";
+import PanelAvailabilityForm from "@/pages/panelAvailabilityFormcopy";
+import PanelistRescheduleAvailabilityForm from "@/pages/panelistRescheduleForm";
+import ViewSlots from "./pages/ViewSlots";
+// import PanelAvailabilityForm from "@/pages/panelAvailabilityForm";
 import CandidateSlotBooking from "@/pages/slotBookingPage";
 import ErrorBoundary from "@/components/ErrorBoundary";
 
@@ -49,6 +52,7 @@ function App() {
             <Route path="jobs/:jobId/rubric/new" element={<RubricEditorPage mode="new" />} />
             <Route path="jobs/:jobId/settings" element={<JobSettingsPage />} />
             <Route path="jobs/:jobId/settings/rounds" element={<RoundSettings />} />
+            
 
             {/* Org-only */}
             <Route element={<RequireOrgContext />}>
@@ -61,12 +65,15 @@ function App() {
             </Route>
 
           </Route>
-
+          
+              <Route path="jobs/view_slots/:round_config_id" element={<ViewSlots />} />
         </Route>
 
         {/* 404 */}
         <Route path="*" element={<NotFound />} />
         <Route path="/panelist/availability" element={<PanelAvailabilityForm />} />
+        <Route path="/panelist/edit-slots" element={<PanelAvailabilityForm />} />
+        <Route path="/panelist/reschedule" element={<PanelistRescheduleAvailabilityForm/>} />
         <Route path="/interview/book" element={<CandidateSlotBooking  />} />
         <Route path="/interview/reschedule" element={<CandidateSlotBooking is_reschedule={true} />} />
       </Routes> 

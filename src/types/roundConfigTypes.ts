@@ -58,6 +58,12 @@ export const roundEditSchema = z.object({
 
 export type RoundEditValues = z.infer<typeof roundEditSchema>;
 
+export const roundCreateSchema = roundEditSchema.extend({
+  round_number: z.number().min(1, 'Round number is required'),
+});
+
+export type RoundCreateValues = z.infer<typeof roundCreateSchema>;
+
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 export const MODE_OPTIONS = [

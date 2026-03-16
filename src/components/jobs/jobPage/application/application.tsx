@@ -6,8 +6,8 @@ import { Separator } from "@/components/ui/separator";
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { useJobId, useActiveVersion } from '@/store/jobPageStore';
-
-
+import { useJobPageStore } from '@/store/jobPageStore';
+import  RoundSlotsStatus from "@/components/jobs/jobPage/buttons/roundSlotStatus"
 
 function Applications() {
   const jobId = useJobId();
@@ -18,7 +18,7 @@ function Applications() {
   const [activeTab, setActiveTab] = useState<'all_candidates' | 'shortlisted' | 'rejected'>('all_candidates');
   const [pageSize, setPageSize] = useState(20);
 
-
+    const {  jobData} = useJobPageStore();
   // async function getApplicationData() {
   //   try {
 
@@ -36,8 +36,8 @@ function Applications() {
   // }
 
   // TODOO: add rubric version as query param once backend supports fetching applications based on rubric version. This will be used to show different applications based on the rubric version selected in the dashboard.
-  
-  
+
+
   async function getApplicationData(
     jobId: string,
     page: number,
@@ -72,7 +72,7 @@ function Applications() {
     if (!jobId) return;
 
     getApplicationData(jobId, page, pageSize);
-    
+
 
   }, [jobId, page, pageSize]);
 
@@ -115,16 +115,21 @@ function Applications() {
             ))
           }
         </div>
-        <div className="relative w-65 max-w-sm">
-          <Search
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-            size={18}
-          />
-          <Input
-            placeholder="Search..."
-            className="pl-9 bg-primary/10 border-none rounded-lg shadow-accent focus-visible:ring-1"
-          />
+        <div className='flex flex-row gap-4 items-center justify-items-end'>
+          <RoundSlotsStatus roundSlots={jobData && jobData.round_slots } />
+
+          <div className="relative w-65 max-w-sm">
+            <Search
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+              size={18}
+            />
+            <Input
+              placeholder="Search..."
+              className="pl-9 bg-primary/10 border-none rounded-lg shadow-accent focus-visible:ring-1"
+            />
+          </div>
         </div>
+
       </div>
 
       <Separator />
@@ -141,41 +146,3 @@ function Applications() {
 
 export default Applications;
 
-
-
-//  failed_files_names: [
-//       {
-//         name: "resume1.pdf",
-//         reason: "File format not supported",
-//       },
-//       {
-//         name: "resume2.pdf",
-//         reason: "File size exceeds limit",
-//       },
-//       {
-//         name: "resume3.pdf",
-//         reason: "Corrupted file",
-//       },
-//       {
-//         name: "resume4.pdf",
-//       },
-//       {
-//         name: "resume5.pdf",
-//         reason: "Invalid content",
-//       },
-//       {
-//         name: "resume2.pdf",
-//         reason: "File size exceeds limit",
-//       },
-//       {
-//         name: "resume3.pdf",
-//         reason: "Corrupted file",
-//       },
-//       {
-//         name: "resume4.pdf",
-//       },
-//       {
-//         name: "resume5.pdf",
-//         reason: "Invalid content",
-//       },
-//     ],

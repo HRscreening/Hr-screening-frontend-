@@ -109,7 +109,7 @@ export function Status({
           setCurrentStatus(roundKey(res.data.new_round));
           toast.success(res.data.message || 'Applicant moved to next round');
         } else {
-          toast.error(res.data.detail || res.data.message || 'Failed to move to next round.');
+          toast.error(res.data.message || res.data.message || 'Failed to move to next round.');
         }
       } else {
         const res = await axios.patch(`/application/change-status/${application_id}`, { new_status: newStatus });
@@ -118,7 +118,8 @@ export function Status({
           setCurrentStatus(newStatus);
           toast.success(res.data.message || 'Status updated');
         } else {
-          toast.error(res.data.detail|| 'Failed to update status.');
+          console.log('Status update failed response', res.data);
+          toast.error(res.data.message|| 'Failed to update status.');
         }
       }
     } catch (err: unknown) {
@@ -127,6 +128,9 @@ export function Status({
       if (axiosErr?.response?.status === 408) {
         // TODO: Trigger popup to add round configuration since this likely means round details are not configured yet
         toast.error('Round configuration is missing. Please configure this round first.');
+      }else if (axiosErr?.response?.status === 411) {
+        // TODO: Trigger popup to add round configuration since this likely means round details are not configured yet
+        toast.error('Cannot move application to this round as slots are not yet available,Please wait for panelist to give slots or request them for slots if they have already given.');
       } else {
         toast.error(axiosErr?.response?.data?.message || 'Failed to update status.');
       }

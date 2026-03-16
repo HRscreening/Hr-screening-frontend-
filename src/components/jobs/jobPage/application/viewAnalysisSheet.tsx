@@ -23,6 +23,7 @@ interface ViewAnalysisSheetProps {
     resume: Resume;
     overallScore: number | undefined;
     openSheet: boolean;
+    application_id: string;
     setOpenSheet: (open: boolean) => void;
 }
 export default function ViewAnalysisSheet({
@@ -31,11 +32,14 @@ export default function ViewAnalysisSheet({
     aiAnalysis,
     resume,
     overallScore,
+    application_id,
     openSheet,
     setOpenSheet,
 }: ViewAnalysisSheetProps) {
 
     const [currentTab, setCurrentTab] = useState<"resume" | "interview">("resume")
+
+
 
     return (
         <Sheet open={openSheet} onOpenChange={(open) => setOpenSheet(open)}>
@@ -85,7 +89,7 @@ export default function ViewAnalysisSheet({
                     />
                 )}
 
-                {currentTab === "interview" && <InterviewAnalysisSheet />}
+                {currentTab === "interview" && <InterviewAnalysisSheet application_id={application_id} />}
             </SheetContent>
         </Sheet>
     )

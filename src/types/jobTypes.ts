@@ -50,10 +50,17 @@ export type SettingsTypes = {
   closing_reason: string | null;
 }
 
+export type RoundSlots ={
+  round_config_id: string;
+  round_number: string;
+  slots_available:boolean;
+}
+
 export type JobOverviewResponse = {
   job: Job;
   dashboard: Dashboard;
   criteria: Criteria;
+  round_slots: RoundSlots[] | null;
   settings: SettingsTypes;
 };
 
