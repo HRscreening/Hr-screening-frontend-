@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import {
     Eye,
 } from "lucide-react";
-import type { Breakdown, AIAnalysis, Resume } from "@/types/applicationTypes";
+import type { Breakdown, AIAnalysis, Resume, GroundingData } from "@/types/applicationTypes";
 import ResumeAnalysisSheet from "@/components/jobs/jobPage/application/analysis_sheets/resumeAnalysisSheet"
 import InterviewAnalysisSheet from "@/components/jobs/jobPage/application/analysis_sheets/interviewAnalysisSheet"
 import { FileText, MessageSquare } from "lucide-react";
@@ -18,16 +18,17 @@ import { cn } from "@/lib/utils";
 // ─── Component ─────────────────────────────────────────────────────────────────
 interface ViewAnalysisSheetProps {
     breakdown?: Breakdown | null;
+    groundingData?: GroundingData | null;
     aiAnalysis?: AIAnalysis | null;
     resume: Resume;
     overallScore: number | undefined;
     openSheet: boolean;
     application_id: string;
     setOpenSheet: (open: boolean) => void;
-
 }
 export default function ViewAnalysisSheet({
     breakdown,
+    groundingData,
     aiAnalysis,
     resume,
     overallScore,
@@ -81,6 +82,7 @@ export default function ViewAnalysisSheet({
                 {currentTab === "resume" && (
                     <ResumeAnalysisSheet
                         breakdown={breakdown}
+                        groundingData={groundingData}
                         aiAnalysis={aiAnalysis}
                         resume={resume}
                         overallScore={overallScore}

@@ -44,6 +44,9 @@ const TableRowSkeleton = () => (
       </div>
     </TableCell>
     <TableCell>
+      <Skeleton className="h-4 w-28" />
+    </TableCell>
+    <TableCell>
       <div className="flex items-center gap-2">
         <Skeleton className="h-2 w-28 rounded-full" />
         <Skeleton className="h-4 w-12" />
@@ -100,7 +103,7 @@ const ApplicationsTable: React.FC<ApplicationsTableProps> = ({
           <TableHeader >
             <TableRow>
               <TableHead>Candidate</TableHead>
-              {/* <TableHead>Progress</TableHead> */}
+              <TableHead className="w-48">Current Role</TableHead>
               <TableHead className="w-36">Match</TableHead>
               <TableHead className="w-36">Status</TableHead>
               <TableHead className="w-24 text-right">Actions</TableHead>
@@ -123,7 +126,7 @@ const ApplicationsTable: React.FC<ApplicationsTableProps> = ({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
+                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
                   No applications found.
                 </TableCell>
               </TableRow>

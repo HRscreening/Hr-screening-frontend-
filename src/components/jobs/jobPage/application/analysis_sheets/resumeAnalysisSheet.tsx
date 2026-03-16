@@ -15,12 +15,11 @@ import {
     ExternalLink,
     AlertCircle,
     Loader2,
-    TrendingUp,
-    ShieldCheck,
     Sparkles,
     ChevronRight,
+    LayoutGrid,
 } from "lucide-react";
-import type { Breakdown, AIAnalysis, Resume } from "@/types/applicationTypes";
+import type { Breakdown, AIAnalysis, Resume, GroundingData, CriterionScore, GroundingCriterion } from "@/types/applicationTypes";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import React from "react";
@@ -140,15 +139,16 @@ function scoreBadgeClass(score: number | undefined): string {
 // ─── Component ─────────────────────────────────────────────────────────────────
 interface ViewAnalysisSheetProps {
     breakdown?: Breakdown | null;
+    groundingData?: GroundingData | null;
     aiAnalysis?: AIAnalysis | null;
     resume: Resume;
     overallScore: number | undefined;
-
 }
 
 
 export default function ResumeAnalysisSheet({
     breakdown,
+    groundingData,
     aiAnalysis,
     resume,
     overallScore
@@ -159,32 +159,10 @@ export default function ResumeAnalysisSheet({
         Array.isArray(value) &&
         value.every((item) => typeof item === "string" && item.trim().length > 0);
 
-    const isEvidenceObjectArray = (
-        value: unknown
-    ): value is Array<{ evidence: string; criterion?: string }> =>
-        Array.isArray(value) &&
-        value.length > 0 &&
-        value.every(
-            (item) =>
-                typeof item === "object" &&
-                item !== null &&
-                "evidence" in item &&
-                typeof (item as Record<string, unknown>).evidence === "string"
-        );
-
-    // const isPlainObject = (value: unknown): value is Record<string, unknown> =>
-    //     value !== null && typeof value === "object" && !Array.isArray(value);
-
     const hasContent = (data: unknown): boolean => {
         if (!data) return false;
         if (typeof data === "object" && Object.keys(data as object).length === 0) return false;
         return true;
-    };
-
-    const normalizeToStringArray = (value: unknown): string[] | null => {
-        if (isStringArray(value)) return value;
-        if (isEvidenceObjectArray(value)) return value.map((item) => item.evidence);
-        return null;
     };
 
     const formatSectionTitle = (key: string) =>
@@ -261,25 +239,47 @@ export default function ResumeAnalysisSheet({
     const isPending = resume.status === "pending";
     const isFailed = resume.status === "failed";
 
+    // ── Requirement level badge ────────────────────────────────────────────────
+
+    const requirementLevelBadge = (level: string | undefined) => {
+        if (!level) return null;
+        const config: Record<string, { label: string; className: string }> = {
+            must: { label: "Required", className: "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/20 dark:border-red-800" },
+            should: { label: "Recommended", className: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/20 dark:border-blue-800" },
+            nice: { label: "Nice to have", className: "bg-muted/60 text-muted-foreground border-border" },
+        };
+        const cfg = config[level] ?? config.should;
+        return (
+            <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", cfg.className)}>
+                {cfg.label}
+            </Badge>
+        );
+    };
+
     // ── Criterion card ─────────────────────────────────────────────────────────
 
     const renderCriterionCard = (
-        key: string,
-        criterion: {
-            score: number;
-            reason?: string | null;
-            evidence?: unknown;
-            sub_criteria?: Record<string, { score: number; reason?: string | null; evidence?: unknown }>;
-        }
+        criterionName: string,
+        criterion: CriterionScore,
+        grounding?: GroundingCriterion
     ) => {
         const hasSubCriteria =
             criterion.sub_criteria && Object.keys(criterion.sub_criteria).length > 0;
-        const normalizedEvidence = normalizeToStringArray(criterion.evidence);
+        const evidence = grounding?.evidence ?? [];
+        const matchAssessment = grounding?.match_assessment;
+
+        const matchColors: Record<string, string> = {
+            exceeds: "text-green-600 dark:text-green-400",
+            strong: "text-blue-600 dark:text-blue-400",
+            partial: "text-amber-600 dark:text-amber-400",
+            weak: "text-orange-600 dark:text-orange-400",
+            none: "text-red-600 dark:text-red-400",
+        };
 
         return (
             <AccordionItem
-                key={key}
-                value={key}
+                key={criterionName}
+                value={criterionName}
                 className="border border-border/60 rounded-lg overflow-hidden bg-card"
             >
                 <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/30 transition-colors [&>svg]:hidden group">
@@ -287,18 +287,24 @@ export default function ResumeAnalysisSheet({
                         <ScoreRing score={criterion.score} size={44} strokeWidth={4} />
                         <div className="flex-1 text-left min-w-0">
                             <p className="text-sm font-medium text-foreground truncate">
-                                {formatSectionTitle(key)}
+                                {criterionName}
                             </p>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                                {scoreLabel(criterion.score)}
-                            </p>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                                <span className="text-xs text-muted-foreground">{scoreLabel(criterion.score)}</span>
+                                {matchAssessment && (
+                                    <span className={cn("text-xs font-medium capitalize", matchColors[matchAssessment] ?? "text-muted-foreground")}>
+                                        · {matchAssessment}
+                                    </span>
+                                )}
+                            </div>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
+                            {requirementLevelBadge(criterion.requirement_level)}
                             <Badge
                                 variant="outline"
                                 className={cn("text-xs tabular-nums", scoreBadgeClass(criterion.score))}
                             >
-                                {criterion.score}/100
+                                {Math.round(criterion.score)}/100
                             </Badge>
                             <ChevronRight className="w-4 h-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-90" />
                         </div>
@@ -307,11 +313,26 @@ export default function ResumeAnalysisSheet({
 
                 <AccordionContent>
                     <div className="px-4 pb-4 pt-2 space-y-4 border-t border-border/40">
-                        {/* Reason */}
-                        {criterion.reason && (
-                            <div className="rounded-md bg-muted/40 px-3 py-2.5 border border-border/40">
+                        {/* JD requirement */}
+                        {grounding?.jd_requirement && (
+                            <div className="rounded-md bg-muted/30 px-3 py-2 border border-border/40">
+                                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                                    Job Requirement
+                                </p>
                                 <p className="text-xs text-muted-foreground leading-relaxed">
-                                    {criterion.reason}
+                                    {grounding.jd_requirement}
+                                </p>
+                            </div>
+                        )}
+
+                        {/* Reasoning */}
+                        {criterion.reasoning && (
+                            <div className="rounded-md bg-muted/40 px-3 py-2.5 border border-border/40">
+                                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                                    Assessment
+                                </p>
+                                <p className="text-xs text-muted-foreground leading-relaxed">
+                                    {criterion.reasoning}
                                 </p>
                             </div>
                         )}
@@ -320,18 +341,18 @@ export default function ResumeAnalysisSheet({
                         {hasSubCriteria && (
                             <div className="space-y-2.5">
                                 <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                                    Breakdown
+                                    Sub-criteria
                                 </p>
                                 <div className="space-y-2.5">
-                                    {Object.entries(criterion.sub_criteria!).map(([subKey, sub]) => (
-                                        <div key={subKey} className="space-y-1">
+                                    {Object.entries(criterion.sub_criteria!).map(([subName, sub]) => (
+                                        <div key={subName} className="space-y-1">
                                             <ScoreBar
                                                 score={sub?.score}
-                                                label={formatSectionTitle(subKey)}
+                                                label={subName}
                                             />
-                                            {sub?.reason && (
+                                            {sub?.reasoning && (
                                                 <p className="text-xs text-muted-foreground/60 pl-30 leading-relaxed">
-                                                    {sub.reason}
+                                                    {sub.reasoning}
                                                 </p>
                                             )}
                                         </div>
@@ -340,22 +361,20 @@ export default function ResumeAnalysisSheet({
                             </div>
                         )}
 
-                        {/* Evidence */}
-                        {normalizedEvidence && normalizedEvidence.length > 0 && (
+                        {/* Evidence from resume */}
+                        {evidence.length > 0 && (
                             <div className="space-y-2">
                                 <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                                    Evidence
+                                    Evidence from Resume
                                 </p>
                                 <ul className="space-y-1.5">
-                                    {normalizedEvidence.map((item, idx) => (
+                                    {evidence.map((item, idx) => (
                                         <li
                                             key={idx}
                                             className="flex items-start gap-2 text-xs text-muted-foreground"
                                         >
-                                            <span className="text-primary mt-0.5 shrink-0 text-sm leading-tight">
-                                                ›
-                                            </span>
-                                            <span className="leading-relaxed">{item}</span>
+                                            <span className="text-primary mt-0.5 shrink-0 text-sm leading-tight">›</span>
+                                            <span className="leading-relaxed italic">{item}</span>
                                         </li>
                                     ))}
                                 </ul>
@@ -366,18 +385,6 @@ export default function ResumeAnalysisSheet({
             </AccordionItem>
         );
     };
-
-    // ── Compute section averages ───────────────────────────────────────────────
-
-    const sectionAvg = (criteria: Record<string, { score: number }> | undefined) => {
-        if (!criteria) return 0;
-        const scores = Object.values(criteria).map((c) => c.score);
-        if (!scores.length) return 0;
-        return Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
-    };
-
-    const mandatoryAvg = sectionAvg(breakdown?.mandatory_criteria);
-    const screeningAvg = sectionAvg(breakdown?.screening_criteria);
 
     // ── Render ─────────────────────────────────────────────────────────────────
 
@@ -442,38 +449,23 @@ export default function ResumeAnalysisSheet({
                 </div>
 
                 {/* Section score pills */}
-                {(breakdown?.mandatory_criteria || breakdown?.screening_criteria) && (
-                    <div className="flex gap-2">
-                        {breakdown.mandatory_criteria &&
-                            Object.keys(breakdown.mandatory_criteria).length > 0 && (
-                                <div
-                                    className={cn(
-                                        "flex items-center gap-2 px-3 py-2 rounded-lg border text-xs flex-1",
-                                        scoreBadgeClass(mandatoryAvg)
-                                    )}
-                                >
-                                    <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
-                                    <span className="font-medium">Mandatory</span>
-                                    <span className="ml-auto font-bold tabular-nums">
-                                        {mandatoryAvg}/100
-                                    </span>
-                                </div>
-                            )}
-                        {breakdown.screening_criteria &&
-                            Object.keys(breakdown.screening_criteria).length > 0 && (
-                                <div
-                                    className={cn(
-                                        "flex items-center gap-2 px-3 py-2 rounded-lg border text-xs flex-1",
-                                        scoreBadgeClass(screeningAvg)
-                                    )}
-                                >
-                                    <TrendingUp className="w-3.5 h-3.5 shrink-0" />
-                                    <span className="font-medium">Screening</span>
-                                    <span className="ml-auto font-bold tabular-nums">
-                                        {screeningAvg}/100
-                                    </span>
-                                </div>
-                            )}
+                {breakdown && Object.keys(breakdown).length > 0 && (
+                    <div className="flex gap-2 flex-wrap">
+                        {Object.entries(breakdown).map(([sectionKey, section]) => (
+                            <div
+                                key={sectionKey}
+                                className={cn(
+                                    "flex items-center gap-2 px-3 py-2 rounded-lg border text-xs flex-1 min-w-32",
+                                    scoreBadgeClass(section.score)
+                                )}
+                            >
+                                <LayoutGrid className="w-3.5 h-3.5 shrink-0 opacity-70" />
+                                <span className="font-medium truncate">{formatSectionTitle(sectionKey)}</span>
+                                <span className="ml-auto font-bold tabular-nums shrink-0">
+                                    {Math.round(section.score)}/100
+                                </span>
+                            </div>
+                        ))}
                     </div>
                 )}
             </div>
@@ -659,49 +651,32 @@ export default function ResumeAnalysisSheet({
                             {/* ─── Criteria Breakdown ─── */}
                             {hasAnyGrounding && breakdown && (
                                 <div className="space-y-6">
-                                    {/* Mandatory */}
-                                    {breakdown.mandatory_criteria &&
-                                        Object.keys(breakdown.mandatory_criteria).length > 0 && (
-                                            <section className="space-y-3">
-                                                <div className="flex items-center gap-2">
-                                                    <ShieldCheck className="w-4 h-4 text-primary" />
-                                                    <h3 className="text-sm font-semibold text-foreground">
-                                                        Mandatory Criteria
-                                                    </h3>
-                                                    <Badge variant="secondary" className="ml-auto text-xs">
-                                                        {Object.keys(breakdown.mandatory_criteria).length}
-                                                    </Badge>
-                                                </div>
-                                                <Accordion type="multiple" className="space-y-2">
-                                                    {Object.entries(breakdown.mandatory_criteria).map(
-                                                        ([key, criterion]) =>
-                                                            renderCriterionCard(key, criterion)
-                                                    )}
-                                                </Accordion>
-                                            </section>
-                                        )}
-
-                                    {/* Screening */}
-                                    {breakdown.screening_criteria &&
-                                        Object.keys(breakdown.screening_criteria).length > 0 && (
-                                            <section className="space-y-3">
-                                                <div className="flex items-center gap-2">
-                                                    <TrendingUp className="w-4 h-4 text-primary" />
-                                                    <h3 className="text-sm font-semibold text-foreground">
-                                                        Screening Criteria
-                                                    </h3>
-                                                    <Badge variant="secondary" className="ml-auto text-xs">
-                                                        {Object.keys(breakdown.screening_criteria).length}
-                                                    </Badge>
-                                                </div>
-                                                <Accordion type="multiple" className="space-y-2">
-                                                    {Object.entries(breakdown.screening_criteria).map(
-                                                        ([key, criterion]) =>
-                                                            renderCriterionCard(key, criterion)
-                                                    )}
-                                                </Accordion>
-                                            </section>
-                                        )}
+                                    {Object.entries(breakdown).map(([sectionKey, section]) => (
+                                        <section key={sectionKey} className="space-y-3">
+                                            <div className="flex items-center gap-2">
+                                                <LayoutGrid className="w-4 h-4 text-primary" />
+                                                <h3 className="text-sm font-semibold text-foreground">
+                                                    {formatSectionTitle(sectionKey)}
+                                                </h3>
+                                                <Badge
+                                                    variant="outline"
+                                                    className={cn("ml-auto text-xs tabular-nums", scoreBadgeClass(section.score))}
+                                                >
+                                                    {Math.round(section.score)}/100
+                                                </Badge>
+                                            </div>
+                                            <Accordion type="multiple" className="space-y-2">
+                                                {Object.entries(section.criteria_scores).map(
+                                                    ([criterionName, criterion]) =>
+                                                        renderCriterionCard(
+                                                            criterionName,
+                                                            criterion,
+                                                            groundingData?.[sectionKey]?.[criterionName]
+                                                        )
+                                                )}
+                                            </Accordion>
+                                        </section>
+                                    ))}
                                 </div>
                             )}
                         </div>
