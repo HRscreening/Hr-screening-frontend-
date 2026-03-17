@@ -134,7 +134,7 @@ const CreateJob = () => {
       setLoading(true);
       setStatusMsg('Creating interview rounds…');
 
-      const res = await axios.post('/interview/bulk-create-round-configs', {
+      const res = await axios.post('/round/bulk-create-round-configs', {
         job_id: jobId,
         rounds: rounds.map((round) => ({
           title: round.title,
