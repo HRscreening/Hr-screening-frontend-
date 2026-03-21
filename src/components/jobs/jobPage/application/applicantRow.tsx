@@ -94,6 +94,13 @@ function InterviewProgressBar() {
 
 */
 
+const resumeStatusStyles: Record<string, string> = {
+  scored:  'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+  parsed:  'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+  pending: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+  failed:  'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+};
+
 const ApplicationRow: React.FC<ApplicationRowProps> = ({ application, onViewDetails }) => {
   const { candidate, scores, status, id } = application;
   const [currentStatus, setCurrentStatus] = React.useState<statusType>(status);
@@ -101,8 +108,10 @@ const ApplicationRow: React.FC<ApplicationRowProps> = ({ application, onViewDeta
   const matchPercentage = activeScore?.overall_score ?? 0;
   const fullName = candidate?.full_name;
   const email = candidate?.email;
+  const phone = candidate?.phone;
   const currentTitle = candidate?.current_title;
   const currentCompany = candidate?.current_company;
+  const resume = application.resume;
   const [openAnalysis, setOpenAnalysis] = useState<boolean>(false);
 
 
@@ -143,6 +152,9 @@ const ApplicationRow: React.FC<ApplicationRowProps> = ({ application, onViewDeta
             </span>
             <span className="text-sm text-muted-foreground">
               {email ? email : 'No email found'}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {phone ? phone : 'No phone'}
             </span>
           </div>
         </div>
@@ -198,7 +210,31 @@ const ApplicationRow: React.FC<ApplicationRowProps> = ({ application, onViewDeta
       </TableCell>
 
       <TableCell>
-        <Status status={currentStatus} application_id={application.id} setCurrentStatus={setCurrentStatus} currentRound={application.current_round} />
+        <div className="flex flex-col gap-1">
+          <Status status={currentStatus} application_id={application.id} setCurrentStatus={setCurrentStatus} currentRound={application.current_round} />
+          {resume && (
+            <div className="flex items-center gap-2">
+              <span
+                data-testid="resume-status-badge"
+                className={cn(
+                  'text-xs px-1.5 py-0.5 rounded font-medium capitalize',
+                  resumeStatusStyles[resume.status] ?? 'bg-muted text-muted-foreground',
+                )}
+              >
+                {resume.status}
+              </span>
+              <a
+                href={resume.raw_file_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="text-xs text-blue-600 hover:underline dark:text-blue-400"
+              >
+                Resume
+              </a>
+            </div>
+          )}
+        </div>
       </TableCell>
 
       <TableCell className="text-right ">

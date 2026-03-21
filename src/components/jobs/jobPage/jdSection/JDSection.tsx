@@ -415,7 +415,48 @@ export default function JDSection({ onLinkChange }: Props) {
       )}
 
       {/* ── Form Config Tab ───────────────────────────────────────────────── */}
-      {activeSection === 'form' && <FormConfigPanel onActivated={tryAutoGenerateLink} />}
+      {activeSection === 'form' && (
+        <div className="space-y-4">
+          <FormConfigPanel onActivated={tryAutoGenerateLink} />
+
+          {/* Public apply link — also visible in form tab */}
+          <Separator />
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Link2 className="w-4 h-4 text-primary" />
+              <h3 className="font-medium text-sm">Public Apply Link</h3>
+            </div>
+            {linkData?.public_apply_enabled ? (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex items-center gap-1.5 bg-muted/50 rounded px-3 py-2 min-w-0 flex-1">
+                    <LinkIcon className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                    <span className="truncate text-xs font-mono">{linkData.public_url}</span>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={handleCopyLink}>
+                    <Copy className="w-3.5 h-3.5 mr-1" /> Copy
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => window.open(linkData.public_url!, '_blank')}>
+                    <ExternalLink className="w-3.5 h-3.5 mr-1" /> Open
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Share this link with candidates to collect applications.
+                </p>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <p className="text-xs text-muted-foreground">
+                  No active public link. Generate one or activate the form first.
+                </p>
+                <Button size="sm" variant="outline" onClick={handleGenerateLink}>
+                  Generate link
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ── AI Wizard ───────────────────────────────────────────────────── */}
       <AIJDWizard

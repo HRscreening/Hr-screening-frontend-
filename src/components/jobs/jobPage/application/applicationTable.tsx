@@ -18,8 +18,8 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import ApplicationRow from "@/components/jobs/jobPage/application/applicantRow";
+import ScoreAllButton from "@/components/jobs/jobPage/buttons/scoreAllButton";
 import type { Application, ApplicationsResponse } from '@/types/applicationTypes';
-// import Job from '@/pages/jobs/Jobs';
 
 interface ApplicationsTableProps {
   data?: ApplicationsResponse;
@@ -30,6 +30,7 @@ interface ApplicationsTableProps {
   onApplicationDeleted?: () => void;
   jobId?: string;
   isProcessing?: boolean;
+  onScoreAllSuccess?: () => void;
 }
 
 const TableRowSkeleton = () => (
@@ -70,6 +71,7 @@ const ApplicationsTable: React.FC<ApplicationsTableProps> = ({
   onApplicationDeleted,
   jobId,
   isProcessing: _isProcessing,
+  onScoreAllSuccess,
 }) => {
   const [pageSize, setPageSize] = useState(data?.pagination.page_size || 15);
   const currentPage = data?.pagination.page || 1;
@@ -98,6 +100,11 @@ const ApplicationsTable: React.FC<ApplicationsTableProps> = ({
 
   return (
     <div className="w-full space-y-4">
+      {jobId && (
+        <div className="flex justify-end">
+          <ScoreAllButton jobId={jobId} onSuccess={onScoreAllSuccess} />
+        </div>
+      )}
       <div className="rounded-md border bg-card px-5">
         <Table >
           <TableHeader >
