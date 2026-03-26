@@ -25,74 +25,6 @@ const avatarColors = [
 ];
 
 
-/*
-
-type InterviewStage = {
-  stage: number;
-  status: "Passed" | "In Progress" | "Failed";
-}
-
-function InterviewProgressBar() {
-  const data: InterviewStage[] = [
-    { stage: 1, status: "Passed" },
-    { stage: 2, status: "In Progress" },
-    { stage: 3, status: "Failed" },
-  ];
-
-  if (!data || data.length === 0) return null;
-
-  const getStyles = (status: string) => {
-    switch (status) {
-      case "Passed":
-        return {
-          bg: "bg-green-100",
-          text: "text-green-600",
-          iconColor: "#16a34a",
-        };
-      case "Failed":
-        return {
-          bg: "bg-red-100",
-          text: "text-red-600",
-          iconColor: "#dc2626",
-        };
-      default:
-        return {
-          bg: "bg-primary",
-          text: "text-white",
-          iconColor: "#ca8a04",
-        };
-    }
-  };
-
-  return (
-    <div className="flex gap-6">
-      {data.map((item) => {
-        const styles = getStyles(item.status);
-
-        return (
-          <div key={item.stage} className="flex flex-col items-center">
-            <div
-              className={`w-8 h-8   rounded-full flex items-center justify-center ${styles.bg}`}
-            >
-              {item.stage === 1 ? (
-                <Mic
-                  color={styles.iconColor}
-                  className="h-4 w-4"
-                />
-              ) : (
-                <span className={`font-semibold ${styles.text}`}>
-                  {item.stage}
-                </span>
-              )}
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-*/
 
 const resumeStatusStyles: Record<string, string> = {
   scored:  'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
@@ -211,7 +143,21 @@ const ApplicationRow: React.FC<ApplicationRowProps> = ({ application, onViewDeta
 
       <TableCell>
         <div className="flex flex-col gap-1">
-          <Status status={currentStatus} application_id={application.id} setCurrentStatus={setCurrentStatus} currentRound={application.current_round} />
+          <Status status={currentStatus} application_id={application.id} setCurrentStatus={setCurrentStatus} currentRound={application.current_round} candidateDetails={{
+          name: candidate?.full_name || null,
+          email: candidate?.email || null,
+          phone: candidate?.phone || null,
+          candidate_id: candidate?.id || null,
+        }} />
+        </div>
+      </TableCell>
+
+
+      <TableCell>
+        <div className="flex flex-col gap-1">
+          <span className="text-sm text-muted-foreground">
+            {application.interview_status ? application.interview_status : '-'}
+          </span>
           {resume && (
             <div className="flex items-center gap-2">
               <span
@@ -240,7 +186,7 @@ const ApplicationRow: React.FC<ApplicationRowProps> = ({ application, onViewDeta
       <TableCell className="text-right ">
         <ViewAnalysis overallScore={activeScore?.overall_score} breakdown={activeScore?.breakdown} aiAnalysis={application.ai_analysis} resume={application.resume} openSheet={openAnalysis} setOpenSheet={setOpenAnalysis} application_id={id} />
         {/* <ViewAnalysis overallScore={activeScore?.overall_score} breakdown={activeScore?.breakdown} groundingData={activeScore?.grounding_data} aiAnalysis={application.ai_analysis} resume={application.resume} openSheet={openAnalysis} setOpenSheet={setOpenAnalysis} /> */}
-        <MenuItems applicationId={id} name={candidate?.full_name} email={candidate?.email} phone={candidate?.phone} candidate_id={candidate?.id} is_flagged={application.is_flagged} is_starred={application.is_starred} flag_reason={application.flag_reason} />
+        <MenuItems applicationId={id} name={candidate?.full_name || null} email={candidate?.email || null} phone={candidate?.phone || null} candidate_id={candidate?.id || null} is_flagged={application.is_flagged} is_starred={application.is_starred} flag_reason={application.flag_reason} />
       </TableCell>
 
     </TableRow>

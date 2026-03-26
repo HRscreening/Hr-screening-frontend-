@@ -51,3 +51,31 @@ axios.interceptors.response.use(
 );
 
 export default axios;
+
+if (import.meta.env.VITE_DEVELOPEMENT_ENV === "development") {
+  axios.interceptors.response.use(
+    (response) => {
+      // ✅ success case (2xx)
+      return response;
+    },
+    (error) => {
+      // ❗ error case (4xx, 5xx)
+
+      if (error.response) {
+        // Server responded with error
+        console.error("❌ API Error:");
+        console.error("Status:", error.response.status);
+        console.error("Data:", error.response.data);
+        console.error("URL:", error.config?.url);
+      } else if (error.request) {
+        // No response from server
+        console.error("❌ No response received:", error.request);
+      } else {
+        // Something else
+        console.error("❌ Axios error:", error.message);
+      }
+
+      return Promise.reject(error); // important
+    }
+  );
+}

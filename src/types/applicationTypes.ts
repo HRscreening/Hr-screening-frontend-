@@ -49,6 +49,7 @@ export type statusType = 'applied' | 'shortlisted' | 'offer_extended' | 'rejecte
 export interface Application {
   id: string;
   current_round: number;
+  interview_status: string | null;
   is_starred: boolean;
   denormalized_rank: number | null;
   is_flagged: boolean;

@@ -32,9 +32,9 @@ interface ApplicationsTableProps {
   isProcessing?: boolean;
   onScoreAllSuccess?: () => void;
 }
-
 const TableRowSkeleton = () => (
   <TableRow>
+    {/* Candidate */}
     <TableCell>
       <div className="flex items-center gap-3">
         <Skeleton className="w-10 h-10 rounded-full" />
@@ -44,20 +44,36 @@ const TableRowSkeleton = () => (
         </div>
       </div>
     </TableCell>
+
+    {/* Current Role */}
     <TableCell>
       <Skeleton className="h-4 w-28" />
     </TableCell>
+
+    {/* Match */}
     <TableCell>
       <div className="flex items-center gap-2">
         <Skeleton className="h-2 w-28 rounded-full" />
-        <Skeleton className="h-4 w-12" />
+        <Skeleton className="h-4 w-10" />
       </div>
     </TableCell>
+
+    {/* Status */}
     <TableCell>
-      <Skeleton className="h-6 w-24 rounded-full" />
+      <Skeleton className="h-6 w-20 rounded-full" />
     </TableCell>
+
+    {/* Sub-Status ✅ added */}
+    <TableCell>
+      <Skeleton className="h-4 w-24" />
+    </TableCell>
+
+    {/* Actions ✅ fixed alignment */}
     <TableCell className="text-right">
-      <Skeleton className="h-8 w-20 ml-auto" />
+      <div className="flex justify-end gap-2">
+        <Skeleton className="h-8 w-8 rounded-md" />
+        <Skeleton className="h-8 w-8 rounded-md" />
+      </div>
     </TableCell>
   </TableRow>
 );
@@ -113,6 +129,7 @@ const ApplicationsTable: React.FC<ApplicationsTableProps> = ({
               <TableHead className="w-48">Current Role</TableHead>
               <TableHead className="w-36">Match</TableHead>
               <TableHead className="w-36">Status</TableHead>
+              <TableHead className="w-36">Sub-Status</TableHead>
               <TableHead className="w-24 text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -126,7 +143,7 @@ const ApplicationsTable: React.FC<ApplicationsTableProps> = ({
                 <ApplicationRow
                   key={application.id}
                   application={application}
-                  onViewDetails={onViewDetails || (() => {})}
+                  onViewDetails={onViewDetails || (() => { })}
                   onApplicationDeleted={onApplicationDeleted}
                   jobId={jobId}
                 />
