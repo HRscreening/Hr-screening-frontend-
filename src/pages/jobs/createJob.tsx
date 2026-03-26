@@ -1,6 +1,6 @@
 import React from 'react'
 import StepIndicator from '@/components/jobs/createJob/stepIndicator'
-import { Upload, FileText, Sparkles, CalendarDays } from 'lucide-react';
+import { Upload, FileText, Sparkles, CalendarDays, Settings } from 'lucide-react';
 import UploadJd from '@/components/jobs/createJob/uploadJd';
 import { toast } from 'sonner';
 import { type ExtractedJD } from '@/types/types';
@@ -8,14 +8,18 @@ import type { InterviewFormTypes } from '@/types/interviewTypes';
 import JobForm from '@/components/jobs/createJob/jobForm';
 import InterviewForm from '@/components/jobs/createJob/InterviewForm';
 import ManageCriterias from '@/components/jobs/createJob/manageCriterias';
+import CreateJobSettings from '@/components/jobs/createJob/createJobSettings';
 import axios from "@/axiosConfig"
 import { useNavigate } from 'react-router-dom';
+import type { CreateJobSettingsType } from '@/types/jobSettingsTypes';
+import type { AxiosError } from 'axios';
 
 const steps = [
   { number: 1, title: 'Upload JD', description: 'Upload job description', icon: Upload },
   { number: 2, title: 'Basic Details', description: 'Fill essential information', icon: FileText },
   { number: 3, title: 'Set Rubric', description: 'Review & finalize rubric', icon: Sparkles },
   { number: 4, title: 'Interview Setup', description: 'Configure interview rounds', icon: CalendarDays },
+  { number: 5, title: 'Job Settings', description: 'Configure Job related settings', icon: Settings },
 ];
 
 // Friendly status messages shown during rubric generation
@@ -31,7 +35,7 @@ const RUBRIC_GENERATION_STATUSES = [
 
 const CreateJob = () => {
   const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = React.useState<number>(1);
+  const [currentStep, setCurrentStep] = React.useState<number>(5);
   const [extractedJData, setExtractedJobData] = React.useState<ExtractedJD | null>(null);
 
   /** Job ID returned by set-rubric — needed for interview round creation */
@@ -40,6 +44,7 @@ const CreateJob = () => {
   const jobFormRef = React.useRef<{ submit: () => void } | null>(null);
   const interviewFormRef = React.useRef<{ submit: () => void } | null>(null);
   const criteriaRef = React.useRef<{ submit: () => void } | null>(null);
+  const settingsRef = React.useRef<{ submit: () => void } | null>(null);
 
   /** Global loading state — also disables the Next button */
   const [loading, setLoading] = React.useState<boolean>(false);
@@ -126,7 +131,7 @@ const CreateJob = () => {
     const rounds = details.rounds;
     if (!rounds || rounds.length === 0) {
       toast.success('Job created! Skipping interview setup.');
-      navigate(`/jobs/${jobId}`, { replace: true });
+      setCurrentStep(5);
       return;
     }
 
@@ -150,10 +155,10 @@ const CreateJob = () => {
         })),
       });
       console.log(res);
-      
 
-      toast.success('Interview rounds created! Taking you to the job page…');
-      navigate(`/jobs/${jobId}`, { replace: true });
+
+      toast.success('Interview rounds created! Now configure job settings.');
+      setCurrentStep(5);
     } catch (error: any) {
       console.error('Error creating interview rounds:', error);
       const detail = error?.response?.data?.detail || error?.response?.data?.message;
@@ -183,6 +188,11 @@ const CreateJob = () => {
 
     if (currentStep === 4) {
       interviewFormRef.current?.submit();
+      return;
+    }
+
+    if (currentStep === 5) {
+      settingsRef.current?.submit();
       return;
     }
 
@@ -240,6 +250,37 @@ const CreateJob = () => {
     }
   }
 
+  /**
+   * Step 5 → DB Write: Save Job Settings, then navigate to job page.
+   */
+  async function handleSaveSettings(settings: CreateJobSettingsType) {
+    // if (!jobId) { toast.error("Job not found. Please try again."); return; }
+    try {
+      setLoading(true);
+      setStatusMsg("Saving job settings…");
+      console.log("Job Settings", settings)
+      // const response = await axios.patch(`/jobs/create-settings/${jobId}`, settings);
+      const response = await axios.post(`/jobs/create-settings/11d8cc89-c0ba-446c-9ed9-abfee2ef5efc`, settings);
+
+      if (response.status === 201) {
+        toast.success('Job settings saved! Taking you to the job page…');
+        navigate(`/jobs/${jobId}`, { replace: true });
+      }
+    } catch (error) {
+      console.error('Error saving job settings:', error);
+      if (axios.isAxiosError(error)) {
+        const detail = error?.response?.data?.detail || error?.response?.data?.message;
+        toast.error(detail ? String(detail) : 'Failed to save job settings. Please try again.');
+      }
+      else{
+        toast.error('Failed to save job settings. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+      setStatusMsg("");
+    }
+  }
+
   return (
     <div className="relative min-h-screen">
       <StepIndicator
@@ -278,6 +319,15 @@ const CreateJob = () => {
           ref={interviewFormRef}
           interviewDetails={extractedJData?.interview_details}
           onUpdate={handleCreateInterviewRounds}
+        />
+      )}
+
+
+
+      {currentStep === 5 && (
+        <CreateJobSettings
+          ref={settingsRef}
+          onUpdate={handleSaveSettings}
         />
       )}
 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { Separator } from "@/components/ui/separator";
 
@@ -17,8 +17,33 @@ interface StepIndicatorProps {
 }
 
 const StepIndicator = ({ steps, currentStep, loading = false, handleNext, handlePrevious }: StepIndicatorProps) => {
+  
+  const [btnTitle,setBtnTitle] = useState("Next")
+
+  useEffect(()=>{
+    switch (currentStep) {
+      case 1:
+        setBtnTitle("Next")
+        break;
+      case 2:
+        setBtnTitle("Generate Rubric")
+        break;
+      case 3:
+        setBtnTitle("Set Rubric")
+        break;
+      case 4:
+        setBtnTitle("Save Configurations")
+        break;
+      case 5:
+        setBtnTitle("Save Settings")
+        break;
+      default:
+        setBtnTitle("Next")
+    }
+  },[currentStep])
+  
   return (
-    <div className="w-full bg-card border-b rounded-lg border sticky top-0 z-40">
+    <div className="w-full bg-card border-b rounded-lg border sticky top-0">
       <div className="flex flex-col w-full items-center text-center">
         <h2 className="text-xl font-bold">Create Job</h2>
         <p className="text-sm text-muted-foreground mb-1">
@@ -27,7 +52,7 @@ const StepIndicator = ({ steps, currentStep, loading = false, handleNext, handle
         <Separator orientation='horizontal' />
       </div>
 
-      <div className="max-w-6xl mx-auto px-8 py-5">
+      <div className="mx-auto px-8 py-5">
         <div className="flex items-center justify-between gap-8">
 
           {/* Steps */}
@@ -145,7 +170,7 @@ const StepIndicator = ({ steps, currentStep, loading = false, handleNext, handle
                 </>
               ) : (
                 <>
-                  {currentStep === steps.length ? 'Set Rubric' : 'Next'}
+                  {btnTitle}
                   <ChevronRight className="w-4 h-4" />
                 </>
               )}
