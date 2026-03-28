@@ -337,23 +337,24 @@ const CreateJob = () => {
         />
       )}
 
+
+
+
       {currentStep === 4 && jobId && (
+        <CreateJobSettings
+        ref={settingsRef}
+        onUpdate={handleSaveSettings}
+        />
+      )}
+
+      {currentStep === 5 && jobId && (
         <InterviewForm
           ref={interviewFormRef}
           interviewDetails={extractedJData?.interview_details}
           onUpdate={handleCreateInterviewRounds}
         />
       )}
-
-
-
-      {currentStep === 5 && jobId && (
-        <CreateJobSettings
-          ref={settingsRef}
-          onUpdate={handleSaveSettings}
-        />
-      )}
-
+      
       {/* ── Rubric generation overlay ── */}
       {loading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">

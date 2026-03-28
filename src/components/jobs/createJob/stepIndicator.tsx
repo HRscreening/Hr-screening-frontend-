@@ -32,10 +32,10 @@ const StepIndicator = ({ steps, currentStep, loading = false, handleNext, handle
         setBtnTitle("Set Rubric")
         break;
       case 4:
-        setBtnTitle("Save Configurations")
+        setBtnTitle("Save Settings")
         break;
       case 5:
-        setBtnTitle("Save Settings")
+        setBtnTitle("Save Configurations")
         break;
       default:
         setBtnTitle("Next")
