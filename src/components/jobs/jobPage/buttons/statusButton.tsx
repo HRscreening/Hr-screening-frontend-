@@ -11,12 +11,23 @@ import axios from '@/axiosConfig';
 import { toast } from 'sonner';
 import { ChevronRight, ChevronLeft, XCircle } from 'lucide-react';
 import { useJobId, useMaxRound } from '@/store/jobPageStore';
+import type { AxiosError } from 'axios';
+import EditNameEmail from '@/components/jobs/jobPage/buttons/editNameEmail';
+import NoRoundConfigDialog from '../dialogs/NoRoundConfigDialog';
+
+type CandidateDetails = {
+  name: string | null;
+  email: string | null;
+  phone: string | null;
+  candidate_id: string | null;
+}
 
 interface StatusProps {
   status: statusType;
   application_id: string;
   setCurrentStatus: React.Dispatch<React.SetStateAction<statusType>>;
   currentRound?: number;
+  candidateDetails: CandidateDetails;
 }
 
 // pipeline: applied -> shortlisted  -> round_1..N -> offer_extended -> hired
@@ -75,12 +86,16 @@ export function Status({
   setCurrentStatus,
   application_id,
   currentRound,
+  candidateDetails
 }: StatusProps) {
   const job_id = useJobId() ?? '';
   const finalRound = useMaxRound() || 3;
   const [open, setOpen] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<statusType | null>(null);
-
+  const [editOpen, setEditOpen] = useState(false);
+  const [noConfig, setNoConfig] = useState(false);
+  const { name, email, phone, candidate_id } = candidateDetails;
+  
   // drop_off is system-only — show badge only, no popover
   const isSystemStatus = status === 'drop_off';
   const isTerminal = status === 'hired' || status === 'rejected' || isSystemStatus;
@@ -99,21 +114,26 @@ export function Status({
   const canGoBack = prevStatus !== null && !isRoundStatus(prevStatus);
 
   async function commitStatusChange(newStatus: statusType) {
+   
     setPendingStatus(null);
     setOpen(false);
     try {
+     
       if (isRoundStatus(newStatus)) {
         const targetRound = parseInt(String(newStatus).split('_')[1], 10);
         const res = await axios.post(`/application/move-to-round/${application_id}`, { job_id, target_round: targetRound });
-        if (res.data.new_round != null) {
+        if (res.status === 200 && res.data.success !== false) {
           setCurrentStatus(roundKey(res.data.new_round));
           toast.success(res.data.message || 'Applicant moved to next round');
-        } else {
+        }
+        
+        else {
           toast.error(res.data.message || res.data.message || 'Failed to move to next round.');
         }
       } else {
         const res = await axios.patch(`/application/change-status/${application_id}`, { new_status: newStatus });
         console.log('Status change response', res);
+        
         if (res.data.success !== false) {
           setCurrentStatus(newStatus);
           toast.success(res.data.message || 'Status updated');
@@ -122,28 +142,42 @@ export function Status({
           toast.error(res.data.message|| 'Failed to update status.');
         }
       }
-    } catch (err: unknown) {
+    } catch (err: AxiosError | any) {
         console.log('Status update error', err);
       const axiosErr = err as { response?: { status?: number; data?: { message?: string } } };
-      if (axiosErr?.response?.status === 408) {
-        // TODO: Trigger popup to add round configuration since this likely means round details are not configured yet
-        toast.error('Round configuration is missing. Please configure this round first.');
-      }else if (axiosErr?.response?.status === 411) {
-        // TODO: Trigger popup to add round configuration since this likely means round details are not configured yet
-        toast.error('Cannot move application to this round as slots are not yet available,Please wait for panelist to give slots or request them for slots if they have already given.');
-      } else {
-        toast.error(axiosErr?.response?.data?.message || 'Failed to update status.');
+       if (axiosErr?.response?.status === 424) {
+        toast.error(axiosErr?.response?.data?.message || 'This Candidate has no Email');
+        setEditOpen(true);
+        console.log("Triggering edit modal due to missing candidate email for status change.");
+      
+      } 
+        
+      else if (axiosErr?.response?.status === 425) {
+        setNoConfig(true);
       }
     }
   }
 
   function requestStatusChange(newStatus: statusType) {
+     if(!email || !name){
+      toast.error('Candidate must have a name and email to update status. Please update candidate details first.');
+      setEditOpen(true);
+      return;
+    }
     if (CONFIRM_REQUIRED.includes(newStatus) || isRoundStatus(newStatus)) {
       setOpen(false);
       setPendingStatus(newStatus);
     } else {
       commitStatusChange(newStatus);
     }
+  }
+
+  if(editOpen ){
+    return <EditNameEmail applicationId={application_id} open={editOpen} setOpen={setEditOpen} candidate_id={candidate_id} email={email} name={name} phone={phone} />
+  }
+
+  if(noConfig){
+    return <NoRoundConfigDialog open={noConfig} setOpen={setNoConfig} roundNumber={currentRound || 1} />
   }
 
   const confirmMeta = pendingStatus ? {

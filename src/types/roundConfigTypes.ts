@@ -30,7 +30,8 @@ export interface RoundFullConfig {
   slots_available: boolean;
   candidate_slot_booking_link: string | null;
   timezone: string | null;
-  panel_mode: 'SEQUENTIAL' | 'PANEL';
+  panel_mode: 'sequential' | 'panel';
+  // panel_mode: 'SEQUENTIAL' | 'PANEL';
   created_at: string;
   updated_at: string;
 }
@@ -39,7 +40,7 @@ export interface RoundFullConfig {
 
 const panelMemberEditSchema = z.object({
   name: z.string().min(1, 'Name is required'),
-  email: z.string().email('Invalid email'),
+  email: z.email('Invalid email'),
   role: z.string().min(1, 'Role is required'),
 });
 
@@ -48,8 +49,19 @@ export const roundEditSchema = z.object({
   interview_type: z.enum(['In Person', 'Phone', 'Video Call']),
   instructions: z.string().optional(),
   duration_minutes: z.number().min(1, 'Min 1 minute'),
-  panelists: z.array(panelMemberEditSchema).min(1, 'At least one panelist'),
-  meet_link: z.string().url('Must be a valid URL').optional().or(z.literal('')),
+  panelists: z
+    .array(panelMemberEditSchema)
+    .min(1, 'At least one panelist')
+    .refine((panelists) => {
+      const emails = panelists.map(p => p.email);
+      const uniqueEmails = new Set(emails);
+      return emails.length === uniqueEmails.size;
+    }, {
+      message: "Duplicate emails are not allowed",
+      path: ["panelists"],
+    }),
+
+  meet_link: z.url('Must be a valid URL').optional().or(z.literal('')),
   start_date: z.date(),
   end_date: z.date(),
   timezone: z.string().min(1, 'Required'),
