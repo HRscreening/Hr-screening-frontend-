@@ -47,10 +47,10 @@ function ScoreRing({
 
     const color =
         score >= 75
-            ? { stroke: "#16a34a", text: "text-green-600 dark:text-green-400" }
+            ? { stroke: "oklch(0.65 0.15 145)", text: "text-green-600 dark:text-green-400" }
             : score >= 50
-                ? { stroke: "#ca8a04", text: "text-yellow-600 dark:text-yellow-400" }
-                : { stroke: "#dc2626", text: "text-red-600 dark:text-red-400" };
+                ? { stroke: "oklch(0.75 0.15 85)", text: "text-yellow-600 dark:text-yellow-400" }
+                : { stroke: "oklch(0.62 0.22 27)", text: "text-red-600 dark:text-red-400" };
 
     return (
         <div
@@ -134,6 +134,16 @@ function scoreBadgeClass(score: number | undefined): string {
     if (score >= 50)
         return "bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-950/20 dark:border-yellow-800";
     return "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/20 dark:border-red-800";
+}
+
+function scoreBgClass(score: number | undefined): string {
+    if (score === undefined || score === null) return "bg-muted/40 text-muted-foreground border border-muted/40";
+
+    if (score >= 75)
+        return "bg-green-100 text-green-700 border border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800";
+    if (score >= 50)
+        return "bg-yellow-100 text-yellow-700 border border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-800";
+    return "bg-red-100 text-red-700 border border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800";
 }
 
 // ─── Component ─────────────────────────────────────────────────────────────────
@@ -239,22 +249,14 @@ export default function ResumeAnalysisSheet({
     const isPending = resume.status === "pending";
     const isFailed = resume.status === "failed";
 
-    // ── Requirement level badge ────────────────────────────────────────────────
+    const [openSections, setOpenSections] = React.useState<Set<string>>(new Set());
 
-    const requirementLevelBadge = (level: string | undefined) => {
-        if (!level) return null;
-        const config: Record<string, { label: string; className: string }> = {
-            must: { label: "Required", className: "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/20 dark:border-red-800" },
-            should: { label: "Recommended", className: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/20 dark:border-blue-800" },
-            nice: { label: "Nice to have", className: "bg-muted/60 text-muted-foreground border-border" },
-        };
-        const cfg = config[level] ?? config.should;
-        return (
-            <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", cfg.className)}>
-                {cfg.label}
-            </Badge>
-        );
-    };
+    const toggleSection = (key: string) =>
+        setOpenSections(prev => {
+            const next = new Set(prev);
+            next.has(key) ? next.delete(key) : next.add(key);
+            return next;
+        });
 
     // ── Criterion card ─────────────────────────────────────────────────────────
 
@@ -284,12 +286,11 @@ export default function ResumeAnalysisSheet({
             >
                 <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/30 transition-colors [&>svg]:hidden group">
                     <div className="flex items-center gap-3 w-full">
-                        <ScoreRing score={criterion.score} size={44} strokeWidth={4} />
                         <div className="flex-1 text-left min-w-0">
                             <p className="text-sm font-medium text-foreground truncate">
                                 {criterionName}
                             </p>
-                            <div className="flex items-center gap-1.5 mt-0.5">
+                            <div className="flex items-center gap-1.5 mt-0.5 mb-2">
                                 <span className="text-xs text-muted-foreground">{scoreLabel(criterion.score)}</span>
                                 {matchAssessment && (
                                     <span className={cn("text-xs font-medium capitalize", matchColors[matchAssessment] ?? "text-muted-foreground")}>
@@ -297,9 +298,31 @@ export default function ResumeAnalysisSheet({
                                     </span>
                                 )}
                             </div>
+                            <div className="h-1 bg-muted rounded-full overflow-hidden w-full">
+                                <div
+                                    className={cn(
+                                        "h-full rounded-full transition-all duration-500",
+                                        criterion.score >= 75
+                                            ? "bg-green-500 dark:bg-green-400"
+                                            : criterion.score >= 50
+                                                ? "bg-yellow-500 dark:bg-yellow-400"
+                                                : "bg-red-500 dark:bg-red-400"
+                                    )}
+                                    style={{ width: `${criterion.score}%` }}
+                                />
+                            </div>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
-                            {requirementLevelBadge(criterion.requirement_level)}
+                            {criterion.importance !== undefined && (
+                                <span className="text-[10px] text-muted-foreground tabular-nums hidden sm:inline">
+                                    {criterion.importance}pt weight
+                                </span>
+                            )}
+                            {criterion.contribution !== undefined && (
+                                <span className="text-[10px] font-semibold text-primary tabular-nums hidden sm:inline">
+                                    +{criterion.contribution.toFixed(1)}
+                                </span>
+                            )}
                             <Badge
                                 variant="outline"
                                 className={cn("text-xs tabular-nums", scoreBadgeClass(criterion.score))}
@@ -448,26 +471,6 @@ export default function ResumeAnalysisSheet({
                     </div>
                 </div>
 
-                {/* Section score pills */}
-                {breakdown && Object.keys(breakdown).length > 0 && (
-                    <div className="flex gap-2 flex-wrap">
-                        {Object.entries(breakdown).map(([sectionKey, section]) => (
-                            <div
-                                key={sectionKey}
-                                className={cn(
-                                    "flex items-center gap-2 px-3 py-2 rounded-lg border text-xs flex-1 min-w-32",
-                                    scoreBadgeClass(section.score)
-                                )}
-                            >
-                                <LayoutGrid className="w-3.5 h-3.5 shrink-0 opacity-70" />
-                                <span className="font-medium truncate">{formatSectionTitle(sectionKey)}</span>
-                                <span className="ml-auto font-bold tabular-nums shrink-0">
-                                    {Math.round(section.score)}/100
-                                </span>
-                            </div>
-                        ))}
-                    </div>
-                )}
             </div>
 
             {/* ── Scrollable body ── */}
@@ -648,35 +651,92 @@ export default function ResumeAnalysisSheet({
 
                             {hasAnyAnalysis && hasAnyGrounding && <Separator />}
 
-                            {/* ─── Criteria Breakdown ─── */}
+                            {/* ─── Criteria Breakdown — per-section expandable cards ─── */}
                             {hasAnyGrounding && breakdown && (
-                                <div className="space-y-6">
-                                    {Object.entries(breakdown).map(([sectionKey, section]) => (
-                                        <section key={sectionKey} className="space-y-3">
-                                            <div className="flex items-center gap-2">
-                                                <LayoutGrid className="w-4 h-4 text-primary" />
-                                                <h3 className="text-sm font-semibold text-foreground">
-                                                    {formatSectionTitle(sectionKey)}
-                                                </h3>
-                                                <Badge
-                                                    variant="outline"
-                                                    className={cn("ml-auto text-xs tabular-nums", scoreBadgeClass(section.score))}
+                                <div className="space-y-3">
+                                    <div className="flex items-center gap-2">
+                                        <LayoutGrid className="w-4 h-4 text-primary" />
+                                        <h3 className="text-sm font-semibold text-foreground">Score Breakdown</h3>
+                                        <span className="ml-auto text-xs text-muted-foreground tabular-nums">
+                                            {Object.values(breakdown).reduce(
+                                                (acc, s) => acc + Object.keys(s.criteria_scores).length,
+                                                0
+                                            )} criteria total
+                                        </span>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        {Object.entries(breakdown).map(([sectionKey, section]) => {
+                                            const isOpen = openSections.has(sectionKey);
+                                            return (
+                                                <div
+                                                    key={sectionKey}
+                                                    className="border border-border/60 rounded-xl overflow-hidden bg-card"
                                                 >
-                                                    {Math.round(section.score)}/100
-                                                </Badge>
-                                            </div>
-                                            <Accordion type="multiple" className="space-y-2">
-                                                {Object.entries(section.criteria_scores).map(
-                                                    ([criterionName, criterion]) =>
-                                                        renderCriterionCard(
-                                                            criterionName,
-                                                            criterion,
-                                                            groundingData?.[sectionKey]?.[criterionName]
-                                                        )
-                                                )}
-                                            </Accordion>
-                                        </section>
-                                    ))}
+                                                    {/* Section header button */}
+                                                    <button
+                                                        onClick={() => toggleSection(sectionKey)}
+                                                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors text-left group"
+                                                    >
+                                                        {/* Colored score block */}
+                                                        <div className={cn(
+                                                            "w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold tabular-nums shrink-0",
+                                                            scoreBgClass(section.score)
+                                                        )}>
+                                                            {Math.round(section.score)}
+                                                        </div>
+
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-sm font-medium text-foreground">
+                                                                {formatSectionTitle(sectionKey)}
+                                                            </p>
+                                                            <div className="flex items-center gap-2 mt-1.5">
+                                                                <div className="w-20 h-1 bg-muted rounded-full overflow-hidden shrink-0">
+                                                                    <div
+                                                                        className={cn(
+                                                                            "h-full rounded-full transition-all duration-500",
+                                                                            section.score >= 75
+                                                                                ? "bg-green-500 dark:bg-green-400"
+                                                                                : section.score >= 50
+                                                                                    ? "bg-yellow-500 dark:bg-yellow-400"
+                                                                                    : "bg-red-500 dark:bg-red-400"
+                                                                        )}
+                                                                        style={{ width: `${section.score}%` }}
+                                                                    />
+                                                                </div>
+                                                                <span className="text-xs text-muted-foreground">
+                                                                    {Object.keys(section.criteria_scores).length} criteria
+                                                                </span>
+                                                            </div>
+                                                        </div>
+
+                                                        <ChevronRight
+                                                            className={cn(
+                                                                "w-4 h-4 text-muted-foreground transition-transform duration-200 shrink-0",
+                                                                isOpen && "rotate-90"
+                                                            )}
+                                                        />
+                                                    </button>
+
+                                                    {/* Criteria list — shown only when section is open */}
+                                                    {isOpen && (
+                                                        <div className="border-t border-border/40 bg-muted/10 px-3 py-3">
+                                                            <Accordion type="multiple" className="space-y-2">
+                                                                {Object.entries(section.criteria_scores).map(
+                                                                    ([criterionName, criterion]) =>
+                                                                        renderCriterionCard(
+                                                                            criterionName,
+                                                                            criterion,
+                                                                            groundingData?.[sectionKey]?.[criterionName]
+                                                                        )
+                                                                )}
+                                                            </Accordion>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
                             )}
                         </div>

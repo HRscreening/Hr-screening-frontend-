@@ -58,6 +58,7 @@ const JobOverview: React.FC = () => {
   const [activeBatchId, setActiveBatchId] = useState<string>("");
   const [trackerOpen, setTrackerOpen] = useState(false);
   const [jdSheetOpen, setJdSheetOpen] = useState(false);
+  const [applicationsRefreshKey, setApplicationsRefreshKey] = useState(0);
   const [linkData, setLinkData] = useState<PublicLinkData | null>(null);
 
   const handleBatchStarted = useCallback((batchId: string) => {
@@ -232,6 +233,7 @@ const JobOverview: React.FC = () => {
             job_id={jobId as string}
             externalOpen={trackerOpen}
             onOpenChange={setTrackerOpen}
+            onComplete={() => setApplicationsRefreshKey((k) => k + 1)}
           />
           <AddCandidatePopup job_id={jobId as string} onBatchStarted={handleBatchStarted} />
 
@@ -300,14 +302,14 @@ const JobOverview: React.FC = () => {
         <TotalApplicationCard data={dashboard as any} />
         <AnalyticsCard
           title="Avg. Match Score"
-          value={`${(dashboard as any).avg_score ?? 0}%`}
+          value={`${Math.round((dashboard as any).avg_score ?? 0)}%`}
           desc="based on skills & exp."
           icon={<TargetIcon className="h-5 w-5" />}
         />
       </div>
 
       {/* Applications table */}
-      <Applications />
+      <Applications refreshKey={applicationsRefreshKey} />
 
       {/* JD & Apply Sheet */}
       <Sheet open={jdSheetOpen} onOpenChange={setJdSheetOpen}>

@@ -105,17 +105,17 @@ export type SubCriterionScore = {
 
 // Criterion score (from score_post_processor output)
 export type CriterionScore = {
-  score: number;
-  raw_llm_score?: number;
+  score: number;           // 0–100
+  raw_llm_score?: number;  // 0–10 direct from LLM
   reasoning?: string | null;
-  requirement_level?: 'must' | 'should' | 'nice';
+  importance?: number;     // relative importance (1-10) for this criterion
+  contribution?: number;   // pts contributed to overall score (score × importance / total_importance)
   sub_criteria?: Record<string, SubCriterionScore>;
 };
 
-// Section score (one entry per rubric section)
+// Section score (one entry per rubric section — display grouping only, not used in scoring formula)
 export type SectionScore = {
-  score: number;         // weighted section score (0–100)
-  raw_score?: number;    // unweighted section score
+  score: number;           // importance-weighted avg within section (display only)
   criteria_scores: Record<string, CriterionScore>;
 };
 

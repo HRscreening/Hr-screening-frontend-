@@ -88,11 +88,13 @@ export default function TrackCandidateDialog({
   job_id,
   externalOpen,
   onOpenChange,
+  onComplete,
 }: {
   batch_id: string;
   job_id: string;
   externalOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
+  onComplete?: () => void;
 }) {
   const [internalOpen, setInternalOpen] = useState(false);
   const open = externalOpen !== undefined ? externalOpen : internalOpen;
@@ -151,6 +153,16 @@ export default function TrackCandidateDialog({
 
   const isComplete = data?.all_complete ?? false;
   const phase = data?.phase ?? "parsing";
+
+  // Auto-close 3 s after all processing completes, then notify parent to refresh
+  useEffect(() => {
+    if (!isComplete) return;
+    const timer = setTimeout(() => {
+      setOpen(false);
+      onComplete?.();
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [isComplete]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Separate file statuses
   const parsedFiles = data?.file_statuses.filter(f => f.status === "parsed") ?? [];
@@ -478,7 +490,10 @@ export default function TrackCandidateDialog({
             {/* Action Button */}
             <div className="flex justify-end">
               <Button
-                onClick={() => setOpen(false)}
+                onClick={() => {
+                  setOpen(false);
+                  if (isComplete) onComplete?.();
+                }}
                 className="bg-primary hover:bg-hover-primary"
               >
                 {isComplete ? "Done" : "Continue Processing"}

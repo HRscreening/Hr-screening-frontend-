@@ -9,7 +9,7 @@ import { useJobId, useActiveVersion } from '@/store/jobPageStore';
 import { useJobPageStore } from '@/store/jobPageStore';
 import  RoundSlotsStatus from "@/components/jobs/jobPage/buttons/roundSlotStatus"
 
-function Applications() {
+function Applications({ refreshKey }: { refreshKey?: number }) {
   const jobId = useJobId();
   const activeVersion = useActiveVersion();
   const [isLoading, setIsLoading] = useState(false);
@@ -70,11 +70,8 @@ function Applications() {
 
   useEffect(() => {
     if (!jobId) return;
-
     getApplicationData(jobId, page, pageSize);
-
-
-  }, [jobId, page, pageSize]);
+  }, [jobId, page, pageSize, refreshKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
 
   const handlePageChange = (newPage: number) => {

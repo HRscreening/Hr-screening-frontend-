@@ -74,6 +74,15 @@ export type JobData = {
 
 };
 
+/** Non-negotiable item from the rubric generation pipeline (non_negotiables array) */
+export type NonNegotiable = {
+  name: string;
+  display_name: string;
+  requirement: string;
+  category: string;
+  verification_question: string;
+};
+
 /** Gate item from Step 2 gate derivation (backend rrg_final.requirements.gates_final) */
 export type GateFinal = {
   canonical: string;
@@ -134,15 +143,19 @@ export type ExtractedJD = {
   threshold_score: number;
   raw_jd_text?: string | null;
   sections: RubricSectionV2[];
+  /** From rubric generation pipeline */
+  non_negotiables?: NonNegotiable[];
   /** From rrg_final when backend returns new pipeline response */
   gates_final?: GateFinal[];
   needs_review_count?: number;
   needs_clarification?: boolean;
   /** Raw RRG for displaying full parsed JD viewer */
   _rrg?: RRGFinal;
-  criteria: {
-    mandatory_criteria: Record<string, CriterionV2>;
-    screening_criteria: Record<string, CriterionV2>;
+  /** Legacy field — used by rubricEditor when reading from DB. Not required for flat scoring model. */
+  criteria?: {
+    mandatory_criteria?: Record<string, CriterionV2>;
+    screening_criteria?: Record<string, CriterionV2>;
+    [key: string]: unknown;
   };
   interview_details?: InterviewFormTypes;
 }
