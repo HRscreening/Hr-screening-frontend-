@@ -22,6 +22,8 @@ import {
 import axios from '@/axiosConfig';
 import { cn } from '@/lib/utils';
 
+import AssessmentTagsSection from '@/components/jobs/jobPage/AssessmentTagsSection';
+
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -216,12 +218,12 @@ export default function AddRoundCard({
       interview_type: 'Video Call',
       instructions: '',
       duration_minutes: 60,
+      assessment_criterias: [],
       panelists: [{ name: '', email: '', role: '' }],
-      meet_link: '',
       start_date: new Date(),
       end_date: new Date(),
       timezone: 'Asia/Kolkata',
-      panel_mode: 'SEQUENTIAL',
+      // panel_mode: 'SEQUENTIAL',
     },
   });
 
@@ -250,10 +252,10 @@ export default function AddRoundCard({
             instructions: values.instructions || null,
             duration_minutes: values.duration_minutes,
             panelists: values.panelists,
-            meet_link: values.meet_link || null,
             start_date: values.start_date.toISOString(),
             end_date: values.end_date.toISOString(),
             timezone: values.timezone,
+            assessment_criterias: values.assessment_criterias,
           },
         ],
       });
@@ -399,7 +401,7 @@ export default function AddRoundCard({
 
               {/* Row 2: Panel Mode + Start + End */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <FormField
+                {/* <FormField
                   control={form.control}
                   name="panel_mode"
                   render={({ field }) => (
@@ -421,7 +423,7 @@ export default function AddRoundCard({
                       <FormMessage />
                     </FormItem>
                   )}
-                />
+                /> */}
                 <FormField
                   control={form.control}
                   name="start_date"
@@ -480,21 +482,6 @@ export default function AddRoundCard({
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="meet_link"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1.5">
-                      <FormLabel className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider flex items-center gap-1">
-                        <Link2 className="h-3 w-3" /> Meeting Link
-                      </FormLabel>
-                      <FormControl>
-                        <Input placeholder="https://meet.google.com/..." className="h-9 text-sm bg-transparent" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
               </div>
 
               {/* Row 4: Instructions */}
@@ -518,7 +505,15 @@ export default function AddRoundCard({
                 )}
               />
 
-              {/* Row 5: Panelists */}
+              {/* Row 5: Assessment Tags */}
+              <AssessmentTagsSection
+                tags={form.watch('assessment_criterias')}
+                onChange={(newTags) => form.setValue('assessment_criterias', newTags, { shouldValidate: true })}
+                roundTitle={form.watch('title')}
+                jobId={jobId}
+              />
+
+              {/* Row 6: Panelists */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <SectionLabel icon={Users}>Panelists</SectionLabel>

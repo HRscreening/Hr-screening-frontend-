@@ -918,6 +918,8 @@ import {
 import axios from '@/axiosConfig';
 import { cn } from '@/lib/utils';
 
+import AssessmentTagsSection from '@/components/jobs/jobPage/AssessmentTagsSection';
+
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -1264,21 +1266,6 @@ function ReadOnlyDetail({
         <InfoCell icon={CalendarIcon} label="End Date">
           {format(new Date(fullConfig.end_date), 'MMM d, yyyy')}
         </InfoCell>
-        <InfoCell icon={Link2} label="Meeting Link" className="col-span-2 md:col-span-1">
-          {fullConfig.meet_link ? (
-            <a
-              href={fullConfig.meet_link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:underline truncate block text-sm"
-            >
-              {fullConfig.meet_link.replace(/^https?:\/\//, '').slice(0, 35)}
-              {fullConfig.meet_link.replace(/^https?:\/\//, '').length > 35 ? '…' : ''}
-            </a>
-          ) : (
-            <span className="text-muted-foreground text-sm">—</span>
-          )}
-        </InfoCell>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -1337,6 +1324,26 @@ function ReadOnlyDetail({
             </p>
           )}
         </div>
+
+        {/* Assessment Tags (read-only) */}
+        {fullConfig.assessment_criterias && fullConfig.assessment_criterias.length > 0 && (
+          <div className="space-y-1.5">
+            <p className="text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wider flex items-center gap-1.5">
+              Assessment Tags ({fullConfig.assessment_criterias.length})
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {fullConfig.assessment_criterias.map((tag, idx) => (
+                <Badge
+                  key={`${tag}-${idx}`}
+                  variant="secondary"
+                  className="text-xs font-medium px-2.5 py-0.5 h-6 bg-primary/10 text-primary border-0"
+                >
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1394,8 +1401,8 @@ export default function RoundConfigCard({
       interview_type: 'Video Call',
       instructions: '',
       duration_minutes: 60,
+      assessment_criterias: [],
       panelists: [{ name: '', email: '', role: '' }],
-      meet_link: '',
       start_date: new Date(),
       end_date: new Date(),
       timezone: 'UTC',
@@ -1433,11 +1440,11 @@ export default function RoundConfigCard({
               _deleted: false,
             }))
           : [{ name: '', email: '', role: '' }],
-      meet_link: fullConfig.meet_link ?? '',
       start_date: new Date(fullConfig.start_date),
       end_date: new Date(fullConfig.end_date),
       timezone: fullConfig.timezone ?? 'UTC',
       panel_mode: fullConfig.panel_mode === 'panel' ? 'PANEL' : 'SEQUENTIAL',
+      assessment_criterias: fullConfig.assessment_criterias ?? [],
     });
     setEditing(true);
   };
@@ -1460,12 +1467,12 @@ export default function RoundConfigCard({
         interview_type: values.interview_type,
         instructions: values.instructions,
         duration_minutes: values.duration_minutes,
-        meet_link: values.meet_link,
         start_date: values.start_date.toISOString(),
         end_date: values.end_date.toISOString(),
         timezone: values.timezone,
         panel_mode: values.panel_mode,
         round_number: overview.round_number,
+        assessment_criterias: values.assessment_criterias,
         // ← structured panelist diff
         panelists: panelistDiff,
       };
@@ -1726,7 +1733,7 @@ export default function RoundConfigCard({
                       </div>
 
                       {/* Row 2: Panel Mode + Start + End */}
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <FormField
                           control={form.control}
                           name="panel_mode"
@@ -1788,7 +1795,7 @@ export default function RoundConfigCard({
                             </FormItem>
                           )}
                         />
-                      </div>
+                      </div> */}
 
                       {/* Row 3: Timezone + Meeting Link */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1819,25 +1826,6 @@ export default function RoundConfigCard({
                             </FormItem>
                           )}
                         />
-                        <FormField
-                          control={form.control}
-                          name="meet_link"
-                          render={({ field }) => (
-                            <FormItem className="space-y-1.5">
-                              <FormLabel className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider flex items-center gap-1">
-                                <Link2 className="h-3 w-3" /> Meeting Link
-                              </FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder="https://meet.google.com/..."
-                                  className="h-9 text-sm bg-transparent"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
                       </div>
 
                       {/* Row 4: Instructions */}
@@ -1861,7 +1849,15 @@ export default function RoundConfigCard({
                         )}
                       />
 
-                      {/* Row 5: Panelists */}
+                      {/* Row 5: Assessment Tags */}
+                      <AssessmentTagsSection
+                        tags={form.watch('assessment_criterias')}
+                        onChange={(newTags) => form.setValue('assessment_criterias', newTags, { shouldValidate: true })}
+                        roundTitle={form.watch('title')}
+                        jobId={jobId}
+                      />
+
+                      {/* Row 6: Panelists */}
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
                           <SectionLabel icon={Users}>

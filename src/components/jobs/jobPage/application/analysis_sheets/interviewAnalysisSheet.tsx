@@ -14,6 +14,12 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import {
+    Tabs,
+    TabsContent,
+    TabsList,
+    TabsTrigger,
+} from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow, format } from "date-fns";
 import axios from "@/axiosConfig";
@@ -23,7 +29,6 @@ import {
     ChevronRight,
     FileText,
     Mic,
-    StickyNote,
     Calendar,
     User,
     Cpu,
@@ -37,8 +42,11 @@ import {
     Download,
     XCircle,
     ExternalLink,
+    Activity,
+    ClipboardCheck,
 } from "lucide-react";
 import { toast } from "sonner";
+import { AssessmentTabView } from "./AssessmentTabView";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -57,10 +65,7 @@ export type InterviewData = {
     meet_link: string | null;
     interview_type: string;
     scheduled_at: string | null;
-    is_notes_available: boolean;
-    is_summary_available: boolean;
     is_transcript_available: boolean;
-    notes: string | null;
     summary: string | null;
     transcript: string | null;
 };
@@ -237,7 +242,7 @@ function TimelineView({ timeline }: { timeline: TimelineEventData[] }) {
 
 function AvailabilityIndicators({ interview, onOpen }: {
     interview: InterviewData;
-    onOpen: (type: "summary" | "transcript" | "notes") => void;
+    onOpen: (type: "summary" | "transcript") => void;
 }) {
     const [loadingTranscript, setLoadingTranscript] = useState(false);
     // Handler for transcript download
@@ -275,18 +280,18 @@ function AvailabilityIndicators({ interview, onOpen }: {
         <div className="flex items-center gap-2 flex-wrap">
             {/* Summary Button */}
             <button
-                disabled={!interview.is_summary_available}
-                onClick={() => interview.is_summary_available && onOpen("summary")}
+                disabled={!interview.summary}
+                onClick={() => interview.summary && onOpen("summary")}
                 className={cn(
                     "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border text-xs font-medium transition-colors",
-                    interview.is_summary_available
+                    interview.summary
                         ? "border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 dark:border-blue-800 dark:text-blue-400 dark:bg-blue-950/20 dark:hover:bg-blue-950/40"
                         : "border-border/40 text-muted-foreground/40 bg-muted/20 cursor-not-allowed"
                 )}
             >
                 <FileText className="w-3 h-3" />
                 Summary
-                {interview.is_summary_available ? (
+                {interview.summary ? (
                     <CheckCircle2 className="w-3 h-3 ml-0.5" />
                 ) : (
                     <span className="w-3 h-3 ml-0.5 rounded-full border border-current/30 inline-block" />
@@ -316,25 +321,6 @@ function AvailabilityIndicators({ interview, onOpen }: {
                 )}
             </button>
 
-            {/* Notes Button */}
-            <button
-                disabled={!interview.is_notes_available}
-                onClick={() => interview.is_notes_available && onOpen("notes")}
-                className={cn(
-                    "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border text-xs font-medium transition-colors",
-                    interview.is_notes_available
-                        ? "border-amber-200 text-amber-700 bg-amber-50 hover:bg-amber-100 dark:border-amber-800 dark:text-amber-400 dark:bg-amber-950/20 dark:hover:bg-amber-950/40"
-                        : "border-border/40 text-muted-foreground/40 bg-muted/20 cursor-not-allowed"
-                )}
-            >
-                <StickyNote className="w-3 h-3" />
-                Notes
-                {interview.is_notes_available ? (
-                    <CheckCircle2 className="w-3 h-3 ml-0.5" />
-                ) : (
-                    <span className="w-3 h-3 ml-0.5 rounded-full border border-current/30 inline-block" />
-                )}
-            </button>
         </div>
     );
 }
@@ -343,7 +329,7 @@ function AvailabilityIndicators({ interview, onOpen }: {
 
 function RoundContent({ round, onOpen }: {
     round: RoundData;
-    onOpen: (type: "summary" | "transcript" | "notes") => void;
+    onOpen: (type: "summary" | "transcript") => void;
 }) {
     const statusCfg = STATUS_CONFIG[round.interview.status] ?? {
         label: round.interview.status,
@@ -379,21 +365,41 @@ function RoundContent({ round, onOpen }: {
                 <AvailabilityIndicators interview={round.interview} onOpen={onOpen} />
             </div>
 
-            {/* Timeline */}
-            {round.timeline_events && round.timeline_events.length > 0 ? (
-                <div className="space-y-2">
-                    <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                        <Calendar className="w-3 h-3" />
-                        Activity Timeline
-                    </p>
-                    <TimelineView timeline={round.timeline_events} />
-                </div>
-            ) : (
-                <div className="flex items-center gap-2 py-6 justify-center text-muted-foreground/40">
-                    <AlertCircle className="w-4 h-4" />
-                    <span className="text-xs">No timeline activity yet</span>
-                </div>
-            )}
+            {/* Tabs for Logs and Assessment */}
+            <Tabs defaultValue="logs" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 mb-4 bg-muted/40">
+                    <TabsTrigger value="logs" className="text-xs flex items-center gap-2">
+                        <Activity className="w-3.5 h-3.5" />
+                        Logs
+                    </TabsTrigger>
+                    <TabsTrigger value="assessment" className="text-xs flex items-center gap-2">
+                        <ClipboardCheck className="w-3.5 h-3.5" />
+                        Assessment
+                    </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="logs" className="mt-0">
+                    {/* Timeline */}
+                    {round.timeline_events && round.timeline_events.length > 0 ? (
+                        <div className="space-y-2">
+                            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                                <Calendar className="w-3 h-3" />
+                                Activity Timeline
+                            </p>
+                            <TimelineView timeline={round.timeline_events} />
+                        </div>
+                    ) : (
+                        <div className="flex items-center gap-2 py-6 justify-center text-muted-foreground/40">
+                            <AlertCircle className="w-4 h-4" />
+                            <span className="text-xs">No timeline activity yet</span>
+                        </div>
+                    )}
+                </TabsContent>
+
+                <TabsContent value="assessment" className="mt-0">
+                    <AssessmentTabView interviewId={round.interview.id} />
+                </TabsContent>
+            </Tabs>
         </div>
     );
 }
@@ -479,7 +485,7 @@ function ContentDialog({
 }: {
     open: boolean;
     onClose: () => void;
-    type: "summary" | "transcript" | "notes" | null;
+    type: "summary" | "transcript" | null;
     round: RoundData | null;
 }) {
     if (!type || !round) return null;
@@ -496,12 +502,6 @@ function ContentDialog({
             icon: Mic,
             content: round.interview.is_transcript_available,
             iconColor: "text-violet-500",
-        },
-        notes: {
-            title: "Interviewer Notes",
-            icon: StickyNote,
-            content: round.interview.notes,
-            iconColor: "text-amber-500",
         },
     }[type];
 
@@ -543,12 +543,12 @@ function ContentDialog({
 export default function InterviewAnalysisSheet({ application_id }: {
     application_id: string;
 }) {
-    const [dialogType, setDialogType] = useState<"summary" | "transcript" | "notes" | null>(null);
+    const [dialogType, setDialogType] = useState<"summary" | "transcript" | null>(null);
     const [dialogRound, setDialogRound] = useState<RoundData | null>(null);
     const [data, setData] = useState<InterviewTabData | null>(null);
     const [loading, setLoading] = useState(true);
 
-    const openDialog = (round: RoundData, type: "summary" | "transcript" | "notes") => {
+    const openDialog = (round: RoundData, type: "summary" | "transcript") => {
         setDialogRound(round);
         setDialogType(type);
     };

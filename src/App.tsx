@@ -21,6 +21,9 @@ import RequireOrgRole from "@/guards/RequireOrgRole";
 import PanelAvailabilityForm from "@/pages/panelAvailabilityFormcopy";
 import PanelistRescheduleAvailabilityForm from "@/pages/panelistRescheduleForm";
 import ViewSlots from "./pages/ViewSlots";
+
+import AssessmentPreview from "@/pages/jobs/assessment/assessment_preview";
+import AssessmentForm from "@/pages/jobs/assessment/assessment_form";
 // import PanelAvailabilityForm from "@/pages/panelAvailabilityForm";
 import CandidateSlotBooking from "@/pages/slotBookingPage";
 import PublicApplyPage from "@/pages/PublicApplyPage";
@@ -66,8 +69,9 @@ function App() {
             </Route>
 
           </Route>
-          
+              {/* Without Layout */}
               <Route path="jobs/view_slots/:round_config_id" element={<ViewSlots />} />
+              <Route path="jobs/:jobId/assessment-form/preview" element={<AssessmentPreview />} />
         </Route>
 
         {/* 404 */}
@@ -79,13 +83,13 @@ function App() {
         <Route path="/panelist/reschedule" element={<PanelistRescheduleAvailabilityForm/>} />
         <Route path="/interview/book" element={<CandidateSlotBooking  />} />
         <Route path="/interview/reschedule" element={<CandidateSlotBooking is_reschedule={true} />} />
+        <Route path="/interview/assessment" element={<AssessmentForm />} />
       </Routes> 
 
       <Toaster />
     </BrowserRouter>
   );
 }
-
 
 
 export default App;

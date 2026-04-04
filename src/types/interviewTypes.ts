@@ -20,7 +20,7 @@ const panelMemberSchema = z.object({
  *   instructions: str (optional)
  *   duration_minutes: int (required)
  *   panelists: list[Panelist]
- *   meet_link: HttpUrl (optional)
+
  *   start_date: datetime
  *   end_date: datetime
  *   timezone: str (default "UTC")
@@ -35,7 +35,8 @@ const roundSchema = z.object({
     interview_type: z.enum(['In Person', 'Phone', 'Video Call']),
     instructions: z.string().optional(),
     duration_minutes: z.number().min(1, 'Duration must be at least 1 minute'),
-    meet_link: z.string().url('Must be a valid URL').optional().or(z.literal('')),
+    assessment_criterias: z.array(z.string()).default([]),
+
     timezone: z.string().min(1, 'Timezone is required'),
 }).refine((data) => {
     const now = new Date();

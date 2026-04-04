@@ -656,6 +656,7 @@ export default function CandidateSlotBooking({ is_reschedule = false }: { is_res
         scheduled_start: string;
         scheduled_end: string;
         meet_link?: string;
+        is_reschedule?: boolean;
     } | null>(null);
 
     // selections: key → slot_id
@@ -774,10 +775,11 @@ export default function CandidateSlotBooking({ is_reschedule = false }: { is_res
         setSubmitting(true);
         try {
             if (isRescheduling) {
-                await axios.post(
+                const res = await axios.post(
                     `/interview/booking/reschedule-to-new-slot?token=${encodedToken}`,
                     body
                 );
+                setBookingResult({ ...res.data, is_reschedule: true });
                 toast.success("Interview rescheduled successfully!");
             } else if (response.panel_mode === "panel") {
                 const res = await axios.post(
@@ -916,8 +918,8 @@ export default function CandidateSlotBooking({ is_reschedule = false }: { is_res
             <StatusScreen
                 icon={<CheckCircle2 className="h-8 w-8 text-emerald-500" />}
                 iconBg="bg-emerald-500/10"
-                title="Interview Booked!"
-                message="You're all set. A confirmation email is on its way."
+                title={bookingResult.is_reschedule ? "Interview Rescheduled!" : "Interview Booked!"}
+                message={bookingResult.is_reschedule ? "Your interview has been successfully moved to the new time." : "You're all set. A confirmation email is on its way."}
                 extra={
                     <div className="space-y-3">
                         <div className="inline-flex items-center gap-2 rounded-lg bg-muted/50 border border-border/50 px-4 py-2.5 text-sm">

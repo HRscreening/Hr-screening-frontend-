@@ -18,9 +18,15 @@ export const ReminderSettingsSchema = z.object({
     interview_reminder_count: z.number().int().nonnegative(),
     interview_reminder_sec: z.array(z.number().int().nonnegative()),
 });
+export const FeedBackReminderSettingsSchema = z.object({
+    enabled: z.boolean().default(true),
+    form_reminder_count: z.number().int().nonnegative(),
+    form_reminder_sec: z.array(z.number().int().nonnegative()),
+});
 
 
 export type ReminderSettingsType = z.infer<typeof ReminderSettingsSchema>;
+export type FeedBackReminderSettingsType = z.infer<typeof FeedBackReminderSettingsSchema>;
 
 
 export const PanelEscalationSettingsSchema = z.object({
@@ -62,7 +68,7 @@ export const CreateJobSettingsSchema = z.object({
 
     panel_reminders: ReminderSettingsSchema,
     candidate_reminders: ReminderSettingsSchema,
-    feedback_reminders: ReminderSettingsSchema,
+    feedback_reminders: FeedBackReminderSettingsSchema,
 
     escalation: PanelEscalationSettingsSchema,
     rescheduling: ReschedulingSettingsSchema,

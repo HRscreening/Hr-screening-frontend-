@@ -582,7 +582,7 @@ const JobSettingsPage: React.FC = () => {
           <Settings2 className="w-4 h-4 text-primary" />
           <h2 className="text-sm font-semibold uppercase tracking-wider text-primary/80">Detailed Configuration</h2>
         </div>
-        { data.settings &&
+        { data?.settings &&
           <JobSettingsDetailedEditor
           jobId={jobId!}
           settings={data.settings}
