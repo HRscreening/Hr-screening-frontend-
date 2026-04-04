@@ -140,7 +140,7 @@ export type ExtractedJD = {
   needs_clarification?: boolean;
   /** Raw RRG for displaying full parsed JD viewer */
   _rrg?: RRGFinal;
-  criteria: {
+  criteria?: {
     mandatory_criteria: Record<string, CriterionV2>;
     screening_criteria: Record<string, CriterionV2>;
   };

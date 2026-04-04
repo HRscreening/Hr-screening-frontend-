@@ -64,7 +64,7 @@ export const roundEditSchema = z
     interview_type: z.enum(['In Person', 'Phone', 'Video Call']),
     instructions: z.string().optional(),
     duration_minutes: z.number().min(1, 'Min 1 minute'),
-    assessment_criterias: z.array(z.string()).default([]),
+    assessment_criterias: z.array(z.string()),
 
     /**
      * All panelist rows (existing + new + soft-deleted).
@@ -94,6 +94,8 @@ export const roundEditSchema = z
     // Validate each active panelist's fields
     active.forEach((p, activeIdx) => {
       // Map back to the real index in the full array (needed for field-level errors)
+
+      console.log(activeIdx)
       const realIdx = data.panelists.findIndex(
         (fp) => !fp._deleted && fp === p
       );
@@ -234,7 +236,7 @@ export interface RoundFullConfig {
   duration_minutes: number;
   panel_mode: 'panel' | 'sequential';
   timezone?: string;
-  
+
   start_date: string;
   end_date: string;
   assessment_criterias?: string[];

@@ -412,7 +412,8 @@ function SelectionSummary({
     requesting,
     onSubmit,
     onRequest,
-    onCancelClick,
+    //@ts-ignore
+    onCancelClick, 
     compact,
 }: {
     panelMode: "panel" | "sequential";

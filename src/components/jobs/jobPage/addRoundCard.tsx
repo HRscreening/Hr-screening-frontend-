@@ -6,7 +6,6 @@ import { toast } from 'sonner';
 import {
   ChevronDown,
   CalendarIcon,
-  Link2,
   Clock,
   FileText,
   Globe,

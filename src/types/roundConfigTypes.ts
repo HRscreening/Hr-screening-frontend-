@@ -50,7 +50,7 @@ export const roundEditSchema = z.object({
   interview_type: z.enum(['In Person', 'Phone', 'Video Call']),
   instructions: z.string().optional(),
   duration_minutes: z.number().min(1, 'Min 1 minute'),
-  assessment_criterias: z.array(z.string()).default([]),
+  assessment_criterias: z.array(z.string()),
   panelists: z
     .array(panelMemberEditSchema)
     .min(1, 'At least one panelist')

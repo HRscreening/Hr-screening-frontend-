@@ -18,7 +18,6 @@ import {
   Mic,
   ClipboardList,
   CalendarDays,
-  Link2,
   Clock,
   FileText,
   Globe,
