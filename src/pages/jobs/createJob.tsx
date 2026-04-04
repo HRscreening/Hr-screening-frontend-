@@ -148,7 +148,7 @@ const CreateJob = () => {
           instructions: round.instructions || null,
           duration_minutes: round.duration_minutes,
           panelists: round.panelists,
-
+          assessment_criterias: round.assessment_criterias,
           start_date: round.start_date.toISOString(),
           end_date: round.end_date.toISOString(),
           timezone: round.timezone,
