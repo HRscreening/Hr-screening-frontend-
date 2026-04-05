@@ -18,7 +18,6 @@ import {
   Mic,
   ClipboardList,
   CalendarDays,
-  Link2,
   Clock,
   FileText,
   Globe,
@@ -60,6 +59,8 @@ import { Calendar } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
+import AssessmentTagsSection from '@/components/jobs/jobPage/AssessmentTagsSection';
+
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface InterviewFormProps {
@@ -67,6 +68,7 @@ interface InterviewFormProps {
    * Pre-populated data from `extractedJData.interview_details`.
    */
   interviewDetails?: InterviewFormTypes | null;
+  jobID: string;
   /**
    * Called with validated form data. In the create-job wizard this
    * fires the API calls to create round configs, then navigates.
@@ -91,7 +93,8 @@ function buildNewRound(index: number): InterviewRound {
     interview_type: 'Video Call',
     instructions: '',
     duration_minutes: 60,
-    meet_link: '',
+    assessment_criterias: [],
+
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   };
 }
@@ -272,12 +275,14 @@ function PanelMemberRow({
 function RoundCard({
   roundIndex,
   form,
+  jobId,
   onRemove,
   canRemove,
 }: {
   roundIndex: number;
   form: ReturnType<typeof useForm<InterviewFormTypes>>;
   onRemove: () => void;
+  jobId: string;
   canRemove: boolean;
 }) {
   const [expanded, setExpanded] = useState(true);
@@ -528,27 +533,7 @@ function RoundCard({
               />
             </div>
 
-            {/* Row 3: Meeting link */}
-            <FormField
-              control={form.control}
-              name={`rounds.${roundIndex}.meet_link`}
-              render={({ field }) => (
-                <FormItem className="space-y-2">
-                  <FormLabel className="text-xs text-muted-foreground font-medium flex items-center gap-1.5">
-                    <Link2 className="h-3 w-3" />
-                    Meeting Link
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="https://meet.google.com/..."
-                      className="h-10 bg-transparent"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+
 
             {/* Row 3b: Instructions */}
             <FormField
@@ -570,6 +555,14 @@ function RoundCard({
                   <FormMessage />
                 </FormItem>
               )}
+            />
+
+            {/* Row 3c: Assessment Tags */}
+            <AssessmentTagsSection
+              tags={form.watch(`rounds.${roundIndex}.assessment_criterias`) ?? []}
+              onChange={(newTags) => form.setValue(`rounds.${roundIndex}.assessment_criterias`, newTags, { shouldValidate: true })}
+              roundTitle={form.watch(`rounds.${roundIndex}.title`) ?? ''}
+              jobId={jobId}
             />
 
             {/* Row 4: Panel members */}
@@ -692,7 +685,7 @@ function FormSectionHeader({
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 const InterviewForm = forwardRef(function InterviewForm(
-  { interviewDetails, onUpdate }: InterviewFormProps,
+  { interviewDetails,jobID, onUpdate }: InterviewFormProps,
   ref
 ) {
   const form = useForm<InterviewFormTypes>({
@@ -773,6 +766,7 @@ const InterviewForm = forwardRef(function InterviewForm(
                     key={round.id}
                     roundIndex={index}
                     form={form}
+                    jobId={jobID}
                     onRemove={() => removeRound(index)}
                     canRemove={roundFields.length > 1}
                   />

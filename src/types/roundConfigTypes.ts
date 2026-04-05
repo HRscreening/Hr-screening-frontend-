@@ -23,8 +23,9 @@ export interface RoundFullConfig {
   interview_type: 'Video Call' | 'Phone' | 'In Person';
   instructions: string | null;
   duration_minutes: number;
+  assessment_criterias: string[] | null;
   panelists: PanelMember[];
-  meet_link: string | null;
+
   start_date: string;
   end_date: string;
   slots_available: boolean;
@@ -49,6 +50,7 @@ export const roundEditSchema = z.object({
   interview_type: z.enum(['In Person', 'Phone', 'Video Call']),
   instructions: z.string().optional(),
   duration_minutes: z.number().min(1, 'Min 1 minute'),
+  assessment_criterias: z.array(z.string()),
   panelists: z
     .array(panelMemberEditSchema)
     .min(1, 'At least one panelist')
@@ -61,11 +63,11 @@ export const roundEditSchema = z.object({
       path: ["panelists"],
     }),
 
-  meet_link: z.url('Must be a valid URL').optional().or(z.literal('')),
+
   start_date: z.date(),
   end_date: z.date(),
   timezone: z.string().min(1, 'Required'),
-  panel_mode: z.enum(['SEQUENTIAL', 'PANEL']),
+  // panel_mode: z.enum(['SEQUENTIAL', 'PANEL']),
 });
 
 export type RoundEditValues = z.infer<typeof roundEditSchema>;

@@ -249,7 +249,7 @@ function CancelDialog({ open, onClose, onConfirm, submitting }: {
 // DateTimePicker
 // ─────────────────────────────────────────────────────────────────────────────
 
-function DateTimePicker({ dateValue, onDateChange, startValue, onStartChange, endValue, minDate, maxDate, duration, dateError, timeError }: {
+function DateTimePicker({ dateValue, onDateChange, startValue, onStartChange, endValue, minDate, maxDate, dateError, timeError }: {
   dateValue: Date | undefined; onDateChange: (d: Date) => void;
   startValue: string; onStartChange: (v: string) => void; endValue: string;
   minDate: Date; maxDate: Date; duration: number;

@@ -500,7 +500,7 @@ const JobSettingsForm = forwardRef(function JobSettingsForm(
       auto_move_to_next_round: 'panel_only',
       panel_reminders: { enabled: true, form_reminder_count: 1, form_reminder_sec: [86400], interview_reminder_count: 1, interview_reminder_sec: [86400] },
       candidate_reminders: { enabled: true, form_reminder_count: 1, form_reminder_sec: [86400], interview_reminder_count: 1, interview_reminder_sec: [86400] },
-      feedback_reminders: { enabled: true, form_reminder_count: 1, form_reminder_sec: [86400], interview_reminder_count: 1, interview_reminder_sec: [86400] },
+      feedback_reminders: { enabled: true, form_reminder_count: 1, form_reminder_sec: [86400]},
       escalation: { enabled: true, escalation_recipients: [] },
       rescheduling: {
         enabled: true,
@@ -610,30 +610,30 @@ const JobSettingsForm = forwardRef(function JobSettingsForm(
                 )}
               />
 
-                <FormField
-                  control={form.control}
-                  name="auto_score_every_resume_on_manual_upload"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <SettingToggle
-                          icon={Upload}
-                          title="Auto score manual uploads"
-                          description="Apply auto-scoring to resumes uploaded manually by the HR team"
-                          checked={field.value ?? false}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
+              <FormField
+                control={form.control}
+                name="auto_score_every_resume_on_manual_upload"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <SettingToggle
+                        icon={Upload}
+                        title="Auto score manual uploads"
+                        description="Apply auto-scoring to resumes uploaded manually by the HR team"
+                        checked={field.value ?? false}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
 
             </div>
-            </div>
+          </div>
 
           <Divider />
 
-            <div className="space-y-4">
+          <div className="space-y-4">
             <FormSectionHeader
               icon={BrainCircuit}
               title="Automation & Workflow"
@@ -807,9 +807,9 @@ const JobSettingsForm = forwardRef(function JobSettingsForm(
             </ExpandPanel>
           </div>
 
-  <Divider />
+          <Divider />
 
-{/* ── Rescheduling ─────────────────────────────────────────────── */ }
+          {/* ── Rescheduling ─────────────────────────────────────────────── */}
           <div className="space-y-4">
             <FormSectionHeader
               icon={RefreshCw}
@@ -1067,8 +1067,8 @@ const JobSettingsForm = forwardRef(function JobSettingsForm(
 
 
 
-  {/* FEEDBACK */}
-         <div className="space-y-4">
+          {/* FEEDBACK */}
+          <div className="space-y-4">
             <FormSectionHeader
               icon={BrainCircuit}
               title="Feedback & Offers"
@@ -1114,7 +1114,7 @@ const JobSettingsForm = forwardRef(function JobSettingsForm(
                 )}
               />
             </div>
-            </div>
+          </div>
 
           <button type="submit" className="hidden" id="job-settings-form-submit" />
         </form >

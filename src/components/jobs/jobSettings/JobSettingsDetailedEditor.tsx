@@ -51,8 +51,10 @@ import { cn } from "@/lib/utils";
 import type {
   SettingsType,
   ReminderSettingsType,
+  FeedBackReminderSettingsType,
   PanelEscalationSettingsType,
   ReschedulingSettingsType,
+
 } from "@/types/jobSettingsTypes";
 
 import {
@@ -183,7 +185,7 @@ function ViewField({ label, value, icon: Icon }: { label: string; value: string 
   );
 }
 
-function ReminderSummary({ reminders }: { reminders: ReminderSettingsType }) {
+function ReminderSummary({ reminders }: { reminders: FeedBackReminderSettingsType }) {
   if (!reminders.enabled) return <Badge variant="secondary" className="text-[10px]">Disabled</Badge>;
 
   const formatSec = (s: number) => {
@@ -198,17 +200,11 @@ function ReminderSummary({ reminders }: { reminders: ReminderSettingsType }) {
         <Badge variant="outline" className="text-[10px] bg-primary/5">
           {reminders.form_reminder_sec.length} Form Reminders
         </Badge>
-        <Badge variant="outline" className="text-[10px] bg-primary/5">
-          {reminders.interview_reminder_sec.length} Interview Reminders
-        </Badge>
       </div>
-      {(reminders.form_reminder_sec.length > 0 || reminders.interview_reminder_sec.length > 0) && (
+      {(reminders.form_reminder_sec.length > 0) && (
           <div className="text-[11px] text-muted-foreground space-y-1">
               {reminders.form_reminder_sec.length > 0 && (
                   <p>Form: {reminders.form_reminder_sec.map(formatSec).join(', ')} after</p>
-              )}
-              {reminders.interview_reminder_sec.length > 0 && (
-                  <p>Interview: {reminders.interview_reminder_sec.map(formatSec).join(', ')} before</p>
               )}
           </div>
       )}
@@ -432,6 +428,7 @@ const JobSettingsDetailedEditor: React.FC<JobSettingsDetailedEditorProps> = ({
       auto_move_to_next_round: settings.auto_move_to_next_round,
     },
   });
+  console.log("Settings",settings)
 
   const handleSave = async (section: string, data: any) => {
     try {

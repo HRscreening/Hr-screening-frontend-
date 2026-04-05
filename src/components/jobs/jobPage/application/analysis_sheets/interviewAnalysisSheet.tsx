@@ -14,6 +14,12 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import {
+    Tabs,
+    TabsContent,
+    TabsList,
+    TabsTrigger,
+} from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow, format } from "date-fns";
 import axios from "@/axiosConfig";
@@ -23,7 +29,6 @@ import {
     ChevronRight,
     FileText,
     Mic,
-    StickyNote,
     Calendar,
     User,
     Cpu,
@@ -34,10 +39,14 @@ import {
     Link,
     BookOpen,
     RefreshCw,
+    Download,
     XCircle,
     ExternalLink,
+    Activity,
+    ClipboardCheck,
 } from "lucide-react";
 import { toast } from "sonner";
+import { AssessmentTabView } from "./AssessmentTabView";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -56,10 +65,7 @@ export type InterviewData = {
     meet_link: string | null;
     interview_type: string;
     scheduled_at: string | null;
-    is_notes_available: boolean;
-    is_summary_available: boolean;
     is_transcript_available: boolean;
-    notes: string | null;
     summary: string | null;
     transcript: string | null;
 };
@@ -83,26 +89,26 @@ export type InterviewTabData = {
 // ─── Event Type Config ─────────────────────────────────────────────────────────
 
 const EVENT_CONFIG: Record<string, { icon: React.ElementType; color: string; dot: string }> = {
-    "Interview Created":                 { icon: BookOpen,     color: "text-blue-600 dark:text-blue-400",      dot: "bg-blue-500"     },
-    "Booking Link Sent":                 { icon: Link,         color: "text-orange-600 dark:text-orange-400",  dot: "bg-orange-500"   },
-    "Interview Scheduled":               { icon: CalendarCheck,color: "text-emerald-600 dark:text-emerald-400",dot: "bg-emerald-500"  },
-    "Interview Rescheduled":             { icon: RefreshCw,    color: "text-amber-600 dark:text-amber-400",    dot: "bg-amber-500"    },
-    "Interview Canceled":                { icon: XCircle,      color: "text-red-600 dark:text-red-400",        dot: "bg-red-500"      },
-    "Candidate Requested for new slots": { icon: Send,         color: "text-violet-600 dark:text-violet-400",  dot: "bg-violet-500"   },
-    DEFAULT:                             { icon: CircleDot,    color: "text-muted-foreground",                  dot: "bg-muted-foreground" },
+    "Interview Created": { icon: BookOpen, color: "text-blue-600 dark:text-blue-400", dot: "bg-blue-500" },
+    "Booking Link Sent": { icon: Link, color: "text-orange-600 dark:text-orange-400", dot: "bg-orange-500" },
+    "Interview Scheduled": { icon: CalendarCheck, color: "text-emerald-600 dark:text-emerald-400", dot: "bg-emerald-500" },
+    "Interview Rescheduled": { icon: RefreshCw, color: "text-amber-600 dark:text-amber-400", dot: "bg-amber-500" },
+    "Interview Canceled": { icon: XCircle, color: "text-red-600 dark:text-red-400", dot: "bg-red-500" },
+    "Candidate Requested for new slots": { icon: Send, color: "text-violet-600 dark:text-violet-400", dot: "bg-violet-500" },
+    DEFAULT: { icon: CircleDot, color: "text-muted-foreground", dot: "bg-muted-foreground" },
 };
 
 // ─── Status Config ─────────────────────────────────────────────────────────────
 
 const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
     "Collecting Availability": { label: "Collecting Availability", className: "bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-950/20 dark:border-yellow-800" },
-    "Ready to Book":           { label: "Ready to Book",           className: "bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-950/20 dark:border-cyan-800" },
-    "Scheduled":               { label: "Scheduled",               className: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/20 dark:border-blue-800" },
-    "Completed":               { label: "Completed",               className: "bg-green-50 text-green-700 border-green-200 dark:bg-green-950/20 dark:border-green-800" },
-    "Canceled":                { label: "Cancelled",               className: "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/20 dark:border-red-800" },
-    "In Progress":             { label: "In Progress",             className: "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/20 dark:border-purple-800" },
-    "Awaiting Feedback":       { label: "Awaiting Feedback",       className: "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/20 dark:border-orange-800" },
-    "Feedback Collected":      { label: "Feedback Collected",      className: "bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/20 dark:border-teal-800" },
+    "Ready to Book": { label: "Ready to Book", className: "bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-950/20 dark:border-cyan-800" },
+    "Scheduled": { label: "Scheduled", className: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/20 dark:border-blue-800" },
+    "Completed": { label: "Completed", className: "bg-green-50 text-green-700 border-green-200 dark:bg-green-950/20 dark:border-green-800" },
+    "Canceled": { label: "Cancelled", className: "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/20 dark:border-red-800" },
+    "In Progress": { label: "In Progress", className: "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/20 dark:border-purple-800" },
+    "Awaiting Feedback": { label: "Awaiting Feedback", className: "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/20 dark:border-orange-800" },
+    "Feedback Collected": { label: "Feedback Collected", className: "bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/20 dark:border-teal-800" },
 };
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
@@ -209,7 +215,8 @@ function TimelineView({ timeline }: { timeline: TimelineEventData[] }) {
                                         <SummaryText text={event.summary} />
                                     </p>
                                     <span className="text-[10px] text-muted-foreground/60 shrink-0 tabular-nums mt-0.5">
-                                        {format(new Date(event.created_at), "HH:mm")}
+                                        {/* {format(new Date(event.created_at), "HH:mm")} */}
+                                        {format(new Date(event.created_at), "dd MMM yyyy, HH:mm a")}
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-2 mt-1.5">
@@ -235,56 +242,85 @@ function TimelineView({ timeline }: { timeline: TimelineEventData[] }) {
 
 function AvailabilityIndicators({ interview, onOpen }: {
     interview: InterviewData;
-    onOpen: (type: "summary" | "transcript" | "notes") => void;
+    onOpen: (type: "summary" | "transcript") => void;
 }) {
-    const indicators = [
-        {
-            key: "summary" as const,
-            label: "Summary",
-            icon: FileText,
-            available: interview.is_summary_available,
-            availableClass: "border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 dark:border-blue-800 dark:text-blue-400 dark:bg-blue-950/20 dark:hover:bg-blue-950/40",
-            unavailableClass: "border-border/40 text-muted-foreground/40 bg-muted/20 cursor-not-allowed",
-        },
-        {
-            key: "transcript" as const,
-            label: "Transcript",
-            icon: Mic,
-            available: interview.is_transcript_available,
-            availableClass: "border-violet-200 text-violet-700 bg-violet-50 hover:bg-violet-100 dark:border-violet-800 dark:text-violet-400 dark:bg-violet-950/20 dark:hover:bg-violet-950/40",
-            unavailableClass: "border-border/40 text-muted-foreground/40 bg-muted/20 cursor-not-allowed",
-        },
-        {
-            key: "notes" as const,
-            label: "Notes",
-            icon: StickyNote,
-            available: interview.is_notes_available,
-            availableClass: "border-amber-200 text-amber-700 bg-amber-50 hover:bg-amber-100 dark:border-amber-800 dark:text-amber-400 dark:bg-amber-950/20 dark:hover:bg-amber-950/40",
-            unavailableClass: "border-border/40 text-muted-foreground/40 bg-muted/20 cursor-not-allowed",
-        },
-    ];
+    const [loadingTranscript, setLoadingTranscript] = useState(false);
+    // Handler for transcript download
+    const handleTranscriptDownload = async () => {
+        if (!interview.id) return;
+        setLoadingTranscript(true);
+        try {
+            const response = await axios.get(
+                `/interview/get-transcript/${interview.id}`,
+                {
+                    responseType: "blob",
+                }
+            );
+
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = `transcript.pdf`;
+
+            document.body.appendChild(link);
+            link.click();
+
+            link.remove();
+            window.URL.revokeObjectURL(url);
+
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to download transcript. Please try again later.");
+        }
+        setLoadingTranscript(false);
+    };
 
     return (
         <div className="flex items-center gap-2 flex-wrap">
-            {indicators.map(({ key, label, icon: Icon, available, availableClass, unavailableClass }) => (
-                <button
-                    key={key}
-                    disabled={!available}
-                    onClick={() => available && onOpen(key)}
-                    className={cn(
-                        "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border text-xs font-medium transition-colors",
-                        available ? availableClass : unavailableClass
-                    )}
-                >
-                    <Icon className="w-3 h-3" />
-                    {label}
-                    {available ? (
-                        <CheckCircle2 className="w-3 h-3 ml-0.5" />
-                    ) : (
-                        <span className="w-3 h-3 ml-0.5 rounded-full border border-current/30 inline-block" />
-                    )}
-                </button>
-            ))}
+            {/* Summary Button */}
+            <button
+                disabled={!interview.summary}
+                onClick={() => interview.summary && onOpen("summary")}
+                className={cn(
+                    "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border text-xs font-medium transition-colors",
+                    interview.summary
+                        ? "border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 dark:border-blue-800 dark:text-blue-400 dark:bg-blue-950/20 dark:hover:bg-blue-950/40"
+                        : "border-border/40 text-muted-foreground/40 bg-muted/20 cursor-not-allowed"
+                )}
+            >
+                <FileText className="w-3 h-3" />
+                Summary
+                {interview.summary ? (
+                    <CheckCircle2 className="w-3 h-3 ml-0.5" />
+                ) : (
+                    <span className="w-3 h-3 ml-0.5 rounded-full border border-current/30 inline-block" />
+                )}
+            </button>
+
+            {/* Transcript Button (Download) */}
+            <button
+                disabled={!interview.is_transcript_available || loadingTranscript}
+                onClick={interview.is_transcript_available && !loadingTranscript ? handleTranscriptDownload : undefined}
+                className={cn(
+                    "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border text-xs font-medium transition-colors relative",
+                    interview.is_transcript_available
+                        ? "border-violet-200 text-violet-700 bg-violet-50 hover:bg-violet-100 dark:border-violet-800 dark:text-violet-400 dark:bg-violet-950/20 dark:hover:bg-violet-950/40 cursor-pointer"
+                        : "border-border/40 text-muted-foreground/40 bg-muted/20 cursor-not-allowed",
+                    loadingTranscript && "opacity-70 cursor-wait"
+                )}
+            >
+                <Mic className="w-3 h-3" />
+                Transcript
+                {loadingTranscript ? (
+                    <span className="w-3 h-3 ml-0.5 animate-spin border-2 border-violet-400 border-t-transparent rounded-full inline-block" />
+                ) : interview.is_transcript_available ? (
+                    <Download className="w-3 h-3 ml-0.5" />
+                ) : (
+                    <span className="w-3 h-3 ml-0.5 rounded-full border border-current/30 inline-block" />
+                )}
+            </button>
+
         </div>
     );
 }
@@ -293,7 +329,7 @@ function AvailabilityIndicators({ interview, onOpen }: {
 
 function RoundContent({ round, onOpen }: {
     round: RoundData;
-    onOpen: (type: "summary" | "transcript" | "notes") => void;
+    onOpen: (type: "summary" | "transcript") => void;
 }) {
     const statusCfg = STATUS_CONFIG[round.interview.status] ?? {
         label: round.interview.status,
@@ -329,21 +365,41 @@ function RoundContent({ round, onOpen }: {
                 <AvailabilityIndicators interview={round.interview} onOpen={onOpen} />
             </div>
 
-            {/* Timeline */}
-            {round.timeline_events && round.timeline_events.length > 0 ? (
-                <div className="space-y-2">
-                    <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                        <Calendar className="w-3 h-3" />
-                        Activity Timeline
-                    </p>
-                    <TimelineView timeline={round.timeline_events} />
-                </div>
-            ) : (
-                <div className="flex items-center gap-2 py-6 justify-center text-muted-foreground/40">
-                    <AlertCircle className="w-4 h-4" />
-                    <span className="text-xs">No timeline activity yet</span>
-                </div>
-            )}
+            {/* Tabs for Logs and Assessment */}
+            <Tabs defaultValue="logs" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 mb-4 bg-muted/40">
+                    <TabsTrigger value="logs" className="text-xs flex items-center gap-2">
+                        <Activity className="w-3.5 h-3.5" />
+                        Logs
+                    </TabsTrigger>
+                    <TabsTrigger value="assessment" className="text-xs flex items-center gap-2">
+                        <ClipboardCheck className="w-3.5 h-3.5" />
+                        Assessment
+                    </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="logs" className="mt-0">
+                    {/* Timeline */}
+                    {round.timeline_events && round.timeline_events.length > 0 ? (
+                        <div className="space-y-2">
+                            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                                <Calendar className="w-3 h-3" />
+                                Activity Timeline
+                            </p>
+                            <TimelineView timeline={round.timeline_events} />
+                        </div>
+                    ) : (
+                        <div className="flex items-center gap-2 py-6 justify-center text-muted-foreground/40">
+                            <AlertCircle className="w-4 h-4" />
+                            <span className="text-xs">No timeline activity yet</span>
+                        </div>
+                    )}
+                </TabsContent>
+
+                <TabsContent value="assessment" className="mt-0">
+                    <AssessmentTabView interviewId={round.interview.id} />
+                </TabsContent>
+            </Tabs>
         </div>
     );
 }
@@ -429,7 +485,7 @@ function ContentDialog({
 }: {
     open: boolean;
     onClose: () => void;
-    type: "summary" | "transcript" | "notes" | null;
+    type: "summary" | "transcript" | null;
     round: RoundData | null;
 }) {
     if (!type || !round) return null;
@@ -444,14 +500,8 @@ function ContentDialog({
         transcript: {
             title: "Interview Transcript",
             icon: Mic,
-            content: round.interview.transcript,
+            content: round.interview.is_transcript_available,
             iconColor: "text-violet-500",
-        },
-        notes: {
-            title: "Interviewer Notes",
-            icon: StickyNote,
-            content: round.interview.notes,
-            iconColor: "text-amber-500",
         },
     }[type];
 
@@ -473,6 +523,7 @@ function ContentDialog({
                     <div className="px-6 py-5">
                         {config.content ? (
                             <p className="text-sm text-foreground/80 leading-relaxed bg-muted/30 rounded-lg p-4 border border-border/40">
+                                {/* @ts-ignore */}
                                 <SummaryText text={config.content} />
                             </p>
                         ) : (
@@ -492,12 +543,12 @@ function ContentDialog({
 export default function InterviewAnalysisSheet({ application_id }: {
     application_id: string;
 }) {
-    const [dialogType, setDialogType] = useState<"summary" | "transcript" | "notes" | null>(null);
+    const [dialogType, setDialogType] = useState<"summary" | "transcript" | null>(null);
     const [dialogRound, setDialogRound] = useState<RoundData | null>(null);
     const [data, setData] = useState<InterviewTabData | null>(null);
     const [loading, setLoading] = useState(true);
 
-    const openDialog = (round: RoundData, type: "summary" | "transcript" | "notes") => {
+    const openDialog = (round: RoundData, type: "summary" | "transcript") => {
         setDialogRound(round);
         setDialogType(type);
     };

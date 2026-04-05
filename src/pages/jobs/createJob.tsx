@@ -131,7 +131,7 @@ const CreateJob = () => {
     const rounds = details.rounds;
     if (!rounds || rounds.length === 0) {
       toast.success('Job created! Skipping interview setup.');
-      setCurrentStep(5);
+      navigate(`/jobs/${jobId}`, { replace: true });
       return;
     }
 
@@ -148,7 +148,7 @@ const CreateJob = () => {
           instructions: round.instructions || null,
           duration_minutes: round.duration_minutes,
           panelists: round.panelists,
-          meet_link: round.meet_link || null,
+          assessment_criterias: round.assessment_criterias,
           start_date: round.start_date.toISOString(),
           end_date: round.end_date.toISOString(),
           timezone: round.timezone,
@@ -157,8 +157,8 @@ const CreateJob = () => {
       console.log(res);
 
 
-      toast.success('Interview rounds created! Now configure job settings.');
-      setCurrentStep(5);
+      toast.success('Job Created Successfully!');
+      navigate(`/jobs/${jobId}`, { replace: true });
     } catch (error: any) {
       console.error('Error creating interview rounds:', error);
       const detail = error?.response?.data?.detail || error?.response?.data?.message;
@@ -187,12 +187,12 @@ const CreateJob = () => {
     }
 
     if (currentStep === 4) {
-      interviewFormRef.current?.submit();
+      settingsRef.current?.submit();
       return;
     }
-
+    
     if (currentStep === 5) {
-      settingsRef.current?.submit();
+      interviewFormRef.current?.submit();
       return;
     }
 
@@ -282,7 +282,7 @@ const CreateJob = () => {
 
       if (response.status === 201) {
         toast.success('Job settings saved! Taking you to the job page…');
-        navigate(`/jobs/${jobId}`, { replace: true });
+        setCurrentStep(5);
       }
     } catch (error) {
       console.error('Error saving job settings:', error);
@@ -337,23 +337,25 @@ const CreateJob = () => {
         />
       )}
 
+
+
+
       {currentStep === 4 && jobId && (
+        <CreateJobSettings
+        ref={settingsRef}
+        onUpdate={handleSaveSettings}
+        />
+      )}
+
+      {currentStep === 5 && jobId && (
         <InterviewForm
           ref={interviewFormRef}
+          jobID={jobId}
           interviewDetails={extractedJData?.interview_details}
           onUpdate={handleCreateInterviewRounds}
         />
       )}
-
-
-
-      {currentStep === 5 && jobId && (
-        <CreateJobSettings
-          ref={settingsRef}
-          onUpdate={handleSaveSettings}
-        />
-      )}
-
+      
       {/* ── Rubric generation overlay ── */}
       {loading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
@@ -395,7 +397,7 @@ const CreateJob = () => {
             <p className="text-xs text-muted-foreground text-center">
               {currentStep === 2
                 ? "This usually takes 20–40 seconds. Please don't close the page."
-                : currentStep === 4
+                : currentStep === 5
                   ? "Creating interview rounds…"
                   : "Saving to database…"}
             </p>
