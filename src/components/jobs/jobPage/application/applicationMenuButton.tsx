@@ -17,9 +17,10 @@ import {
 
 } from "lucide-react"
 import { Button } from '@/components/ui/button';
-import axios from '@/axiosConfig';
-import { toast } from 'sonner';
 import { DeleteDialog, FlagReasonDialog } from './helpersDialog';
+import { useToggleStar } from '@/hooks/job_hooks/applications/useToggleStar';
+import { useToggleFlag } from '@/hooks/job_hooks/applications/useToggleFlag';
+import { useDeleteApplication } from '@/hooks/job_hooks/applications/useDeleteApplication';
 
 
 
@@ -40,101 +41,30 @@ export default function MenuItems({ ...data }: MenuItemsProps) {
     const [isFlagDialogOpen, setIsFlagDialogOpen] = useState<boolean>(false);
     const flagReason = data.flag_reason || "";
 
+    const { mutate: toggleStar } = useToggleStar();
+    const { mutate: toggleFlag } = useToggleFlag();
+    const { mutate: deleteApp } = useDeleteApplication();
 
     async function handleShare() {
-        // Implement share functionality
         console.log("Share action triggered");
     }
 
-    async function handleFlag(reason?: string) {
-        try {
+    function handleFlag(reason?: string) {
+        if (reason === flagReason) return;
 
-            if (reason === flagReason) {
-                return;
-            }
-
-            if (data.is_flagged) {
-                const res = await axios.patch(`/application/unflag/${data.applicationId}`);
-                if (res.status === 200) {
-                    toast.success("Application unflagged successfully");
-                }
-                else {
-                    throw new Error("Failed to unflag application");
-                }
-            } else {
-
-
-                if (!reason || reason.trim() === "") {
-                    toast.error("Flag reason cannot be empty.");
-                    return;
-                }
-                if (reason.length > 250) {
-                    toast.error("Flag reason cannot exceed 250 characters.");
-                    return;
-                }
-                if (reason.length < 10) {
-                    toast.error("Flag reason should be at least 10 characters long.");
-                    return;
-                }
-
-                const res = await axios.patch(`/application/flag/${data.applicationId}`, { "flag_reason": reason });
-
-                if (res.status === 200) {
-                    toast.success("Application flagged successfully");
-                }
-                else {
-                    throw new Error("Failed to flag application");
-                }
-            }
-        } catch (err) {
-            console.log(err);
-            toast.error("An error occurred while updating the flag status.");
+        if (!data.is_flagged) {
+            if (!reason || reason.trim() === "") return;
         }
+
+        toggleFlag({ applicationId: data.applicationId, isFlagged: data.is_flagged, reason });
     }
 
-    async function handleStar() {
-        try {
-            if (data.is_starred) {
-                const res = await axios.patch(`/application/unstar/${data.applicationId}`);
-                if (res.status === 200) {
-                    toast.success("Application unstarred successfully");
-                }
-                else {
-                    throw new Error("Failed to unstar application");
-                }
-            } else {
-
-
-                const res = await axios.patch(`/application/star/${data.applicationId}`);
-                if (res.status === 200) {
-                    toast.success("Application starred successfully");
-                }
-                else {
-                    throw new Error("Failed to star application");
-                }
-
-            }
-        } catch (err) {
-            console.log(err);
-            toast.error("An error occurred while updating the star status.");
-        }
+    function handleStar() {
+        toggleStar({ applicationId: data.applicationId, isStarred: data.is_starred });
     }
 
-    async function handleDelete() {
-        try {
-            const res = await axios.delete(`/application/delete/${data.applicationId}`);
-
-            if (res.status === 200) {
-                toast.success("Application deleted successfully");
-                return;
-            }
-
-        } catch (error) {
-            console.error("Error deleting application:", error);
-            toast.error("Failed to delete application. Please try again.");
-        }
-
-
+    function handleDelete() {
+        deleteApp({ applicationId: data.applicationId });
     }
 
     return (
@@ -185,7 +115,6 @@ export default function MenuItems({ ...data }: MenuItemsProps) {
                             </DropdownMenuItem>
                         )
 
-
                     }
                     <DropdownMenuItem >
                         <Info />
@@ -219,12 +148,8 @@ export default function MenuItems({ ...data }: MenuItemsProps) {
                 onClose={() => setIsFlagDialogOpen(false)}
                 flagReason={flagReason}
                 isFlagged={data.is_flagged}
-                onConfirm={(reason) => {
-                    handleFlag(reason);
-                }
-                }
+                onConfirm={(reason) => handleFlag(reason)}
             />
         </>
     )
 }
-

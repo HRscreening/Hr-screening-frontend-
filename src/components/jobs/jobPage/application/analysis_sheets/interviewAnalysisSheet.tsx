@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
     Accordion,
     AccordionContent,
@@ -23,6 +23,7 @@ import {
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow, format } from "date-fns";
 import axios from "@/axiosConfig";
+import { useApplicationInterview } from "@/hooks/job_hooks/useApplicationInterview";
 import {
     CheckCircle2,
     Clock,
@@ -545,8 +546,8 @@ export default function InterviewAnalysisSheet({ application_id }: {
 }) {
     const [dialogType, setDialogType] = useState<"summary" | "transcript" | null>(null);
     const [dialogRound, setDialogRound] = useState<RoundData | null>(null);
-    const [data, setData] = useState<InterviewTabData | null>(null);
-    const [loading, setLoading] = useState(true);
+
+    const { data, isLoading } = useApplicationInterview(application_id, true);
 
     const openDialog = (round: RoundData, type: "summary" | "transcript") => {
         setDialogRound(round);
@@ -558,29 +559,8 @@ export default function InterviewAnalysisSheet({ application_id }: {
         setDialogRound(null);
     };
 
-    async function loadInterviewData() {
-        try {
-            setLoading(true);
-            const res = await axios.get(`/interview/get-interview-details/${application_id}`);
-            if (res.status === 200) {
-                setData(res.data);
-            } else {
-                throw new Error(`Failed to load interview data: ${res.data.message}`);
-            }
-        } catch (error) {
-            console.error("Error fetching interview data:", error);
-            // toast.error("Failed to load interview data. Please try again later.");
-        } finally {
-            setLoading(false);
-        }
-    }
-
-    useEffect(() => {
-        loadInterviewData();
-    }, [application_id]);
-
     // ── Loading ──
-    if (loading) {
+    if (isLoading) {
         return (
             <div className="h-full overflow-hidden">
                 <ScrollArea className="h-full">

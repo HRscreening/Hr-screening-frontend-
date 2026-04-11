@@ -1,5 +1,3 @@
-import { useEffect, useState } from "react";
-import axios from "@/axiosConfig";
 import {
     Accordion,
     AccordionContent,
@@ -18,8 +16,9 @@ import {
     AlertCircle,
     Quote
 } from "lucide-react";
-import type { InterviewAssessment, CriteriaRating } from "@/types/interviewAssessmentType";
+import type { CriteriaRating } from "@/types/interviewAssessmentType";
 import { cn } from "@/lib/utils";
+import { useApplicationAssessment } from "@/hooks/job_hooks/useApplicationAssessment";
 
 interface AssessmentTabViewProps {
     interviewId: string;
@@ -70,28 +69,10 @@ const CriteriaSection = ({ ratings }: { ratings: CriteriaRating[] }) => {
 };
 
 export function AssessmentTabView({ interviewId }: AssessmentTabViewProps) {
-    const [assessment, setAssessment] = useState<InterviewAssessment | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const { data: assessment, isLoading, isError } = useApplicationAssessment(interviewId, true);
 
-    useEffect(() => {
-        async function fetchAssessment() {
-            setLoading(true);
-            setError(null);
-            try {
-                const res = await axios.get(`/assessment/get-assessment/${interviewId}`);
-                setAssessment(res.data);
-            } catch (err) {
-                console.error("Error fetching assessment:", err);
-                setError("Failed to load assessment data");
-            } finally {
-                setLoading(false);
-            }
-        }
-        fetchAssessment();
-    }, [interviewId]);
 
-    if (loading) {
+    if (isLoading) {
         return (
             <div className="space-y-4 py-2">
                 <Skeleton className="h-20 w-full rounded-xl" />
@@ -100,11 +81,11 @@ export function AssessmentTabView({ interviewId }: AssessmentTabViewProps) {
         );
     }
 
-    if (error) {
+    if (isError) {
         return (
             <div className="flex flex-col items-center justify-center py-10 text-muted-foreground gap-2">
                 <AlertCircle className="w-8 h-8 opacity-20" />
-                <p className="text-xs">{error}</p>
+                <p className="text-xs">Failed to load assessment data</p>
             </div>
         );
     }

@@ -1,6 +1,5 @@
 "use client";
-
-import { useEffect, useState } from "react";
+// !use persistent storage to cache this page since fetching slots data can be expensive and we want to avoid refetching on every navigation
 import { useParams } from "react-router-dom";
 import {
     format,
@@ -9,7 +8,6 @@ import {
     isTomorrow,
     formatDistanceToNow,
 } from "date-fns";
-import axios from "@/axiosConfig";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,7 +26,6 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { toast } from "sonner";
 
 import {
     Video,
@@ -86,10 +83,9 @@ interface RoundData {
     duration_minutes: number;
 }
 
-interface ApiResponse {
-    round_data: RoundData;
-    panelists: Panelist[];
-}
+
+import { useRoundSlots } from '@/hooks/job_hooks/slots/useRoundSlots'
+import { useRequestPanelists,useRequestAllPanelists } from '@/hooks/job_hooks/slots/useRequestPanelists'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -556,106 +552,50 @@ function RowSkeleton() {
 export default function ViewSlots() {
     const { round_config_id } = useParams<{ round_config_id: string }>();
 
-    const [data, setData] = useState<ApiResponse | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [fetchError, setFetchError] = useState<string | null>(null);
-    const [requestingIds, setRequestingIds] = useState<Set<string>>(new Set());
-    const [requestingAll, setRequestingAll] = useState(false);
-
-    useEffect(() => {
-        if (!round_config_id) return;
-        (async () => {
-            try {
-                const res = await axios.get(`/round/${round_config_id}/slots`);
-                setData(res.data);
-            } catch (err: any) {
-                setFetchError(extractErrorMessage(err));
-            } finally {
-                setLoading(false);
-            }
-        })();
-    }, [round_config_id]);
+    const { data, isLoading: loading, error } = useRoundSlots(round_config_id);
+    
+    const requestMutation = useRequestPanelists(round_config_id!);
+    const requestAllMutation = useRequestAllPanelists(round_config_id!);
 
     const handleRequestSingle = async (panelistId: string) => {
-        setRequestingIds((prev) => new Set(prev).add(panelistId));
         try {
-            await axios.post(`/round/request-panelists-for-slots/${round_config_id}`, {
-                panelist_ids: [panelistId],
-            });
-            toast.success("Request sent successfully.");
-            setData((prev) =>
-                prev
-                    ? {
-                          ...prev,
-                          panelists: prev.panelists.map((p) =>
-                              p.id === panelistId
-                                  ? {
-                                        ...p,
-                                        response_status: "Pending",
-                                        last_requested_at: new Date().toISOString(),
-                                        times_requested: p.times_requested + 1,
-                                    }
-                                  : p
-                          ),
-                      }
-                    : prev
-            );
+            await requestMutation.mutateAsync([panelistId]);
         } catch (err: any) {
-            toast.error(extractErrorMessage(err));
-        } finally {
-            setRequestingIds((prev) => {
-                const next = new Set(prev);
-                next.delete(panelistId);
-                return next;
-            });
+            console.error('Failed to request panelist', err);
         }
     };
 
     const handleRequestAll = async () => {
         if (!data) return;
-        const eligible = data.panelists.filter((p) => canRequest(p.response_status));
+        const eligible = data.panelists.filter((p: Panelist) => canRequest(p.response_status));
         if (eligible.length === 0) return;
-        setRequestingAll(true);
+        
         try {
-            await axios.post(`/round/request-all-panelists-for-slots/${round_config_id}`);
-            toast.success(
-                `Requested slots from ${eligible.length} panelist${eligible.length > 1 ? "s" : ""}.`
-            );
-            setData((prev) =>
-                prev
-                    ? {
-                          ...prev,
-                          panelists: prev.panelists.map((p) =>
-                              canRequest(p.response_status)
-                                  ? {
-                                        ...p,
-                                        response_status: "Pending",
-                                        last_requested_at: new Date().toISOString(),
-                                        times_requested: p.times_requested + 1,
-                                    }
-                                  : p
-                          ),
-                      }
-                    : prev
-            );
+            await requestAllMutation.mutateAsync();
         } catch (err: any) {
-            toast.error(extractErrorMessage(err));
-        } finally {
-            setRequestingAll(false);
+            console.error('Failed to request all panelists', err);
         }
     };
 
+    const fetchError = error ? extractErrorMessage(error) : null;
+    const requestingIds = new Set<string>(
+        requestMutation.isPending && Array.isArray(requestMutation.variables)
+            ? (requestMutation.variables as string[])
+            : []
+    );
+    const requestingAll = requestAllMutation.isPending;
+
     const panelists = data?.panelists ?? [];
-    const eligibleCount = panelists.filter((p) => canRequest(p.response_status)).length;
+    const eligibleCount = panelists.filter((p: Panelist) => canRequest(p.response_status)).length;
     const allPending = eligibleCount === 0 && panelists.length > 0;
-    const respondedCount = panelists.filter((p) => p.available_slots.length > 0).length;
-    const awaitingCount = panelists.filter((p) => p.response_status === "Pending").length;
-    const expiredCount = panelists.filter((p) => p.response_status === "Expired").length;
-    const notRequestedCount = panelists.filter((p) => p.response_status === "Not Requested").length;
+    const respondedCount = panelists.filter((p: Panelist) => p.available_slots.length > 0).length;
+    const awaitingCount = panelists.filter((p: Panelist) => p.response_status === "Pending").length;
+    const expiredCount = panelists.filter((p: Panelist) => p.response_status === "Expired").length;
+    const notRequestedCount = panelists.filter((p: Panelist) => p.response_status === "Not Requested").length;
     const needsActionCount = expiredCount + notRequestedCount;
-    const totalSlots = panelists.reduce((acc, p) => acc + p.available_slots.length, 0);
+    const totalSlots = panelists.reduce((acc: number, p: Panelist) => acc + p.available_slots.length, 0);
     const totalAvailable = panelists.reduce(
-        (acc, p) => acc + p.available_slots.filter((s) => !s.is_booked).length,
+        (acc: number, p: Panelist) => acc + p.available_slots.filter((s: AvailableSlot) => !s.is_booked).length,
         0
     );
 
@@ -898,7 +838,7 @@ export default function ViewSlots() {
                                     </div>
                                 ) : (
                                     <div className="space-y-2.5">
-                                        {panelists.map((p) => (
+                                        {panelists.map((p: Panelist) => (
                                             <PanelistRow
                                                 key={p.id}
                                                 panelist={p}

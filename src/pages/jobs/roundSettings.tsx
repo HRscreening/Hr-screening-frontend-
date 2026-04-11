@@ -1,53 +1,24 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { toast } from 'sonner';
 import { CalendarDays, AlertTriangle, Layers, Plus } from 'lucide-react';
 
-import axios from '@/axiosConfig';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Loader from '@/components/loader';
 import RoundConfigCard from '@/components/jobs/jobPage/roundConfigCard';
 import AddRoundCard from '@/components/jobs/jobPage/addRoundCard';
-import type { RoundOverview } from '@/types/roundConfigTypes';
+import { useRoundOverviews } from '@/hooks/job_hooks/useRoundOverviews';
 
 // ─── Main Page Component ──────────────────────────────────────────────────────
 
 const JobSettings = () => {
+
   const { jobId } = useParams<{ jobId: string }>();
-  const [overviews, setOverviews] = useState<RoundOverview[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [showAddCard, setShowAddCard] = useState(false);
 
-  const fetchOverviews = useCallback(async () => {
-    if (!jobId) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await axios.get(`/round/${jobId}/rounds/overview`);
-      setOverviews(res.data);
-    } catch (err) {
-      console.error('Failed to fetch round overviews', err);
-      setError('Failed to load interview rounds');
-      toast.error('Failed to load interview rounds');
-    } finally {
-      setLoading(false);
-    }
-  }, [jobId]);
+  const { data: overviews = [], isLoading: loading, isError: error, refetch: fetchOverviews } = useRoundOverviews(jobId);
 
-  useEffect(() => {
-    fetchOverviews();
-  }, [fetchOverviews]);
-
-  const handleDeleted = (id: string) => {
-    setOverviews((prev) => prev.filter((o) => o.round_config_id !== id));
-  };
-
-  const handleRoundCreated = () => {
-    setShowAddCard(false);
-    fetchOverviews();
-  };
+ 
 
   if (loading) {
     return <Loader text="Loading interview rounds…" />;
@@ -60,15 +31,17 @@ const JobSettings = () => {
           <AlertTriangle className="h-5 w-5 text-destructive" />
         </div>
         <p className="text-sm font-semibold">Something went wrong</p>
-        <p className="text-xs text-muted-foreground mt-1">{error}</p>
-        <Button variant="outline" size="sm" className="mt-3" onClick={fetchOverviews}>
+        <p className="text-xs text-muted-foreground mt-1">Failed to load interview rounds</p>
+        <Button variant="outline" size="sm" className="mt-3" onClick={() => fetchOverviews()}>
           Try again
         </Button>
       </div>
     );
   }
 
-  const existingRoundNumbers = overviews.map((o) => o.round_number);
+  const handleRoundCreated = () => {
+    setShowAddCard(false);
+  };
 
   return (
     <div className="w-full max-w-5xl mx-auto px-6 py-6 space-y-5">
@@ -109,7 +82,7 @@ const JobSettings = () => {
       {showAddCard && (
         <AddRoundCard
           jobId={jobId!}
-          existingRoundNumbers={existingRoundNumbers}
+          existingRoundNumbers={overviews.map((o) => o.round_number)}
           onCreated={handleRoundCreated}
           onCancel={() => setShowAddCard(false)}
         />
@@ -143,7 +116,6 @@ const JobSettings = () => {
                 key={overview.round_config_id}
                 overview={overview}
                 jobId={jobId!}
-                onDeleted={handleDeleted}
                 onUpdated={fetchOverviews}
               />
             ))}

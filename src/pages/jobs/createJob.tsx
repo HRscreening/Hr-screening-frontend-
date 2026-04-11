@@ -12,6 +12,8 @@ import CreateJobSettings from '@/components/jobs/createJob/createJobSettings';
 import axios from "@/axiosConfig"
 import { useNavigate } from 'react-router-dom';
 import type { CreateJobSettingsType } from '@/types/jobSettingsTypes';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/queryKeys';
 // import type { AxiosError } from 'axios';
 
 const steps = [
@@ -35,6 +37,7 @@ const RUBRIC_GENERATION_STATUSES = [
 
 const CreateJob = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient()
   const [currentStep, setCurrentStep] = React.useState<number>(1);
   const [extractedJData, setExtractedJobData] = React.useState<ExtractedJD | null>(null);
 
@@ -252,6 +255,7 @@ const CreateJob = () => {
             if (jdId) {
               await axios.post(`/jobs/${createdJobId}/jd-versions/${jdId}/activate`);
             }
+            queryClient.invalidateQueries({ queryKey: queryKeys.jobs});
           } catch {
             // Non-blocking — recruiter can manage JD from the JD & Apply panel
           }

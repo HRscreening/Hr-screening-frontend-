@@ -2,9 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { toast } from "sonner";
-import axios from "@/axiosConfig";
-
 import {
   Card,
   CardContent,
@@ -64,7 +61,11 @@ import {
 import type { JobSettingsResponse, JobSettingsEditValues, } from "../../types/jobSettingsTypes"
 import { STATUS_OPTIONS, jobSettingsEditSchema } from "../../types/jobSettingsTypes"
 import JobSettingsDetailedEditor from "@/components/jobs/jobSettings/JobSettingsDetailedEditor";
-
+import { useJobSettings } from "@/hooks/job_hooks/settings/useJobSettings";
+import { useUpdateJobSettings } from "@/hooks/job_hooks/settings/useUpdateJobSettings";
+import { useCloseJob } from "@/hooks/job_hooks/settings/useCloseJob";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
 /* ─────────────────── helpers ─────────────────── */
 
 const statusColor: Record<string, string> = {
@@ -102,13 +103,16 @@ const SettingsSkeleton: React.FC = () => (
 
 const JobSettingsPage: React.FC = () => {
   const { jobId } = useParams<{ jobId: string }>();
+  const queryClient = useQueryClient()
+  if (!jobId) return null
+
   const navigate = useNavigate();
 
-  const [data, setData] = useState<JobSettingsResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [closing, setClosing] = useState(false);
   const [editing, setEditing] = useState(false);
+
+  const { data, isLoading, refetch, isError } = useJobSettings(jobId);
+  const updateMutation = useUpdateJobSettings(jobId ?? '');
+  const closeMutation = useCloseJob(jobId ?? '');
 
   const form = useForm<JobSettingsEditValues>({
     resolver: zodResolver(jobSettingsEditSchema),
@@ -122,33 +126,13 @@ const JobSettingsPage: React.FC = () => {
     },
   });
 
-  /* ── Fetch settings ── */
-  useEffect(() => {
-    if (!jobId) return;
-    const fetch = async () => {
-      try {
-        setLoading(true);
-        const res = await axios.get(`/jobs/settings/${jobId}`);
-        const payload: JobSettingsResponse = res.data;
-        setData(payload);
-        resetForm(payload);
-      } catch (err) {
-        console.error("Failed to load job settings", err);
-        toast.error("Failed to load job settings");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetch();
-  }, [jobId]); // eslint-disable-line react-hooks/exhaustive-deps
-
   const resetForm = (payload: JobSettingsResponse) => {
     form.reset({
       title: payload.job_details.title,
-      location: payload.job_details.location,
-      salary: payload.job_details.salary,
+      location: payload.job_details.location ?? "",
+      salary: payload.job_details.salary ?? "",
       status: payload.job_details.status,
-      description: payload.job_details.description,
+      description: payload.job_details.description ?? "",
       target_headcount: payload.job_details.target_headcount,
       manual_rounds_count: payload.job_details.manual_rounds_count,
       voice_ai_enabled: payload.settings.voice_ai_enabled,
@@ -156,48 +140,31 @@ const JobSettingsPage: React.FC = () => {
     });
   };
 
-  /* ── Save settings ── */
-  const onSubmit = async (values: JobSettingsEditValues) => {
-    if (!jobId) return;
-    try {
-      setSaving(true);
-      await axios.put(`/jobs/${jobId}/settings`, values);
-      toast.success("Settings saved");
+  useEffect(() => {
+    if (data) {
+      resetForm(data);
+    }
+  }, [data]); // eslint-disable-line react-hooks/exhaustive-deps
 
-      const res = await axios.get(`/jobs/${jobId}/settings`);
-      const payload: JobSettingsResponse = res.data;
-      setData(payload);
-      resetForm(payload);
+  const onSubmit = async (values: JobSettingsEditValues) => {
+    try {
+      if (!jobId) return;
+      await updateMutation.mutateAsync(values);
       setEditing(false);
-    } catch (err) {
-      console.error("Failed to save settings", err);
-      toast.error("Failed to save settings");
-    } finally {
-      setSaving(false);
+    } catch (error) {
+      console.error("Update failed", error);
     }
   };
 
-  /* ── Close application ── */
   const handleCloseApplication = async () => {
     if (!jobId) return;
     try {
-      setClosing(true);
-      await axios.post(`/jobs/${jobId}/close`);
-      toast.success("Applications closed");
-
-      const res = await axios.get(`/jobs/${jobId}/settings`);
-      const payload: JobSettingsResponse = res.data;
-      setData(payload);
-      resetForm(payload);
+      await closeMutation.mutateAsync();
     } catch (err) {
       console.error("Failed to close application", err);
-      toast.error("Failed to close application");
-    } finally {
-      setClosing(false);
     }
   };
 
-  /* ── Cancel edit ── */
   const handleCancelEdit = () => {
     if (data) resetForm(data);
     setEditing(false);
@@ -205,18 +172,15 @@ const JobSettingsPage: React.FC = () => {
 
   const handleRefresh = async () => {
     if (!jobId) return;
-    try {
-      const res = await axios.get(`/jobs/settings/${jobId}`);
-      setData(res.data);
-    } catch (err) {
-      console.error("Failed to refresh settings", err);
-    }
+    queryClient.invalidateQueries({
+  queryKey: queryKeys.jobSettings(jobId),})
   };
 
-  /* ── Loading / Error states ── */
-  if (loading) return <SettingsSkeleton />;
+  if (isLoading) return <SettingsSkeleton />;
 
-  if (!data) {
+
+
+  if (!data || isError) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <Card className="max-w-sm shadow-md">
@@ -243,6 +207,7 @@ const JobSettingsPage: React.FC = () => {
       </div>
     );
   }
+
 
   return (
     <div className="w-full mx-auto px-6 py-5 space-y-4">
@@ -293,10 +258,10 @@ const JobSettingsPage: React.FC = () => {
                 size="sm"
                 className="h-8 text-xs gap-1.5"
                 onClick={form.handleSubmit(onSubmit)}
-                disabled={saving}
+                disabled={updateMutation.isPending}
               >
                 <Save className="w-3 h-3" />
-                {saving ? "Saving…" : "Save"}
+                {updateMutation.isPending ? "Saving…" : "Save"}
               </Button>
             </>
           )}
@@ -551,7 +516,7 @@ const JobSettingsPage: React.FC = () => {
                       </div>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="destructive" size="sm" className="h-7 text-[10px]" disabled={closing || data.job_details.status === "closed"}>
+                          <Button variant="destructive" size="sm" className="h-7 text-[10px]" disabled={closeMutation.isPending || data.job_details.status === "closed"}>
                             {data.job_details.status === "closed" ? "Closed" : "Close"}
                           </Button>
                         </AlertDialogTrigger>
@@ -562,7 +527,7 @@ const JobSettingsPage: React.FC = () => {
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleCloseApplication} className="bg-red-600">Confirm</AlertDialogAction>
+                            <AlertDialogAction onClick={handleCloseApplication} className="bg-red-600" disabled={closeMutation.isPending}>Confirm</AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
@@ -572,9 +537,9 @@ const JobSettingsPage: React.FC = () => {
               </div>
             </div>
 
-        </div>
-      </form>
-    </Form>
+          </div>
+        </form>
+      </Form>
 
       {/* Row 2: Detailed Settings (Full Width Grid) */}
       <div className="space-y-4 pt-4 border-t border-border/20">
@@ -582,11 +547,11 @@ const JobSettingsPage: React.FC = () => {
           <Settings2 className="w-4 h-4 text-primary" />
           <h2 className="text-sm font-semibold uppercase tracking-wider text-primary/80">Detailed Configuration</h2>
         </div>
-        { data?.settings &&
+        {data?.settings &&
           <JobSettingsDetailedEditor
-          jobId={jobId!}
-          settings={data.settings}
-          onRefresh={handleRefresh}
+            jobId={jobId!}
+            settings={data.settings}
+            onRefresh={handleRefresh}
           />
         }
       </div>

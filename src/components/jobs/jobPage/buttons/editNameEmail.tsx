@@ -10,10 +10,10 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import axios from "@/axiosConfig";
-// import type { CandidateCreate, CandidateUpdate } from "@/types/candidateHandlerSchema";
 import { CandidateCreateSchema, CandidateUpdateSchema } from "@/types/candidateHandlerSchema";
 import { ZodError } from "zod";
+import { useUpdateCandidate } from "@/hooks/job_hooks/applications/useUpdateCandidate";
+import { toast } from "sonner";
 
 
 type EditNameEmailProps = {
@@ -28,19 +28,20 @@ type EditNameEmailProps = {
 
 
 const EditNameEmail = ({
-  applicationId: _applicationId,
+  applicationId,
   name,
   email,
   phone,
-  candidate_id: _candidate_id,
+  candidate_id,
   open,
   setOpen
 }: EditNameEmailProps) => {
   const [nameInput, setNameInput] = useState(name || "");
   const [emailInput, setEmailInput] = useState(email || "");
   const [phoneInput, setPhoneInput] = useState(phone || "");
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const { mutate: updateCandidate, isPending } = useUpdateCandidate();
 
   const handleClose = () => {
     setOpen(false);
@@ -50,8 +51,7 @@ const EditNameEmail = ({
     setError(null);
   };
 
-  async function handleSubmit() {
-    setLoading(true);
+  function handleSubmit() {
     setError(null);
 
     try {
@@ -60,71 +60,53 @@ const EditNameEmail = ({
         return;
       }
 
-      if(nameInput.trim().toLocaleLowerCase() == "na")  {
+      if (nameInput.trim().toLocaleLowerCase() === "na") {
         setError("Please enter a valid name.");
         return;
       }
 
-      if (!_candidate_id) {
-        // CREATE
-
-        const validated = CandidateCreateSchema.parse({
-          full_name: nameInput,
-          email: emailInput,
-          phone: phoneInput || undefined,
-        });
-
-        await axios.post(
-          `/application/attach-candidate/${_applicationId}`,
-          validated
-        );
-
+      if (!candidate_id) {
+        CandidateCreateSchema.parse({ full_name: nameInput, email: emailInput, phone: phoneInput || undefined });
       } else {
-        // UPDATE
-
-        const validated = CandidateUpdateSchema.parse({
-          full_name: nameInput || undefined,
-          email: emailInput || undefined,
-          phone: phoneInput || undefined,
-        });
-
-        await axios.patch(
-          `/candidate/edit/${_candidate_id}`,
-          validated
-        );
+        CandidateUpdateSchema.parse({ full_name: nameInput, email: emailInput, phone: phoneInput || undefined });
       }
-
-      setOpen(false);
-
     } catch (err) {
-      console.log(err);
       if (err instanceof ZodError) {
-       setError("Invalid input")
-       return;
+        setError("Invalid input");
+        return;
       }
-      setError("An error occurred while updating the information.");
-    } finally {
-      setLoading(false);
     }
+
+    updateCandidate(
+      {
+        applicationId,
+        candidateId: candidate_id,
+        full_name: nameInput,
+        email: emailInput,
+        phone: phoneInput || undefined,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Candidate information updated");
+          setOpen(false);
+        },
+        onError: () => {
+          setError("An error occurred while updating the information.");
+        },
+      }
+    );
   }
 
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      {/* <DialogTrigger asChild>
-        <Button className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-hover-primary transition">
-          <Edit className="mr-2 h-4 w-4" />
-          Edit
-        </Button>
-      </DialogTrigger> */}
-
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">
             Edit Candidate Information
           </DialogTitle>
           <DialogDescription>
-            Update the candidate’s name, email, and phone number.
+            Update the candidate's name, email, and phone number.
           </DialogDescription>
         </DialogHeader>
 
@@ -170,16 +152,16 @@ const EditNameEmail = ({
           <Button
             variant="outline"
             onClick={handleClose}
-            disabled={loading}
+            disabled={isPending}
           >
             Cancel
           </Button>
 
           <Button
             onClick={handleSubmit}
-            disabled={loading}
+            disabled={isPending}
           >
-            {loading ? "Saving..." : "Save"}
+            {isPending ? "Saving..." : "Save"}
           </Button>
         </DialogFooter>
       </DialogContent>

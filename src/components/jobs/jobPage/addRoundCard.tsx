@@ -18,7 +18,6 @@ import {
   Plus,
 } from 'lucide-react';
 
-import axios from '@/axiosConfig';
 import { cn } from '@/lib/utils';
 
 import AssessmentTagsSection from '@/components/jobs/jobPage/AssessmentTagsSection';
@@ -52,6 +51,7 @@ import {
 
 import type { RoundCreateValues } from '@/types/roundConfigTypes';
 import { roundCreateSchema, MODE_OPTIONS, TIMEZONE_OPTIONS } from '@/types/roundConfigTypes';
+import { useCreateRound } from '@/hooks/job_hooks/rounds/useCreateRound';
 
 // ─── DatePicker (same as in roundConfigCard) ──────────────────────────────────
 
@@ -203,7 +203,7 @@ export default function AddRoundCard({
   onCreated: () => void;
   onCancel: () => void;
 }) {
-  const [saving, setSaving] = useState(false);
+  const createMutation = useCreateRound(jobId);
 
   const nextRoundNumber = existingRoundNumbers.length > 0
     ? Math.max(...existingRoundNumbers) + 1
@@ -239,33 +239,22 @@ export default function AddRoundCard({
       return;
     }
 
-    setSaving(true);
     try {
-      await axios.post('/round/bulk-create-round-configs', {
-        job_id: jobId,
-        rounds: [
-          {
-            title: values.title,
-            round_number: values.round_number,
-            interview_type: values.interview_type,
-            instructions: values.instructions || null,
-            duration_minutes: values.duration_minutes,
-            panelists: values.panelists,
-            start_date: values.start_date.toISOString(),
-            end_date: values.end_date.toISOString(),
-            timezone: values.timezone,
-            assessment_criterias: values.assessment_criterias,
-          },
-        ],
+      await createMutation.mutateAsync({
+        title: values.title,
+        round_number: values.round_number,
+        interview_type: values.interview_type,
+        instructions: values.instructions || null,
+        duration_minutes: values.duration_minutes,
+        panelists: values.panelists,
+        start_date: values.start_date.toISOString(),
+        end_date: values.end_date.toISOString(),
+        timezone: values.timezone,
+        assessment_criterias: values.assessment_criterias,
       });
-      toast.success('Round created successfully');
       onCreated();
     } catch (err: any) {
       console.error('Failed to create round', err);
-      const detail = err?.response?.data?.detail || err?.response?.data?.message;
-      toast.error(detail ? String(detail) : 'Failed to create round');
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -542,12 +531,12 @@ export default function AddRoundCard({
 
               {/* Action bar */}
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-border/20">
-                <Button type="button" variant="ghost" size="sm" className="h-8 text-xs" onClick={onCancel} disabled={saving}>
+                <Button type="button" variant="ghost" size="sm" className="h-8 text-xs" onClick={onCancel} disabled={createMutation.isPending}>
                   Cancel
                 </Button>
-                <Button type="submit" size="sm" className="h-8 text-xs gap-1.5 bg-emerald-600 hover:bg-emerald-700" disabled={saving}>
-                  {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
-                  {saving ? 'Creating…' : 'Create Round'}
+                <Button type="submit" size="sm" className="h-8 text-xs gap-1.5 bg-emerald-600 hover:bg-emerald-700" disabled={createMutation.isPending}>
+                  {createMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
+                  {createMutation.isPending ? 'Creating…' : 'Create Round'}
                 </Button>
               </div>
             </CardContent>

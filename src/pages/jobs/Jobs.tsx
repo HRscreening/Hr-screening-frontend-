@@ -1,59 +1,65 @@
 // List all jobs 
 
-import { useState, useEffect } from 'react'
-import axios from '@/axiosConfig'
 import { useNavigate } from 'react-router-dom'
 import type { JobCardType } from '@/types/types';
-import { toast } from "sonner"
 import JobCard from '@/components/jobs/jobCard';
 import { Plus, Briefcase, Loader2, RefreshCw } from 'lucide-react';
 import { Button } from "@/components/ui/button";
+import { useJobs } from '@/hooks/job_hooks/use-jobs'
+import { useDeleteJob } from '@/hooks/job_hooks/useDeleteJob'
 
 const Job = () => {
   const navigate = useNavigate();
-  const [jobs, setJobs] = useState<JobCardType[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  // const [jobs, setJobs] = useState<JobCardType[]>([]);
+  // const [loading, setLoading] = useState<boolean>(true);
+  // const [error, setError] = useState<string | null>(null);
 
-  async function fetchJobs() {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await axios.get("/jobs/get-jobs");
+  // async function fetchJobs() {
+  //   setLoading(true);
+  //   setError(null);
+  //   try {
+  //     const res = await axios.get("/jobs/get-jobs");
 
-      if (res.status !== 200) {
-        const errorMsg = "Failed to fetch jobs, try again later";
-        toast.error(errorMsg);
-        setError(errorMsg);
-        return;
-      }
+  //     if (res.status !== 200) {
+  //       const errorMsg = "Failed to fetch jobs, try again later";
+  //       toast.error(errorMsg);
+  //       setError(errorMsg);
+  //       return;
+  //     }
 
-      // Transform backend data to match frontend type
-      const transformedJobs: JobCardType[] = res.data.jobs.map((job: any) => ({
-        id: job.id,
-        title: job.title,
-        status: job.status,
-        location: job.location ?? "",
-        created_at: job.created_at,
-        jd_url: job.jd_url,
-        head_count: job.target_headcount
-      }));
+  //     // Transform backend data to match frontend type
+  //     const transformedJobs: JobCardType[] = res.data.jobs.map((job: any) => ({
+  //       id: job.id,
+  //       title: job.title,
+  //       status: job.status,
+  //       location: job.location ?? "",
+  //       created_at: job.created_at,
+  //       jd_url: job.jd_url,
+  //       head_count: job.target_headcount
+  //     }));
 
-      setJobs(transformedJobs);
+  //     setJobs(transformedJobs);
 
-    } catch (error) {
-      console.error("Error fetching jobs:", error);
-      const errorMsg = "Failed to fetch jobs, try again later";
-      toast.error(errorMsg);
-      setError(errorMsg);
-    } finally {
-      setLoading(false);
-    }
+  //   } catch (error) {
+  //     console.error("Error fetching jobs:", error);
+  //     const errorMsg = "Failed to fetch jobs, try again later";
+  //     toast.error(errorMsg);
+  //     setError(errorMsg);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }
+
+  // useEffect(() => {
+  //   fetchJobs()
+  // }, []);
+
+  const { data: jobs, isLoading, isError, refetch ,error} = useJobs()
+  const deleteMutation = useDeleteJob()
+
+  const handleDeleteJob = async (jobId: string) => {
+    await deleteMutation.mutateAsync(jobId)
   }
-
-  useEffect(() => {
-    fetchJobs()
-  }, []);
 
   const handleCreateNew = () => {
     navigate('/create-job');
@@ -63,26 +69,26 @@ const Job = () => {
     navigate(`/jobs/${jobId}`);
   };
 
-  const handleDeleteJob = async (jobId: string) => {
-    try {
-      const res = await axios.delete(`/jobs/${jobId}`);
-      if (res.data?.status === "success" && res.status === 200) {
-        toast.success("Job deleted successfully");
-        setJobs((prev) => prev.filter((job) => job.id !== jobId));
-      } else {
-        toast.error("Failed to delete job");
-      }
-    } catch (error: unknown) {
-      console.error("Error deleting job:", error);
-      const msg = error && typeof error === "object" && "response" in error
-        ? (error as { response?: { data?: { detail?: string } } }).response?.data?.detail
-        : null;
-      toast.error(msg || "Failed to delete job");
-    }
-  };
+  // const handleDeleteJob = async (jobId: string) => {
+  //   try {
+  //     const res = await axios.delete(`/jobs/${jobId}`);
+  //     if (res.data?.status === "success" && res.status === 200) {
+  //       toast.success("Job deleted successfully");
+  //       setJobs((prev) => prev.filter((job) => job.id !== jobId));
+  //     } else {
+  //       toast.error("Failed to delete job");
+  //     }
+  //   } catch (error: unknown) {
+  //     console.error("Error deleting job:", error);
+  //     const msg = error && typeof error === "object" && "response" in error
+  //       ? (error as { response?: { data?: { detail?: string } } }).response?.data?.detail
+  //       : null;
+  //     toast.error(msg || "Failed to delete job");
+  //   }
+  // };
 
   // Loading State
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="flex flex-col items-center gap-3">
@@ -94,7 +100,7 @@ const Job = () => {
   }
 
   // Error State
-  if (error) {
+  if (isError) {
     return (
       <div className="flex items-center justify-center py-16">
         <div className="text-center max-w-md">
@@ -104,9 +110,9 @@ const Job = () => {
           <h3 className="text-lg font-semibold text-foreground mb-2">
             Failed to Load Jobs
           </h3>
-          <p className="text-sm text-muted-foreground mb-6">{error}</p>
+          <p className="text-sm text-muted-foreground mb-6">{error.message}</p>
           <button
-            onClick={fetchJobs}
+            onClick={()=> refetch()}
             className="bg-primary text-primary-foreground px-5 py-2.5 rounded-lg hover:opacity-90 transition inline-flex items-center gap-2 text-sm font-medium"
           >
             <RefreshCw className="w-4 h-4" />
@@ -118,7 +124,7 @@ const Job = () => {
   }
 
   // Empty State
-  if (jobs.length === 0) {
+  if (!jobs || jobs.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 px-4">
         <div className="bg-muted/30 rounded-full p-6 mb-4">
@@ -165,12 +171,12 @@ const Job = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {jobs.map((job) => (
+        {jobs?.map((job: JobCardType) => (
           <JobCard
             key={job.id}
             job={job}
             onClick={() => handleJobClick(job.id)}
-            onDelete={handleDeleteJob}
+            onDelete={() => handleDeleteJob(job.id)}
           />
         ))}
       </div>

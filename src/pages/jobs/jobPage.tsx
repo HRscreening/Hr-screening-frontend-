@@ -36,30 +36,25 @@ import TotalApplicationCard from '@/components/jobs/cards/totalApplicationCard';
 import AnalyticsCard from '@/components/jobs/cards/analyticsCard';
 import Applications from '@/components/jobs/jobPage/application/application';
 import Loader from '@/components/loader';
-import { useJobPageStore } from '@/store/jobPageStore';
-import type { RubricVersionData } from '@/types/jobTypes';
 import JDSection from '@/components/jobs/jobPage/jdSection/JDSection';
-
-interface PublicLinkData {
-  public_apply_enabled: boolean;
-  public_slug: string | null;
-  public_url: string | null;
-}
+import { useJob, useJobRubric, usePublicLink } from '@/hooks/job_hooks/useJob';
+import { queryClient } from '@/lib/react-query-client';
 
 const JobOverview: React.FC = () => {
   const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
 
-  const {
-    jobData, versionData, activeVersion, isLoading,
-    initJob, setJobData, setVersionData, setActiveVersion, setIsLoading, reset,
-  } = useJobPageStore();
+  if (!jobId) return null;
+
+  const { data: jobData, isLoading: jobLoading } = useJob(jobId);
+  const { data: rubricData, isLoading: rubricLoading } = useJobRubric(jobId);
+  const { data: publicLinkData, isLoading: linkLoading } = usePublicLink(jobId);
 
   const [activeBatchId, setActiveBatchId] = useState<string>("");
   const [trackerOpen, setTrackerOpen] = useState(false);
   const [jdSheetOpen, setJdSheetOpen] = useState(false);
-  const [applicationsRefreshKey, setApplicationsRefreshKey] = useState(0);
-  const [linkData, setLinkData] = useState<PublicLinkData | null>(null);
+
+  const [activeVersion, setActiveVersion] = useState<string>("");
 
   const handleBatchStarted = useCallback((batchId: string) => {
     setActiveBatchId(batchId);
@@ -67,70 +62,18 @@ const JobOverview: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (jobId) initJob(jobId);
-    return () => { reset(); };
-  }, [jobId]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (jobData?.job?.current_batch_id && !activeBatchId) {
+      setActiveBatchId(jobData.job.current_batch_id);
+    }
+  }, [jobData, activeBatchId]);
 
   useEffect(() => {
-    const fetchJobData = async () => {
-      try {
-        setIsLoading(true);
-        const res = await axios.get(`/jobs/get-job/${jobId}`);
-        if (res.status === 200) {
-          setJobData(res.data);
-          setActiveVersion(res.data?.criteria?.current_active_version);
-          if (!activeBatchId && res.data?.job?.current_batch_id) {
-            setActiveBatchId(res.data.job.current_batch_id);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching job data:', error);
-        toast.error('Failed to load job data');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    const fetchRubricVersions = async () => {
-      try {
-        const res = await axios.get(`/jobs/${jobId}/rubrics/versions`);
-        const payload = res.data;
-        const versions = (payload?.versions ?? []).map((v: any) => ({
-          rubric_id: String(v.rubric_id),
-          rubric_version: `v${v.version}`,
-          created_at: v.created_at ? String(v.created_at) : "",
-          is_active: v.is_active ?? false,
-        }));
-        const active = (payload?.versions ?? []).find((v: any) => v.is_active) ?? null;
-        const mapped: RubricVersionData = {
-          current_active_version: active ? `v${active.version}` : (versions[0]?.rubric_version ?? "v1"),
-          active_rubric_id: payload?.active_rubric_id ? String(payload.active_rubric_id) : "",
-          versions,
-        };
-        setVersionData(mapped);
-        if (!activeVersion) setActiveVersion(mapped.current_active_version);
-      } catch (e) {
-        console.warn("Failed to fetch rubric versions", e);
-      }
-    };
-
-    const fetchPublicLink = async () => {
-      try {
-        const res = await axios.get(`/jobs/${jobId}/public-link`);
-        setLinkData(res.data);
-      } catch {
-        setLinkData({ public_apply_enabled: false, public_slug: null, public_url: null });
-      }
-    };
-
-    if (jobId) {
-      fetchJobData();
-      fetchRubricVersions();
-      fetchPublicLink();
+    if (rubricData?.current_active_version && !activeVersion) {
+      setActiveVersion(rubricData.current_active_version);
     }
-  }, [jobId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [rubricData, activeVersion]);
 
-  if (isLoading) return <Loader />;
+  if (jobLoading || rubricLoading || linkLoading) return <Loader />;
 
   if (!jobData) {
     return (
@@ -159,29 +102,10 @@ const JobOverview: React.FC = () => {
   const handleVersionChange = async (version: string) => {
     try {
       setActiveVersion(version);
-      const found = versionData?.versions.find((v) => v.rubric_version === version);
+      const found = rubricData?.versions.find((v: any) => v.rubric_version === version);
       if (!found || !jobId) return;
 
       await axios.post(`/jobs/${jobId}/rubrics/${found.rubric_id}/activate`);
-
-      const [jobRes, versionsRes] = await Promise.all([
-        axios.get(`/jobs/get-job/${jobId}`),
-        axios.get(`/jobs/${jobId}/rubrics/versions`),
-      ]);
-      if (jobRes.status === 200) setJobData(jobRes.data);
-
-      const payload = versionsRes.data;
-      const versions = (payload?.versions ?? []).map((v: any) => ({
-        rubric_id: String(v.rubric_id),
-        rubric_version: `v${v.version}`,
-        created_at: v.created_at ? String(v.created_at) : "",
-      }));
-      const active = (payload?.versions ?? []).find((v: any) => v.is_active) ?? null;
-      setVersionData({
-        current_active_version: active ? `v${active.version}` : (versions[0]?.rubric_version ?? "v1"),
-        active_rubric_id: payload?.active_rubric_id ? String(payload.active_rubric_id) : "",
-        versions,
-      });
       toast.success(`Activated rubric ${version}`);
     } catch (e) {
       console.error("Failed to activate rubric version", e);
@@ -190,8 +114,8 @@ const JobOverview: React.FC = () => {
   };
 
   const handleCopyLink = () => {
-    if (linkData?.public_url) {
-      navigator.clipboard.writeText(linkData.public_url);
+    if (publicLinkData?.public_url) {
+      navigator.clipboard.writeText(publicLinkData.public_url);
       toast.success('Link copied to clipboard');
     }
   };
@@ -233,7 +157,7 @@ const JobOverview: React.FC = () => {
             job_id={jobId as string}
             externalOpen={trackerOpen}
             onOpenChange={setTrackerOpen}
-            onComplete={() => setApplicationsRefreshKey((k) => k + 1)}
+            onComplete={() => queryClient.invalidateQueries({ queryKey: ['applications', jobId] })}
           />
           <AddCandidatePopup job_id={jobId as string} onBatchStarted={handleBatchStarted} />
 
@@ -270,18 +194,18 @@ const JobOverview: React.FC = () => {
           <RubricVersionSwitcher
             activeVersion={activeVersion}
             handleVersionChange={handleVersionChange}
-            versionData={versionData}
+            versionData={rubricData}
           />
         </div>
       </div>
 
       {/* Public apply link bar — shown whenever a link is active */}
-      {linkData?.public_apply_enabled && linkData.public_url && (
+      {publicLinkData?.public_apply_enabled && publicLinkData.public_url && (
         <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-lg border border-green-500/30 bg-green-50/40 dark:bg-green-900/10">
           <Link2 className="w-3.5 h-3.5 text-green-600 shrink-0" />
           <span className="text-xs text-muted-foreground">Public apply link:</span>
           <span className="text-xs font-mono text-green-700 dark:text-green-400 truncate flex-1 min-w-0">
-            {linkData.public_url}
+            {publicLinkData.public_url}
           </span>
           <Button variant="ghost" size="sm" className="h-7 px-2" onClick={handleCopyLink}>
             <Copy className="w-3.5 h-3.5" />
@@ -290,7 +214,7 @@ const JobOverview: React.FC = () => {
             variant="ghost"
             size="sm"
             className="h-7 px-2"
-            onClick={() => window.open(linkData.public_url!, '_blank')}
+            onClick={() => window.open(publicLinkData.public_url!, '_blank')}
           >
             <ExternalLink className="w-3.5 h-3.5" />
           </Button>
@@ -309,7 +233,7 @@ const JobOverview: React.FC = () => {
       </div>
 
       {/* Applications table */}
-      <Applications refreshKey={applicationsRefreshKey} />
+      <Applications jobId={jobId}/>
 
       {/* JD & Apply Sheet */}
       <Sheet open={jdSheetOpen} onOpenChange={setJdSheetOpen}>
@@ -318,7 +242,7 @@ const JobOverview: React.FC = () => {
             <SheetTitle>JD & Apply Link</SheetTitle>
           </SheetHeader>
           <div className="mt-4">
-            <JDSection onLinkChange={setLinkData} />
+            <JDSection onLinkChange={() => {}} />
           </div>
         </SheetContent>
       </Sheet>

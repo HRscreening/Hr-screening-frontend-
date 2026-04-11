@@ -1,8 +1,7 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState} from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
-import { toast } from 'sonner';
 import {
   ChevronDown,
   ChevronUp,
@@ -22,7 +21,6 @@ import {
   CalendarX2,
 } from 'lucide-react';
 
-import axios from '@/axiosConfig';
 import { cn } from '@/lib/utils';
 
 import AssessmentTagsSection from '@/components/jobs/jobPage/AssessmentTagsSection';
@@ -77,57 +75,12 @@ import {
   TIMEZONE_OPTIONS,
 } from '@/types/roundConfigEditTypes';
 
+import { useUpdateRound } from '@/hooks/job_hooks/rounds/useUpdateRound';
+import { useDeleteRound } from '@/hooks/job_hooks/rounds/useDeleteRound';
+import { useRoundDetail } from '@/hooks/job_hooks/rounds/useRoundDetail';
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-// function DatePicker({
-//   value,
-//   onChange,
-//   placeholder,
-//   disabled,
-// }: {
-//   value?: Date;
-//   onChange: (date: Date | undefined) => void;
-//   placeholder: string;
-//   disabled?: boolean;
-// }) {
-//   const [open, setOpen] = useState(false);
-
-//   return (
-//     <Popover open={open} onOpenChange={setOpen}>
-//       <PopoverTrigger asChild>
-//         <Button
-//           variant="outline"
-//           disabled={disabled}
-//           className={cn(
-//             'w-full justify-between font-normal h-9 px-3 border-border/60 bg-background hover:bg-muted/30 transition-all duration-200 text-sm',
-//             !value && 'text-muted-foreground'
-//           )}
-//         >
-//           <span className="flex items-center gap-2">
-//             <CalendarIcon className="h-3.5 w-3.5 shrink-0 text-primary/60" />
-//             {value ? format(value, 'PPP') : placeholder}
-//           </span>
-//           <ChevronDown className="h-3 w-3 text-muted-foreground" />
-//         </Button>
-//       </PopoverTrigger>
-//       <PopoverContent
-//         className="w-auto overflow-hidden p-0 shadow-lg border-border/60"
-//         align="start"
-//       >
-//         <Calendar
-//           mode="single"
-//           selected={value}
-//           captionLayout="dropdown"
-//           onSelect={(date) => {
-//             onChange(date);
-//             setOpen(false);
-//           }}
-//           className="rounded-lg p-3 [--cell-size:2.5rem]"
-//         />
-//       </PopoverContent>
-//     </Popover>
-//   );
-// }
 
 function InfoCell({
   icon: Icon,
@@ -455,42 +408,27 @@ function ReadOnlyDetail({
 export default function RoundConfigCard({
   overview,
   jobId,
-  onDeleted,
   onUpdated,
 }: {
   overview: RoundOverview;
   jobId: string;
-  onDeleted: (id: string) => void;
   onUpdated: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const [fullConfig, setFullConfig] = useState<RoundFullConfig | null>(null);
-  const [loadingDetail, setLoadingDetail] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [deleting, setDeleting] = useState(false);
+
+  const { data: fullConfig, isLoading: loadingDetail } = useRoundDetail(
+    expanded ? overview.round_config_id : ''
+  );
+
+  const updateMutation = useUpdateRound(jobId, overview.round_config_id);
+  const deleteMutation = useDeleteRound(jobId, overview.round_config_id);
 
   const modeConfig = MODE_OPTIONS.find((m) => m.value === overview.interview_type);
   const ModeIcon = modeConfig?.icon ?? Video;
 
-  const fetchFullConfig = useCallback(async () => {
-    if (fullConfig) return;
-    setLoadingDetail(true);
-    try {
-      const res = await axios.get(`/round/get-round-config/${overview.round_config_id}`);
-      setFullConfig(res.data);
-    } catch (err) {
-      console.error('Failed to fetch round config', err);
-      toast.error('Failed to load round details');
-    } finally {
-      setLoadingDetail(false);
-    }
-  }, [jobId, overview.round_config_id, fullConfig]);
-
   const handleToggle = () => {
-    const willExpand = !expanded;
-    setExpanded(willExpand);
-    if (willExpand) fetchFullConfig();
+    setExpanded(!expanded);
   };
 
   // ── Form ──────────────────────────────────────────────────────────────────
@@ -558,10 +496,11 @@ export default function RoundConfigCard({
   // ── Save ──────────────────────────────────────────────────────────────────
 
   const handleSave: SubmitHandler<RoundEditValues> = async (values: RoundEditValues) => {
-    setSaving(true);
+    console.log('handleSave values:', values);
     try {
       // Build the structured diff from the flat panelists array
       const panelistDiff = buildPanelistDiff(values.panelists);
+      console.log('panelistDiff:', panelistDiff);
 
       const body = {
         title: values.title,
@@ -578,44 +517,23 @@ export default function RoundConfigCard({
         panelists: panelistDiff,
       };
 
-      console.log('Saving round with body:', body);
-      /*
-        body.panelists shape:
-        {
-          add:    [{ name, email, role }, ...],
-          edit:   [{ id, name, email, role }, ...],
-          delete: ["uuid1", "uuid2", ...],
-        }
-      */
-
-      console.log("body to be sent to backend:", body);
-
-      await axios.put(`/round/update-round-config/${overview.round_config_id}`, body);
-      toast.success('Round updated successfully');
+      await updateMutation.mutateAsync(body);
       setEditing(false);
-      setFullConfig(null);
       onUpdated();
     } catch (err) {
       console.error('Failed to update round', err);
-      toast.error('Failed to update round');
-    } finally {
-      setSaving(false);
     }
   };
 
   // ── Delete ────────────────────────────────────────────────────────────────
 
   const handleDelete = async () => {
-    setDeleting(true);
     try {
-      await axios.delete(`/round/delete-round-config/${overview.round_config_id}`);
-      toast.success('Round deleted');
-      onDeleted(overview.round_config_id);
+      await deleteMutation.mutateAsync();
+      // onUpdated is called if handleDeleted handles removal from parent state
+      // but React Query will invalidate the rounds list anyway.
     } catch (err) {
       console.error('Failed to delete round', err);
-      toast.error('Failed to delete round');
-    } finally {
-      setDeleting(false);
     }
   };
 
@@ -1027,7 +945,7 @@ export default function RoundConfigCard({
                           size="sm"
                           className="h-8 text-xs"
                           onClick={cancelEdit}
-                          disabled={saving}
+                          disabled={updateMutation.isPending}
                         >
                           Cancel
                         </Button>
@@ -1035,14 +953,22 @@ export default function RoundConfigCard({
                           type="submit"
                           size="sm"
                           className="h-8 text-xs gap-1.5"
-                          disabled={saving}
+                          disabled={updateMutation.isPending}
+                          onClick={() => {
+                            console.log('Save button clicked');
+                            console.log('Form state:', {
+                              isValid: form.formState.isValid,
+                              isSubmitting: form.formState.isSubmitting,
+                              errors: form.formState.errors,
+                            });
+                          }}
                         >
-                          {saving ? (
+                          {updateMutation.isPending ? (
                             <Loader2 className="h-3 w-3 animate-spin" />
                           ) : (
                             <Save className="h-3 w-3" />
                           )}
-                          {saving ? 'Saving…' : 'Save'}
+                          {updateMutation.isPending ? 'Saving…' : 'Save'}
                         </Button>
                       </div>
                     </CardContent>
@@ -1076,9 +1002,9 @@ export default function RoundConfigCard({
                           variant="outline"
                           size="sm"
                           className="h-7 text-xs gap-1.5 text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
-                          disabled={deleting}
+                          disabled={deleteMutation.isPending}
                         >
-                          {deleting ? (
+                          {deleteMutation.isPending ? (
                             <Loader2 className="h-3 w-3 animate-spin" />
                           ) : (
                             <Trash2 className="h-3 w-3" />
@@ -1102,6 +1028,7 @@ export default function RoundConfigCard({
                           <AlertDialogAction
                             onClick={handleDelete}
                             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            disabled={deleteMutation.isPending}
                           >
                             Delete
                           </AlertDialogAction>

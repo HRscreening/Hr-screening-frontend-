@@ -61,10 +61,16 @@ export interface Application {
   status: statusType;
   created_at: string;
   updated_at: string;
-  ai_analysis: AIAnalysis;
+  ai_analysis?: AIAnalysis;       // not returned by list endpoint — fetched separately
   candidate: Candidate;
   resume: Resume;
-  scores: Score[];  // backend always returns an array
+  scores?: Score[];               // not returned by list endpoint — fetched separately
+}
+
+// Returned by /application/get-score/:id
+export interface ApplicationScoreResponse {
+  score: Score;
+  ai_analysis: AIAnalysis;
 }
 
 export interface Pagination {

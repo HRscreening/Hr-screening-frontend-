@@ -7,13 +7,12 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import axios from '@/axiosConfig';
 import { toast } from 'sonner';
 import { ChevronRight, ChevronLeft, XCircle } from 'lucide-react';
-import { useJobId, useMaxRound } from '@/store/jobPageStore';
-import type { AxiosError } from 'axios';
+import { useMaxRound } from '@/store/jobPageStore';
 import EditNameEmail from '@/components/jobs/jobPage/buttons/editNameEmail';
 import NoRoundConfigDialog from '../dialogs/NoRoundConfigDialog';
+import { useChangeApplicationStatus } from '@/hooks/job_hooks/applications/useChangeApplicationStatus';
 
 type CandidateDetails = {
   name: string | null;
@@ -88,14 +87,15 @@ export function Status({
   currentRound,
   candidateDetails
 }: StatusProps) {
-  const job_id = useJobId() ?? '';
   const finalRound = useMaxRound() || 3;
   const [open, setOpen] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<statusType | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [noConfig, setNoConfig] = useState(false);
   const { name, email, phone, candidate_id } = candidateDetails;
-  
+
+  const { mutate: changeStatus } = useChangeApplicationStatus();
+
   // drop_off is system-only — show badge only, no popover
   const isSystemStatus = status === 'drop_off';
   const isTerminal = status === 'hired' || status === 'rejected' || isSystemStatus;
@@ -113,49 +113,35 @@ export function Status({
   const prevStatus = getPrev(effectiveStatus, finalRound);
   const canGoBack = prevStatus !== null && !isRoundStatus(prevStatus);
 
-  async function commitStatusChange(newStatus: statusType) {
-   
+  function commitStatusChange(newStatus: statusType) {
     setPendingStatus(null);
     setOpen(false);
-    try {
-     
-      if (isRoundStatus(newStatus)) {
-        const targetRound = parseInt(String(newStatus).split('_')[1], 10);
-        const res = await axios.post(`/application/move-to-round/${application_id}`, { job_id, target_round: targetRound });
-        if (res.status === 200 && res.data.success !== false) {
-          setCurrentStatus(roundKey(res.data.new_round));
-          toast.success(res.data.message || 'Applicant moved to next round');
-        }
-        
-        else {
-          toast.error(res.data.message || res.data.message || 'Failed to move to next round.');
-        }
-      } else {
-        const res = await axios.patch(`/application/change-status/${application_id}`, { new_status: newStatus });
-        console.log('Status change response', res);
-        
-        if (res.data.success !== false) {
-          setCurrentStatus(newStatus);
-          toast.success(res.data.message || 'Status updated');
-        } else {
-          console.log('Status update failed response', res.data);
-          toast.error(res.data.message|| 'Failed to update status.');
-        }
+
+    changeStatus(
+      { applicationId: application_id, newStatus },
+      {
+        onSuccess: (data) => {
+          if (isRoundStatus(newStatus) && data.new_round) {
+            setCurrentStatus(roundKey(data.new_round));
+            toast.success(data.message || 'Applicant moved to next round');
+          } else {
+            setCurrentStatus(newStatus);
+            toast.success(data.message || 'Status updated');
+          }
+        },
+        onError: (err: any) => {
+          const axiosErr = err as { response?: { status?: number; data?: { message?: string } } };
+          if (axiosErr?.response?.status === 424) {
+            toast.error(axiosErr?.response?.data?.message || 'This candidate has no email');
+            setEditOpen(true);
+          } else if (axiosErr?.response?.status === 425) {
+            setNoConfig(true);
+          } else {
+            toast.error(err?.message || 'Failed to update status.');
+          }
+        },
       }
-    } catch (err: AxiosError | any) {
-        console.log('Status update error', err);
-      const axiosErr = err as { response?: { status?: number; data?: { message?: string } } };
-       if (axiosErr?.response?.status === 424) {
-        toast.error(axiosErr?.response?.data?.message || 'This Candidate has no Email');
-        setEditOpen(true);
-        console.log("Triggering edit modal due to missing candidate email for status change.");
-      
-      } 
-        
-      else if (axiosErr?.response?.status === 425) {
-        setNoConfig(true);
-      }
-    }
+    );
   }
 
   function requestStatusChange(newStatus: statusType) {
