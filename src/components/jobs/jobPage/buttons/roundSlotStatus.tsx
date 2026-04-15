@@ -8,18 +8,21 @@ import {
   TooltipProvider, TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { ChevronDown } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import type { RoundSlots } from '@/types/jobTypes';
 
-type Props = { roundSlots: RoundSlots[] | null };
+type Props = { 
+  roundSlots: RoundSlots[] | null
+  jobId: string;
+  setCurrentRoundConfigId: (roundConfigId: string) => void;
+};
 
-const RoundSlotsStatus = ({ roundSlots }: Props) => {
-  const navigate = useNavigate();
+const RoundSlotsStatus = ({ roundSlots,jobId,setCurrentRoundConfigId }: Props) => {
 
   const hasMissingSlots = roundSlots?.some((r) => !r.slots_available) ?? false;
 
   const handleRoundClick = (roundConfigId: string) => {
-    window.open(`view_slots/${roundConfigId}`, '_blank');
+    setCurrentRoundConfigId(roundConfigId);
   };
 
   return (
@@ -85,12 +88,17 @@ const RoundSlotsStatus = ({ roundSlots }: Props) => {
             ) : (
               <DropdownMenuItem className="flex flex-col items-start gap-1 px-3 py-2 text-sm text-gray-500">
                 <span>No round configurations found.</span>
+                <Link
+                  to={`/jobs/${jobId}/settings/rounds`}
+                  className="text-blue-500 underline text-xs">
+
                 <span
-                  className="text-blue-500 underline cursor-pointer text-xs"
-                  onClick={() => navigate('settings/rounds')}
-                >
+                  // className="text-blue-500 underline cursor-pointer text-xs"
+                  // onClick={() => navigate(`/jobs/${jobId}/settings/rounds`)}
+                  >
                   Configure rounds in Settings →
                 </span>
+                  </Link>
               </DropdownMenuItem>
             )}
           </div>

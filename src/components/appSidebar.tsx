@@ -18,6 +18,7 @@ import { useEffect } from "react";
 import Logo from '@/assets/image.png'
 import { useAuthStore } from "@/store/authStore.ts";
 import { useContextStore } from "@/store/contextStore.ts";
+import { queryClient } from "@/lib/react-query-client";
 
 type SidebarItem = {
     name: string;
@@ -151,6 +152,7 @@ export function AppSidebar({ setPageTitle }: { setPageTitle: (title: string) => 
                                     localStorage.removeItem("access_token");
                                     useAuthStore.getState().clearUser();
                                     useContextStore.getState().setPersonal();
+                                    queryClient.clear();
                                     navigate("/", { replace: true });
 
                                     console.log("Logged out successfully");

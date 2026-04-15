@@ -5,7 +5,6 @@ import { Separator } from "@/components/ui/separator";
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { useJobPageStore } from '@/store/jobPageStore';
-import RoundSlotsStatus from "@/components/jobs/jobPage/buttons/roundSlotStatus"
 import { useApplications } from '@/hooks/job_hooks/useApplications';
 
 function Applications({ jobId }: { jobId: string }) {
@@ -14,6 +13,7 @@ function Applications({ jobId }: { jobId: string }) {
   const [activeTab, setActiveTab] = useState<'all_candidates' | 'shortlisted' | 'rejected'>('all_candidates');
 
   const { jobData } = useJobPageStore();
+  console.log('jobData in Applications component:', jobData);
   const { data: currentData, isLoading } = useApplications(jobId, page, pageSize);
 
   // TODOO: add rubric version as query param once backend supports fetching applications based on rubric version.
@@ -54,7 +54,7 @@ function Applications({ jobId }: { jobId: string }) {
           ))}
         </div>
         <div className='flex flex-row gap-4 items-center justify-items-end'>
-          <RoundSlotsStatus roundSlots={jobData && jobData.round_slots} />
+          {/* <RoundSlotsStatus roundSlots={roundSlots  && roundSlots } /> */}
           <div className="relative w-65 max-w-sm">
             <Search
               className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
@@ -75,6 +75,7 @@ function Applications({ jobId }: { jobId: string }) {
         onPageChange={handlePageChange}
         onPageSizeChange={handlePageSizeChange}
         onViewDetails={handleViewDetails}
+        jobId={jobId}
       />
     </div>
   );

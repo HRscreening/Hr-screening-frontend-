@@ -1,6 +1,4 @@
 "use client";
-// !use persistent storage to cache this page since fetching slots data can be expensive and we want to avoid refetching on every navigation
-import { useParams } from "react-router-dom";
 import {
     format,
     parseISO,
@@ -549,8 +547,13 @@ function RowSkeleton() {
 // Main
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function ViewSlots() {
-    const { round_config_id } = useParams<{ round_config_id: string }>();
+interface ViewSlotsProps {
+    round_config_id: string;
+}
+
+export default function ViewSlots(
+    {round_config_id}: ViewSlotsProps
+) {
 
     const { data, isLoading: loading, error } = useRoundSlots(round_config_id);
     

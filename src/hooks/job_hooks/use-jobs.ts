@@ -1,11 +1,15 @@
 import { useQuery } from '@tanstack/react-query'
 import { getJobs } from '@/services/jobService'
 import { queryKeys } from '@/lib/queryKeys'
+import { useAuthStore } from '@/store/authStore'
 
 export const useJobs = () => {
+  const { user } = useAuthStore()
+
   return useQuery({
-    queryKey: queryKeys.jobs,
+    queryKey: queryKeys.jobs(user?.id || ""),
     queryFn: getJobs,
+    enabled: !!user?.id,
     select: (data) =>
       data.map((job: any) => ({
         id: job.id,

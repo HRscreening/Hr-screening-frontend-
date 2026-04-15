@@ -1,6 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { updateCandidate, attachCandidate } from '@/services/applicationService'
-import { useJobId } from '@/store/jobPageStore'
 import type { ApplicationsResponse } from '@/types/applicationTypes'
 
 type UpdateCandidateVars = {
@@ -13,8 +12,6 @@ type UpdateCandidateVars = {
 
 export function useUpdateCandidate() {
   const queryClient = useQueryClient()
-  const jobId = useJobId()
-  const filter = { queryKey: ['applications', jobId] }
 
   return useMutation({
     mutationFn: ({ applicationId, candidateId, full_name, email, phone }: UpdateCandidateVars) => {

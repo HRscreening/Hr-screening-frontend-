@@ -24,6 +24,7 @@ type EditNameEmailProps = {
   email: string | null;
   phone: string | null;
   candidate_id: string | null;
+  onSuccess? : () => void
 };
 
 
@@ -34,7 +35,8 @@ const EditNameEmail = ({
   phone,
   candidate_id,
   open,
-  setOpen
+  setOpen,
+  onSuccess
 }: EditNameEmailProps) => {
   const [nameInput, setNameInput] = useState(name || "");
   const [emailInput, setEmailInput] = useState(email || "");
@@ -89,6 +91,7 @@ const EditNameEmail = ({
         onSuccess: () => {
           toast.success("Candidate information updated");
           setOpen(false);
+          onSuccess?.();
         },
         onError: () => {
           setError("An error occurred while updating the information.");

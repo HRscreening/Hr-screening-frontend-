@@ -1,7 +1,7 @@
 import axios from '@/axiosConfig'
 
 export const getJobSettings = async (jobId: string) => {
-  const res = await axios.get(`/jobs/settings/${jobId}`)
+  const res = await axios.get(`/jobs/job-info/${jobId}`)
   return res.data
 }
 

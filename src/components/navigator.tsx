@@ -19,6 +19,11 @@ const SEGMENT_LABELS: Record<string, string> = {
   edit: "Edit",
   new: "New",
   rounds: "Rounds",
+  "add-applications": "Add Applications",
+  "track-resumes": "Track Resumes",
+  "interview-settings": "Interview Settings",
+  analytics: "Analytics",
+  "job-info": "Job Info",
 };
 
 export default function Navigator() {

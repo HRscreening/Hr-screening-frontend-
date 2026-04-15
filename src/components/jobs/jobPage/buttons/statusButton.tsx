@@ -23,6 +23,7 @@ type CandidateDetails = {
 
 interface StatusProps {
   status: statusType;
+  jobId: string;
   application_id: string;
   setCurrentStatus: React.Dispatch<React.SetStateAction<statusType>>;
   currentRound?: number;
@@ -83,6 +84,7 @@ function getClassName(status: statusType): string {
 export function Status({
   status,
   setCurrentStatus,
+  jobId,
   application_id,
   currentRound,
   candidateDetails
@@ -92,6 +94,7 @@ export function Status({
   const [pendingStatus, setPendingStatus] = useState<statusType | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [noConfig, setNoConfig] = useState(false);
+  const [autoStatusAfterEdit, setAutoStatusAfterEdit] = useState<statusType | null>(null);
   const { name, email, phone, candidate_id } = candidateDetails;
 
   const { mutate: changeStatus } = useChangeApplicationStatus();
@@ -118,7 +121,7 @@ export function Status({
     setOpen(false);
 
     changeStatus(
-      { applicationId: application_id, newStatus },
+      { jobId:jobId,applicationId: application_id, newStatus },
       {
         onSuccess: (data) => {
           if (isRoundStatus(newStatus) && data.new_round) {
@@ -145,8 +148,9 @@ export function Status({
   }
 
   function requestStatusChange(newStatus: statusType) {
-     if(!email || !name){
+     if(!email || !name || name.toLowerCase() === 'na' || email.toLowerCase() === 'na'){
       toast.error('Candidate must have a name and email to update status. Please update candidate details first.');
+      setAutoStatusAfterEdit(newStatus);
       setEditOpen(true);
       return;
     }
@@ -159,7 +163,33 @@ export function Status({
   }
 
   if(editOpen ){
-    return <EditNameEmail applicationId={application_id} open={editOpen} setOpen={setEditOpen} candidate_id={candidate_id} email={email} name={name} phone={phone} />
+    return <EditNameEmail 
+      applicationId={application_id} 
+      open={editOpen} 
+      setOpen={(v) => {
+        setEditOpen(v);
+        if(!v) setAutoStatusAfterEdit(null);
+      }} 
+      candidate_id={candidate_id} 
+      email={email} 
+      name={name} 
+      phone={phone} 
+      onSuccess={() => {
+        if(autoStatusAfterEdit) {
+          // Add a tiny delay to allow React Query cache to settle if needed, 
+          // though since we use props for validation we rely on parent refresh.
+          // For now, let's just trigger the confirm or direct change.
+          const statusToApply = autoStatusAfterEdit;
+          setAutoStatusAfterEdit(null);
+          
+          if (CONFIRM_REQUIRED.includes(statusToApply) || isRoundStatus(statusToApply)) {
+            setPendingStatus(statusToApply);
+          } else {
+            commitStatusChange(statusToApply);
+          }
+        }
+      }}
+    />
   }
 
   if(noConfig){

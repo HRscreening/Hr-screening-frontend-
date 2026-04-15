@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { changeApplicationStatus, moveApplicationToRound } from '@/services/applicationService'
-import { useJobId } from '@/store/jobPageStore'
+// import { useJobId } from '@/store/jobPageStore'
 import type { ApplicationsResponse, statusType } from '@/types/applicationTypes'
 
 function isRoundStatus(s: statusType) {
@@ -9,11 +9,11 @@ function isRoundStatus(s: statusType) {
 
 export function useChangeApplicationStatus() {
   const queryClient = useQueryClient()
-  const jobId = useJobId() ?? ''
-  const filter = { queryKey: ['applications', jobId] }
+  // const jobId = useJobId() ?? ''
+  // const filter = { queryKey: ['applications', jobId] }
 
   return useMutation({
-    mutationFn: ({ applicationId, newStatus }: { applicationId: string; newStatus: statusType }) => {
+    mutationFn: ({ jobId,applicationId, newStatus }: {jobId:string, applicationId: string; newStatus: statusType }) => {
       if (isRoundStatus(newStatus)) {
         const targetRound = parseInt(String(newStatus).split('_')[1], 10)
         return moveApplicationToRound(applicationId, jobId, targetRound)

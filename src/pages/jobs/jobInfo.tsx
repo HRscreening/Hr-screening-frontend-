@@ -43,14 +43,8 @@ import {
 
 import {
   ChevronLeft,
-  Save,
-  Pencil,
-  X,
   XCircle,
-  ArrowRight,
   Ban,
-  Settings2,
-  Users,
   MapPin,
   DollarSign,
   FileText,
@@ -58,14 +52,11 @@ import {
   Info,
 } from "lucide-react";
 
-import type { JobSettingsResponse, JobSettingsEditValues, } from "../../types/jobSettingsTypes"
+import type { JobSettings, JobSettingsEditValues, } from "../../types/jobSettingsTypes"
 import { STATUS_OPTIONS, jobSettingsEditSchema } from "../../types/jobSettingsTypes"
-import JobSettingsDetailedEditor from "@/components/jobs/jobSettings/JobSettingsDetailedEditor";
 import { useJobSettings } from "@/hooks/job_hooks/settings/useJobSettings";
 import { useUpdateJobSettings } from "@/hooks/job_hooks/settings/useUpdateJobSettings";
 import { useCloseJob } from "@/hooks/job_hooks/settings/useCloseJob";
-import { useQueryClient } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/queryKeys";
 /* ─────────────────── helpers ─────────────────── */
 
 const statusColor: Record<string, string> = {
@@ -103,14 +94,14 @@ const SettingsSkeleton: React.FC = () => (
 
 const JobSettingsPage: React.FC = () => {
   const { jobId } = useParams<{ jobId: string }>();
-  const queryClient = useQueryClient()
+
   if (!jobId) return null
 
   const navigate = useNavigate();
 
   const [editing, setEditing] = useState(false);
 
-  const { data, isLoading, refetch, isError } = useJobSettings(jobId);
+  const { data, isLoading, isError } = useJobSettings(jobId);
   const updateMutation = useUpdateJobSettings(jobId ?? '');
   const closeMutation = useCloseJob(jobId ?? '');
 
@@ -126,17 +117,15 @@ const JobSettingsPage: React.FC = () => {
     },
   });
 
-  const resetForm = (payload: JobSettingsResponse) => {
+  const resetForm = (payload: JobSettings) => {
     form.reset({
-      title: payload.job_details.title,
-      location: payload.job_details.location ?? "",
-      salary: payload.job_details.salary ?? "",
-      status: payload.job_details.status,
-      description: payload.job_details.description ?? "",
-      target_headcount: payload.job_details.target_headcount,
-      manual_rounds_count: payload.job_details.manual_rounds_count,
-      voice_ai_enabled: payload.settings.voice_ai_enabled,
-      is_confidential: payload.settings.is_confidential,
+      title: payload.title,
+      location: payload.location ?? "",
+      salary: payload.salary ?? "",
+      status: payload.status,
+      description: payload.description ?? "",
+      target_headcount: payload.target_headcount,
+      manual_rounds_count: payload.manual_rounds_count,
     });
   };
 
@@ -163,17 +152,6 @@ const JobSettingsPage: React.FC = () => {
     } catch (err) {
       console.error("Failed to close application", err);
     }
-  };
-
-  const handleCancelEdit = () => {
-    if (data) resetForm(data);
-    setEditing(false);
-  };
-
-  const handleRefresh = async () => {
-    if (!jobId) return;
-    queryClient.invalidateQueries({
-  queryKey: queryKeys.jobSettings(jobId),})
   };
 
   if (isLoading) return <SettingsSkeleton />;
@@ -210,87 +188,14 @@ const JobSettingsPage: React.FC = () => {
 
 
   return (
-    <div className="w-full mx-auto px-6 py-5 space-y-4">
-      {/* ── Header ── */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={() => navigate(`/jobs/${jobId}`)}
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </Button>
-          <Settings2 className="w-4 h-4 text-muted-foreground" />
-          <h1 className="text-sm font-semibold">Job Settings</h1>
-          <Badge
-            className={`${statusColor[data.job_details.status] ?? ""} text-[10px] px-2 py-0 h-5 ml-1`}
-            variant="secondary"
-          >
-            {data.job_details.status.charAt(0).toUpperCase() + data.job_details.status.slice(1)}
-          </Badge>
-        </div>
-
-        <div className="flex items-center gap-1.5">
-          {!editing ? (
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 text-xs gap-1.5"
-              onClick={() => setEditing(true)}
-            >
-              <Pencil className="w-3 h-3" />
-              Edit
-            </Button>
-          ) : (
-            <>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 text-xs gap-1.5"
-                onClick={handleCancelEdit}
-              >
-                <X className="w-3 h-3" />
-                Cancel
-              </Button>
-              <Button
-                size="sm"
-                className="h-8 text-xs gap-1.5"
-                onClick={form.handleSubmit(onSubmit)}
-                disabled={updateMutation.isPending}
-              >
-                <Save className="w-3 h-3" />
-                {updateMutation.isPending ? "Saving…" : "Save"}
-              </Button>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* ── Quick Action: Manage Rounds (most-used, always visible first) ── */}
-      <div
-        className="flex items-center justify-between px-4 py-3 rounded-lg border border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer group mb-6"
-        onClick={() => navigate(`/jobs/${jobId}/settings/rounds`)}
-      >
-        <div className="flex items-center gap-3">
-          <div className="p-1.5 rounded-md bg-primary/10">
-            <Users className="w-4 h-4 text-primary" />
-          </div>
-          <div>
-            <p className="text-sm font-medium">Interview Rounds</p>
-            <p className="text-[11px] text-muted-foreground">Rounds, panels & slot availability</p>
-          </div>
-        </div>
-        <ArrowRight className="w-4 h-4 text-primary/60 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
-      </div>
-
+    <div className="w-full mx-auto space-y-4">
+ 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           {/* ── Sectioned Layout: Details then Detailed Settings ── */}
           <div className="space-y-6">
             {/* Row 1: Job Details + Metadata Sidebar */}
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-4">
+            
               <Card className="border-border/40">
                 <CardHeader className="px-5 py-3 border-b border-border/20">
                   <CardTitle className="text-sm font-semibold">Job Details</CardTitle>
@@ -476,29 +381,29 @@ const JobSettingsPage: React.FC = () => {
               {/* Sidebar Metadata & Danger Zone */}
               <div className="space-y-4">
                 {/* Metadata */}
-                {(data.job_details.closing_reason || data.job_details.job_metadata) && (
+                {(data.closing_reason || data.job_metadata) && (
                   <Card className="border-border/40">
                     <CardHeader className="px-4 py-3 border-b border-border/20">
                       <CardTitle className="text-sm font-semibold">Metadata</CardTitle>
                     </CardHeader>
                     <CardContent className="px-4 py-3 space-y-3">
-                      {data.job_details.closing_reason && (
+                      {data.closing_reason && (
                         <div className="flex items-start gap-2">
                           <Ban className="w-3.5 h-3.5 text-red-500 mt-0.5 shrink-0" />
                           <div className="min-w-0">
                             <p className="text-xs font-medium">Closing Reason</p>
-                            <p className="text-[11px] text-muted-foreground">{data.job_details.closing_reason}</p>
+                            <p className="text-[11px] text-muted-foreground">{data.closing_reason}</p>
                           </div>
                         </div>
                       )}
-                      {data.job_details.job_metadata && (
+                      {data.job_metadata && (
                         <div className="space-y-1">
                           <p className="text-xs font-medium flex items-center gap-1.5">
                             <Info className="w-3 h-3 text-muted-foreground" />
                             Job Metadata
                           </p>
                           <pre className="text-[10px] bg-muted rounded-md p-2 overflow-x-auto leading-relaxed">
-                            {JSON.stringify(data.job_details.job_metadata, null, 2)}
+                            {JSON.stringify(data.job_metadata, null, 2)}
                           </pre>
                         </div>
                       )}
@@ -516,8 +421,8 @@ const JobSettingsPage: React.FC = () => {
                       </div>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="destructive" size="sm" className="h-7 text-[10px]" disabled={closeMutation.isPending || data.job_details.status === "closed"}>
-                            {data.job_details.status === "closed" ? "Closed" : "Close"}
+                          <Button variant="destructive" size="sm" className="h-7 text-[10px]" disabled={closeMutation.isPending || data.status === "closed"}>
+                            {data.status === "closed" ? "Closed" : "Close"}
                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
@@ -535,26 +440,12 @@ const JobSettingsPage: React.FC = () => {
                   </CardContent>
                 </Card>
               </div>
-            </div>
+     
 
           </div>
         </form>
       </Form>
 
-      {/* Row 2: Detailed Settings (Full Width Grid) */}
-      <div className="space-y-4 pt-4 border-t border-border/20">
-        <div className="flex items-center gap-2 px-1">
-          <Settings2 className="w-4 h-4 text-primary" />
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-primary/80">Detailed Configuration</h2>
-        </div>
-        {data?.settings &&
-          <JobSettingsDetailedEditor
-            jobId={jobId!}
-            settings={data.settings}
-            onRefresh={handleRefresh}
-          />
-        }
-      </div>
     </div>
   );
 };

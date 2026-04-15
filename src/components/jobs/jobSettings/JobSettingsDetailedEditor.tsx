@@ -186,7 +186,7 @@ function ViewField({ label, value, icon: Icon }: { label: string; value: string 
 }
 
 function ReminderSummary({ reminders }: { reminders: FeedBackReminderSettingsType }) {
-  if (!reminders.enabled) return <Badge variant="secondary" className="text-[10px]">Disabled</Badge>;
+  if (!reminders?.enabled) return <Badge variant="secondary" className="text-[10px]">Disabled</Badge>;
 
   const formatSec = (s: number) => {
       if (s < 3600) return `${Math.round(s / 60)}m`;
@@ -213,7 +213,7 @@ function ReminderSummary({ reminders }: { reminders: FeedBackReminderSettingsTyp
 }
 
 function EscalationSummary({ escalation }: { escalation: PanelEscalationSettingsType }) {
-    if (!escalation.enabled) return <Badge variant="secondary" className="text-[10px]">Disabled</Badge>;
+    if (!escalation?.enabled) return <Badge variant="secondary" className="text-[10px]">Disabled</Badge>;
     return (
         <div className="space-y-2">
             <ViewField 
@@ -232,7 +232,7 @@ function EscalationSummary({ escalation }: { escalation: PanelEscalationSettings
 }
 
 function ReschedulingSummary({ rescheduling }: { rescheduling: ReschedulingSettingsType }) {
-    if (!rescheduling.enabled) return <Badge variant="secondary" className="text-[10px]">Disabled</Badge>;
+    if (!rescheduling?.enabled) return <Badge variant="secondary" className="text-[10px]">Disabled</Badge>;
     const formatSec = (s: number) => {
         if (s < 3600) return `${Math.round(s/60)}m`;
         const h = s/3600;
@@ -438,7 +438,7 @@ const JobSettingsDetailedEditor: React.FC<JobSettingsDetailedEditorProps> = ({
       // If it's the general section, we just send those specific keys.
       // const finalPayload = section === 'general' ? {} : payload;
       const finalPayload = payload;
-      console.log("final_payload",finalPayload)
+      // console.log("final_payload",finalPayload)
       await axios.patch(`/jobs/${jobId}/edit-settings`, finalPayload);
       toast.success(`${section.replace(/_/g, ' ')} saved successfully`);
       setEditingSection(null);
@@ -725,7 +725,7 @@ const JobSettingsDetailedEditor: React.FC<JobSettingsDetailedEditorProps> = ({
                 <ViewField label="Auto-score" value={settings.auto_score_every_resume ? "Enabled" : "Disabled"} icon={FileSearch} />
                 <ViewField label="AI Assessment" value={settings.ai_assessment_enabled ? "Enabled" : "Disabled"} icon={ClipboardCheck} />
                 {/* <ViewField label="Manual Rounds" value={settings.manual_rounds_count} icon={Layers} /> */}
-                <ViewField label="Re-score" value={settings.rescore_on_rubric_change.replace(/_/g, ' ')} icon={RefreshCw} />
+                <ViewField label="Re-score" value={settings.rescore_on_rubric_change?.replace(/_/g, ' ')} icon={RefreshCw} />
             </div>
           )}
         </CardContent>

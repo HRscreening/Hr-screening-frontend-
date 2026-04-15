@@ -33,7 +33,7 @@ const resumeStatusStyles: Record<string, string> = {
   failed:  'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
 };
 
-const ApplicationRow: React.FC<ApplicationRowProps> = ({ application, onViewDetails }) => {
+const ApplicationRow: React.FC<ApplicationRowProps> = ({ jobId,application, onViewDetails }) => {
   const { candidate, scores, status, id } = application;
   const [currentStatus, setCurrentStatus] = React.useState<statusType>(status);
   const activeScore = scores?.[0] ?? null;
@@ -143,7 +143,7 @@ const ApplicationRow: React.FC<ApplicationRowProps> = ({ application, onViewDeta
 
       <TableCell>
         <div className="flex flex-col gap-1">
-          <Status status={currentStatus} application_id={application.id} setCurrentStatus={setCurrentStatus} currentRound={application.current_round} candidateDetails={{
+          <Status jobId={jobId as string} status={currentStatus} application_id={application.id} setCurrentStatus={setCurrentStatus} currentRound={application.current_round} candidateDetails={{
           name: candidate?.full_name || null,
           email: candidate?.email || null,
           phone: candidate?.phone || null,

@@ -1,6 +1,5 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useEffect, useState } from 'react';
+import { useParams,  } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -9,40 +8,21 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import {
-  ChevronLeft,
-  Briefcase,
-  XCircle,
-  Share2,
-  RefreshCcw,
-  ListCheck,
-  Settings,
-  TargetIcon,
-  FileText,
+
   Copy,
   ExternalLink,
   Link2,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import AddCandidatePopup from "@/components/jobs/jobPage/buttons/addCandidatePopUp";
-import TrackCandidateDialog from "@/components/jobs/jobPage/buttons/resumeProcessingTracker";
-import axios from "@/axiosConfig"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
-import RubricVersionSwitcher from "@/components/jobs/jobPage/buttons/rubricVersionButton"
-import TotalApplicationCard from '@/components/jobs/cards/totalApplicationCard';
-import AnalyticsCard from '@/components/jobs/cards/analyticsCard';
+
 import Applications from '@/components/jobs/jobPage/application/application';
 import Loader from '@/components/loader';
 import JDSection from '@/components/jobs/jobPage/jdSection/JDSection';
 import { useJob, useJobRubric, usePublicLink } from '@/hooks/job_hooks/useJob';
-import { queryClient } from '@/lib/react-query-client';
 
 const JobOverview: React.FC = () => {
   const { jobId } = useParams<{ jobId: string }>();
-  const navigate = useNavigate();
+
 
   if (!jobId) return null;
 
@@ -51,15 +31,9 @@ const JobOverview: React.FC = () => {
   const { data: publicLinkData, isLoading: linkLoading } = usePublicLink(jobId);
 
   const [activeBatchId, setActiveBatchId] = useState<string>("");
-  const [trackerOpen, setTrackerOpen] = useState(false);
   const [jdSheetOpen, setJdSheetOpen] = useState(false);
 
   const [activeVersion, setActiveVersion] = useState<string>("");
-
-  const handleBatchStarted = useCallback((batchId: string) => {
-    setActiveBatchId(batchId);
-    setTrackerOpen(true);
-  }, []);
 
   useEffect(() => {
     if (jobData?.job?.current_batch_id && !activeBatchId) {
@@ -75,44 +49,6 @@ const JobOverview: React.FC = () => {
 
   if (jobLoading || rubricLoading || linkLoading) return <Loader />;
 
-  if (!jobData) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Card className="max-w-md shadow-lg">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-3 p-3 rounded-full bg-red-50 dark:bg-red-950/30 w-fit">
-              <XCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
-            </div>
-            <CardTitle>Job Not Found</CardTitle>
-            <CardDescription>The job you're looking for doesn't exist.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => navigate('/jobs')} className="w-full">
-              <ChevronLeft className="w-4 h-4 mr-2" />
-              Back to Jobs
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  const dashboard = jobData.dashboard ?? { total_applications: 0, by_status: {}, avg_score: 0 };
-
-  const handleVersionChange = async (version: string) => {
-    try {
-      setActiveVersion(version);
-      const found = rubricData?.versions.find((v: any) => v.rubric_version === version);
-      if (!found || !jobId) return;
-
-      await axios.post(`/jobs/${jobId}/rubrics/${found.rubric_id}/activate`);
-      toast.success(`Activated rubric ${version}`);
-    } catch (e) {
-      console.error("Failed to activate rubric version", e);
-      toast.error("Failed to switch rubric version");
-    }
-  };
-
   const handleCopyLink = () => {
     if (publicLinkData?.public_url) {
       navigator.clipboard.writeText(publicLinkData.public_url);
@@ -124,7 +60,7 @@ const JobOverview: React.FC = () => {
     <div className="min-h-screen bg-background">
 
       {/* Header */}
-      <div className="flex items-center gap-3 min-w-0 flex-1">
+      {/* <div className="flex items-center gap-3 min-w-0 flex-1">
         <div className="p-2 rounded-lg bg-primary/10">
           <Briefcase className="w-4 h-4 text-primary" />
         </div>
@@ -197,7 +133,7 @@ const JobOverview: React.FC = () => {
             versionData={rubricData}
           />
         </div>
-      </div>
+      </div> */}
 
       {/* Public apply link bar — shown whenever a link is active */}
       {publicLinkData?.public_apply_enabled && publicLinkData.public_url && (
@@ -222,7 +158,7 @@ const JobOverview: React.FC = () => {
       )}
 
       {/* Analytics */}
-      <div className="flex flex-wrap gap-4 mt-4">
+      {/* <div className="flex flex-wrap gap-4 mt-4">
         <TotalApplicationCard data={dashboard as any} />
         <AnalyticsCard
           title="Avg. Match Score"
@@ -230,10 +166,10 @@ const JobOverview: React.FC = () => {
           desc="based on skills & exp."
           icon={<TargetIcon className="h-5 w-5" />}
         />
-      </div>
+      </div> */}
 
       {/* Applications table */}
-      <Applications jobId={jobId}/>
+      <Applications jobId={jobId} />
 
       {/* JD & Apply Sheet */}
       <Sheet open={jdSheetOpen} onOpenChange={setJdSheetOpen}>

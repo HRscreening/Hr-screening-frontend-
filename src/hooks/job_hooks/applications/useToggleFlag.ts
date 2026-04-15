@@ -1,13 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { flagApplication, unflagApplication } from '@/services/applicationService'
-import { useJobId } from '@/store/jobPageStore'
 import type { ApplicationsResponse } from '@/types/applicationTypes'
 import { toast } from 'sonner'
 
 export function useToggleFlag() {
   const queryClient = useQueryClient()
-  const jobId = useJobId()
-  const filter = { queryKey: ['applications', jobId] }
 
   return useMutation({
     mutationFn: ({

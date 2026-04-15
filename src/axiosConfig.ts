@@ -3,6 +3,7 @@ import axios from "axios";
 import { useContextStore } from "@/store/contextStore";
 import { useAuthStore } from "@/store/authStore";
 import { toast } from "sonner";
+import { queryClient } from "@/lib/react-query-client";
 
 axios.defaults.baseURL =
   import.meta.env.VITE_BACKEND_URL || "http://localhost:8000/api";
@@ -43,6 +44,7 @@ axios.interceptors.response.use(
       isRedirecting = true;
       localStorage.removeItem("access_token");
       useAuthStore.getState().clearUser();
+      queryClient.clear();
       toast.error("Session expired. Please log in again.");
       window.location.href = "/";
     }

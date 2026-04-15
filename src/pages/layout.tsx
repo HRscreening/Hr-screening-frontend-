@@ -12,9 +12,8 @@ import ProfileButton from "@/components/profileButton.tsx";
 export default function Layout() {
 
 
-  const [pageTitle, setPageTitle] = useState("Dashboard");
+  const [_, setPageTitle] = useState("Dashboard");
 
-  console.log("Current Page:", pageTitle);
 
   
 
