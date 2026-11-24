@@ -32,8 +32,8 @@ export default function Layout() {
             <SidebarProvider className="flex flex-1 min-h-[calc(100svh-3.75rem)]!">
                 <JobSidebar />
 
-                <main className="flex flex-1 flex-col overflow-auto">
-                    <div className="w-full flex-1 p-4">
+                <main className="flex flex-1 flex-col">
+                    <div className="w-full flex-1 p-4 overflow-y-auto max-h-[calc(100vh-3.75rem)]">
                         <Outlet />
                     </div>
                 </main>

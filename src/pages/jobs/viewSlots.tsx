@@ -49,7 +49,7 @@ const ViewSlots = () => {
 
   return (
     <div className="space-y-6">
-      <div className='flex flex-row justify-between items-center bg-white p-4 rounded-lg border border-border shadow-sm'>
+      <div className='flex flex-row sticky -top-4 z-50 justify-between items-center bg-white p-4 rounded-lg border border-border shadow-sm'>
         <div className="space-y-1">
           <h1 className='text-2xl font-bold tracking-tight'>Panelist Availability Slots</h1>
           <p className='text-sm text-muted-foreground'>

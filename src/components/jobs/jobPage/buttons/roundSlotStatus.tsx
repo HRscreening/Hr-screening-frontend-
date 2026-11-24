@@ -29,7 +29,7 @@ const RoundSlotsStatus = ({ roundSlots,jobId,setCurrentRoundConfigId }: Props) =
     <TooltipProvider delayDuration={200}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="flex items-center gap-1.5 bg-white border border-gray-200 hover:border-blue-400 rounded-md px-2.5 py-1.5 text-sm font-medium text-gray-700 transition-all hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1">
+          <button className="shadow-2xl cursor-pointer  flex items-center gap-1.5 bg-white border border-gray-200 hover:border-blue-400 rounded-md px-2.5 py-1.5 text-sm font-medium text-gray-700 transition-all hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1">
 
             {/* Red dot on trigger if any round lacks slots */}
             {hasMissingSlots && (
@@ -43,7 +43,7 @@ const RoundSlotsStatus = ({ roundSlots,jobId,setCurrentRoundConfigId }: Props) =
               </Tooltip>
             )}
 
-            <span>Round Slots</span>
+            <span>Round</span>
             <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
           </button>
         </DropdownMenuTrigger>
